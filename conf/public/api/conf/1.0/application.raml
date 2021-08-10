@@ -33,38 +33,37 @@ traits:
                 value:
                   code : ACCEPT_HEADER_INVALID
 
-/customs/transits/guarantees:
-  /balances:
-    post:
-      displayName: Send a Balance Request
+/customs/guarantees/balances:
+  post:
+    displayName: Send a Balance Request
+    is:
+      - headers.acceptHeader
+      - headers.contentHeader
+      - acceptHeaderInvalid
+    (annotations.scope): "common-transit-convention-guarantee-balance"
+    securedBy: [ sec.oauth_2_0: { scopes: [ "common-transit-convention-guarantee-balance" ] } ]
+    body:
+      application/json:
+        type: !include schemas/post-balance-request-schema.json
+        example: |
+          {
+            "taxIdentifier": "GB123456789012",
+            "guaranteeReference": "20GB0000010000GX1",
+            "accessCode": "ABC1"
+          }
+
+  /{requestId}:
+    uriParameters:
+      requestId:
+        description: The request ID of the balance request to check.
+        type: string
+        example: "22b9899e-24ee-48e6-a189-97d1f45391c4"
+        required: true
+
+    get:
+      displayName: Check the status of a Balance Request
       is:
         - headers.acceptHeader
-        - headers.contentHeader
         - acceptHeaderInvalid
       (annotations.scope): "common-transit-convention-guarantee-balance"
       securedBy: [ sec.oauth_2_0: { scopes: [ "common-transit-convention-guarantee-balance" ] } ]
-      body:
-        application/json:
-          type: !include schemas/post-balance-request-schema.json
-          example: |
-            {
-              "taxIdentifier": "GB123456789012",
-              "guaranteeReference": "20GB0000010000GX1",
-              "accessCode": "ABC1"
-            }
-
-    /{requestId}:
-      uriParameters:
-        requestId:
-          description: The request ID of the balance request to check.
-          type: string
-          example: "22b9899e-24ee-48e6-a189-97d1f45391c4"
-          required: true
-
-      get:
-        displayName: Check the status of a Balance Request
-        is:
-          - headers.acceptHeader
-          - acceptHeaderInvalid
-        (annotations.scope): "common-transit-convention-guarantee-balance"
-        securedBy: [ sec.oauth_2_0: { scopes: [ "common-transit-convention-guarantee-balance" ] } ]
