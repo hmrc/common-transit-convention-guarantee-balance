@@ -16,13 +16,13 @@
 
 package controllers.documentation
 
+import akka.stream.Materializer
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.Call
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import akka.stream.Materializer
 
 class DocumentationRoutesSpec extends AnyFlatSpec with Matchers with GuiceOneAppPerSuite {
 
@@ -30,22 +30,29 @@ class DocumentationRoutesSpec extends AnyFlatSpec with Matchers with GuiceOneApp
 
   "API documentation route" should "return 200 and JSON response for definition.json" in {
     val request = FakeRequest(Call("GET", "/api/definition"))
-    val result = route(app, request).get
+    val result  = route(app, request).get
+
     status(result) shouldBe OK
     contentType(result) should contain(JSON)
-    contentAsJson(result)
+
+    val definitionJson = contentAsJson(result)
+    val scopeKey = (definitionJson \ "scopes" \\ "key").head.as[String]
+    val apiContext = (definitionJson \ "api" \ "context").as[String]
+
+    scopeKey shouldBe "common-transit-convention-guarantee-balance"
+    apiContext shouldBe "customs/guarantees"
   }
 
   it should "return 200 and plain text response for the RAML definition file" in {
     val request = FakeRequest(Call("GET", "/api/conf/1.0/application.raml"))
-    val result = route(app, request).get
+    val result  = route(app, request).get
     status(result) shouldBe OK
     contentType(result) should contain(BINARY)
   }
 
   it should "return 200 and plain text response for the overview Markdown file" in {
     val request = FakeRequest(Call("GET", "/api/conf/1.0/docs/overview.md"))
-    val result = route(app, request).get
+    val result  = route(app, request).get
     status(result) shouldBe OK
     contentType(result) should contain(BINARY)
   }
