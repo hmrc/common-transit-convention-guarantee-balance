@@ -12,6 +12,7 @@ object AppDependencies {
 
   val test = Seq(
     "uk.gov.hmrc"         %% "bootstrap-test-play-28" % bootstrapVersion,
+    "com.typesafe.akka"   %% "akka-testkit"           % PlayVersion.akkaVersion,
     "com.vladsch.flexmark" % "flexmark-all"           % "0.36.8"
   ).map(_ % s"$Test, $IntegrationTest")
 }
