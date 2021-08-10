@@ -4,14 +4,14 @@ import sbt.Keys.libraryDependencies
 import sbt._
 
 object AppDependencies {
+  val bootstrapVersion = "5.10.0"
 
   val compile = Seq(
-    "uk.gov.hmrc"             %% "bootstrap-backend-play-28"  % "5.7.0"
+    "uk.gov.hmrc" %% "bootstrap-backend-play-28" % bootstrapVersion
   )
 
   val test = Seq(
-    "uk.gov.hmrc"             %% "bootstrap-test-play-28"     % "5.7.0"             % Test,
-    
-    "com.vladsch.flexmark"    %  "flexmark-all"               % "0.36.8"            % "test, it"
-  )
+    "uk.gov.hmrc"         %% "bootstrap-test-play-28" % bootstrapVersion,
+    "com.vladsch.flexmark" % "flexmark-all"           % "0.36.8"
+  ).map(_ % s"$Test, $IntegrationTest")
 }

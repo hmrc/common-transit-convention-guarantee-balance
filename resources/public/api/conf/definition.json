@@ -1,0 +1,25 @@
+{
+  "scopes": [
+    {
+      "key": "common-transit-convention-guarantee-balance",
+      "name": "Common Transit Convention Guarantee Balance",
+      "description": "Common Transit Convention Guarantee Balance API"
+    }
+  ],
+  "api": {
+    "name": "Common Transit Convention Guarantee Balance",
+    "description": "The public API to allow traders to submit and receive responses to Common Transit Convention guarantee balance enquiries",
+    "context": "customs/transits",
+    "categories": ["CUSTOMS"],
+    "versions": [
+      {
+        "version": "1.0",
+        "status": "BETA",
+        "endpointsEnabled": true,
+        "access": {
+          "type": "PUBLIC"
+        }
+      }
+    ]
+  }
+}

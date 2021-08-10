@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "#/post-balance-request-schema.json",
+    "title": "Balance Request",
+    "description": "A balance request for the CTC Guarantee Balance API",
+    "type": "object",
+    "required": [
+        "taxIdentifier",
+        "guaranteeReference",
+        "accessCode"
+    ],
+    "properties": {
+        "taxIdentifier": {
+            "type": "string",
+            "description": "The trader identification number (TIN) of the principal on the guarantee.",
+            "minLength": 1,
+            "maxLength": 17
+        },
+        "guaranteeReference": {
+            "type": "string",
+            "description": "The guarantee reference number (GRN) of the guarantee.",
+            "minLength": 17,
+            "maxLength": 24
+        },
+        "accessCode": {
+            "type": "string",
+            "description": "The access code granting access to make use of the guarantee.",
+            "minLength": 4,
+            "maxLength": 4
+        }
+    }
+}
