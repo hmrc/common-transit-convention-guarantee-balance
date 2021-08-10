@@ -12,7 +12,6 @@ lazy val microservice = Project(appName, file("."))
   .settings(SbtDistributablesPlugin.publishingSettings)
   .settings(DefaultBuildSettings.integrationTestSettings())
   .settings(inThisBuild(buildSettings))
-  .settings(inConfig(Test)(testSettings))
   .settings(inConfig(IntegrationTest)(ScalafmtPlugin.scalafmtConfigSettings))
   .settings(inConfig(IntegrationTest)(scalafixConfigSettings(IntegrationTest)))
   .settings(scalacSettings)
@@ -40,11 +39,6 @@ lazy val scalacSettings = Def.settings(
   scalacOptions ~= { opts =>
     opts.filterNot(Set("-Xfatal-warnings", "-Ywarn-value-discard"))
   }
-)
-
-lazy val testSettings = Def.settings(
-  // Add the public assets folder to the classpath for unit tests
-  unmanagedClasspath += (Assets / resourceDirectory).value
 )
 
 lazy val scoverageSettings = Def.settings(
