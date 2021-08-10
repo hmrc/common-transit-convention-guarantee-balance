@@ -36,8 +36,8 @@ class DocumentationRoutesSpec extends AnyFlatSpec with Matchers with GuiceOneApp
     contentType(result) should contain(JSON)
 
     val definitionJson = contentAsJson(result)
-    val scopeKey = (definitionJson \ "scopes" \\ "key").head.as[String]
-    val apiContext = (definitionJson \ "api" \ "context").as[String]
+    val scopeKey       = (definitionJson \ "scopes" \\ "key").head.as[String]
+    val apiContext     = (definitionJson \ "api" \ "context").as[String]
 
     scopeKey shouldBe "common-transit-convention-guarantee-balance"
     apiContext shouldBe "customs/guarantees"
@@ -55,5 +55,11 @@ class DocumentationRoutesSpec extends AnyFlatSpec with Matchers with GuiceOneApp
     val result  = route(app, request).get
     status(result) shouldBe OK
     contentType(result) should contain(BINARY)
+  }
+
+  it should "return 404 for nonexistent resource" in {
+    val request = FakeRequest(Call("GET", "/api/conf/1.0/docs/foobar.md"))
+    val result  = route(app, request).get
+    status(result) shouldBe NOT_FOUND
   }
 }
