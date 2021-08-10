@@ -8,14 +8,25 @@ lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .settings(SbtDistributablesPlugin.publishingSettings)
   .settings(DefaultBuildSettings.integrationTestSettings())
+  .settings(inThisBuild(buildSettings))
+  .settings(inConfig(IntegrationTest)(ScalafmtPlugin.scalafmtConfigSettings))
+  .settings(inConfig(IntegrationTest)(scalafixConfigSettings(IntegrationTest)))
   .settings(scalacSettings)
   .settings(scoverageSettings)
   .settings(
     majorVersion := 0,
-    scalaVersion := "2.12.13",
+    scalaVersion := "2.12.14",
+    semanticdbEnabled := true,
+    semanticdbVersion := scalafixSemanticdb.revision,
     resolvers += Resolver.jcenterRepo,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
   )
+
+lazy val buildSettings = Def.settings(
+  scalafixDependencies ++= Seq(
+    "com.github.liancheng" %% "organize-imports" % "0.5.0"
+  )
+)
 
 lazy val scalacSettings = Def.settings(
   // Disable warnings arising from generated routing code

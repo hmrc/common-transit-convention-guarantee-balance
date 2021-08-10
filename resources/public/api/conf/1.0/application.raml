@@ -1,0 +1,70 @@
+#%RAML 1.0
+---
+title: CTC Guarantee Balance
+description: The public API to allow traders to submit and receive responses to Common Transit Convention guarantee balance enquiries
+protocols: [ HTTPS ]
+baseUri: https://api.service.hmrc.gov.uk/
+version: 1.0
+
+documentation:
+ - title: Overview
+   content: !include docs/overview.md
+ - title: Versioning
+   content: !include https://developer.service.hmrc.gov.uk/api-documentation/assets/common/docs/versioning.md
+
+mediaType: [ application/json ]
+
+uses:
+  sec: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/securitySchemes.raml
+  headers: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/headers.raml
+  annotations: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/annotations.raml
+  types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml
+
+traits:
+  acceptHeaderInvalid:
+    responses:
+      406:
+        body:
+          application/json:
+            type: types.errorResponse
+            examples:
+              badRequest:
+                description: The accept header is missing or invalid
+                value:
+                  code : ACCEPT_HEADER_INVALID
+
+/customs/transits/guarantees:
+  /balances:
+    post:
+      displayName: Send a Balance Request
+      is:
+        - headers.acceptHeader
+        - headers.contentHeader
+        - acceptHeaderInvalid
+      (annotations.scope): "common-transit-convention-guarantee-balance"
+      securedBy: [ sec.oauth_2_0: { scopes: [ "common-transit-convention-guarantee-balance" ] } ]
+      body:
+        application/json:
+          type: !include schemas/post-balance-request-schema.json
+          example: |
+            {
+              "taxIdentifier": "GB123456789012",
+              "guaranteeReference": "20GB0000010000GX1",
+              "accessCode": "ABC1"
+            }
+
+    /{requestId}:
+      uriParameters:
+        requestId:
+          description: The request ID of the balance request to check.
+          type: string
+          example: "22b9899e-24ee-48e6-a189-97d1f45391c4"
+          required: true
+
+      get:
+        displayName: Check the status of a Balance Request
+        is:
+          - headers.acceptHeader
+          - acceptHeaderInvalid
+        (annotations.scope): "common-transit-convention-guarantee-balance"
+        securedBy: [ sec.oauth_2_0: { scopes: [ "common-transit-convention-guarantee-balance" ] } ]
