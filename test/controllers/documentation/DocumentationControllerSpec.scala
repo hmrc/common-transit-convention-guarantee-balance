@@ -18,9 +18,11 @@ package controllers.documentation
 
 import akka.actor.ActorSystem
 import akka.stream.Materializer
+import akka.testkit.TestKit
 import controllers.Assets
 import controllers.AssetsConfiguration
 import controllers.DefaultAssetsMetadata
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.Configuration
@@ -32,26 +34,23 @@ import play.api.http.HttpConfiguration
 import play.api.test.FakeRequest
 import play.api.test.Helpers
 import play.api.test.Helpers._
-import org.scalatest.BeforeAndAfterAll
-import akka.testkit.TestKit
 
 class DocumentationControllerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
 
   val system                = ActorSystem.create(suiteName)
   implicit val materializer = Materializer(system)
 
-  val environment      = Environment.simple(mode = Mode.Test)
-  val configuration    = Configuration.load(environment)
-  val httpErrorHandler = new DefaultHttpErrorHandler(environment, configuration, None, None)
+  val environment   = Environment.simple(mode = Mode.Test)
+  val configuration = Configuration.load(environment)
 
-  val assetsMetadata = {
-    val assetsConfig  = AssetsConfiguration.fromConfiguration(configuration, environment.mode)
-    val httpConfig    = HttpConfiguration.fromConfiguration(configuration, environment)
-    val fileMimeTypes = new DefaultFileMimeTypes(httpConfig.fileMimeTypes)
-    new DefaultAssetsMetadata(environment, assetsConfig, fileMimeTypes)
+  val assets = {
+    val assetsConfig     = AssetsConfiguration.fromConfiguration(configuration, environment.mode)
+    val httpConfig       = HttpConfiguration.fromConfiguration(configuration, environment)
+    val fileMimeTypes    = new DefaultFileMimeTypes(httpConfig.fileMimeTypes)
+    val httpErrorHandler = new DefaultHttpErrorHandler(environment, configuration, None, None)
+    val assetsMetadata   = new DefaultAssetsMetadata(environment, assetsConfig, fileMimeTypes)
+    new Assets(httpErrorHandler, assetsMetadata)
   }
-
-  val assets = new Assets(httpErrorHandler, assetsMetadata)
 
   val controller = new DocumentationController(assets, Helpers.stubControllerComponents())
 
@@ -59,21 +58,22 @@ class DocumentationControllerSpec extends AnyFlatSpec with Matchers with BeforeA
     TestKit.shutdownActorSystem(system)
   }
 
-  "Documentation controller" should "return 200 and JSON response at the definition route" in {
+  "DocumentationController" should "return 200 and JSON response at the definition route" in {
     val result = controller.definition()(FakeRequest())
     status(result) shouldBe OK
     contentType(result) should contain(JSON)
     contentAsJson(result)
   }
 
-  it should "return 200 and plain text response for the RAML definition file" in {
-    val result = controller.raml("1.0", "application.raml")(FakeRequest())
+  // Not DocumentationController, but demonstrates that the approach used in definition.routes works
+  "Public assets route" should "return 200 and plain text response for the RAML definition file" in {
+    val result = assets.at("/public/api/conf", "1.0/application.raml")(FakeRequest())
     status(result) shouldBe OK
     contentType(result) should contain(BINARY)
   }
 
   it should "return 200 and plain text response for the overview Markdown file" in {
-    val result = controller.raml("1.0", "docs/overview.md")(FakeRequest())
+    val result = assets.at("/public/api/conf", "1.0/docs/overview.md")(FakeRequest())
     status(result) shouldBe OK
     contentType(result) should contain(BINARY)
   }
