@@ -32,24 +32,32 @@ import play.api.http.HttpConfiguration
 import play.api.test.FakeRequest
 import play.api.test.Helpers
 import play.api.test.Helpers._
+import org.scalatest.BeforeAndAfterAll
+import akka.testkit.TestKit
 
-class DocumentationControllerSpec extends AnyFlatSpec with Matchers {
+class DocumentationControllerSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
 
   val system                = ActorSystem.create(suiteName)
   implicit val materializer = Materializer(system)
 
+  val environment      = Environment.simple(mode = Mode.Test)
+  val configuration    = Configuration.load(environment)
+  val httpErrorHandler = new DefaultHttpErrorHandler(environment, configuration, None, None)
+
   val assetsMetadata = {
-    val environment   = Environment.simple(mode = Mode.Test)
-    val configuration = Configuration.load(environment)
     val assetsConfig  = AssetsConfiguration.fromConfiguration(configuration, environment.mode)
     val httpConfig    = HttpConfiguration.fromConfiguration(configuration, environment)
     val fileMimeTypes = new DefaultFileMimeTypes(httpConfig.fileMimeTypes)
     new DefaultAssetsMetadata(environment, assetsConfig, fileMimeTypes)
   }
 
-  val assets = new Assets(new DefaultHttpErrorHandler(), assetsMetadata)
+  val assets = new Assets(httpErrorHandler, assetsMetadata)
 
   val controller = new DocumentationController(assets, Helpers.stubControllerComponents())
+
+  override protected def afterAll(): Unit = {
+    TestKit.shutdownActorSystem(system)
+  }
 
   "Documentation controller" should "return 200 and JSON response at the definition route" in {
     val result = controller.definition()(FakeRequest())
