@@ -16,6 +16,8 @@
 
 package config
 
+import io.lemonlabs.uri.AbsoluteUrl
+import io.lemonlabs.uri.UrlPath
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -23,13 +25,19 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AppConfig @Inject() (
-  config: Configuration,
-  servicesConfig: ServicesConfig
-) {
+class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
 
-  val authBaseUrl: String = servicesConfig.baseUrl("auth")
+  private lazy val backendBaseUrl: AbsoluteUrl =
+    AbsoluteUrl.parse(servicesConfig.baseUrl("transit-movements-guarantee-balance"))
+  private lazy val backendPath: UrlPath =
+    UrlPath.parse(
+      config.get[String]("microservice.services.transit-movements-guarantee-balance.path")
+    )
+  lazy val backendUrl: AbsoluteUrl =
+    backendBaseUrl.withPath(backendPath)
 
-  val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
+  lazy val enrolmentKey        = config.get[String]("auth.enrolmentKey")
+  lazy val enrolmentIdentifier = config.get[String]("auth.enrolmentIdentifier")
+
+  lazy val features = config.get[Map[String, Boolean]]("features")
 }
