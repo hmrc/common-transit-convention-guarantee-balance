@@ -18,16 +18,16 @@ package connectors
 
 import cats.effect.IO
 import models.request.BalanceRequest
-import models.values.RequestId
+import models.values.BalanceId
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
 case class FakeBalanceRequestConnector(
-  sendRequestResponse: IO[Either[UpstreamErrorResponse, RequestId]] = IO.stub
+  sendRequestResponse: IO[Either[UpstreamErrorResponse, BalanceId]] = IO.stub
 ) extends BalanceRequestConnector {
 
   override def sendRequest(request: BalanceRequest)(implicit
     hc: HeaderCarrier
-  ): IO[Either[UpstreamErrorResponse, RequestId]] =
+  ): IO[Either[UpstreamErrorResponse, BalanceId]] =
     sendRequestResponse
 }

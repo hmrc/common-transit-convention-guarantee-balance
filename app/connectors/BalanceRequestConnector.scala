@@ -20,7 +20,7 @@ import cats.effect.IO
 import com.google.inject.ImplementedBy
 import config.AppConfig
 import models.request.BalanceRequest
-import models.values.RequestId
+import models.values.BalanceId
 import play.api.http.ContentTypes
 import play.api.http.HeaderNames
 import runtime.IOFutures
@@ -35,7 +35,7 @@ import javax.inject.Inject
 trait BalanceRequestConnector {
   def sendRequest(request: BalanceRequest)(implicit
     hc: HeaderCarrier
-  ): IO[Either[UpstreamErrorResponse, RequestId]]
+  ): IO[Either[UpstreamErrorResponse, BalanceId]]
 }
 
 class BalanceRequestConnectorImpl @Inject() (appConfig: AppConfig, http: HttpClient)
@@ -44,14 +44,14 @@ class BalanceRequestConnectorImpl @Inject() (appConfig: AppConfig, http: HttpCli
 
   def sendRequest(request: BalanceRequest)(implicit
     hc: HeaderCarrier
-  ): IO[Either[UpstreamErrorResponse, RequestId]] =
+  ): IO[Either[UpstreamErrorResponse, BalanceId]] =
     IO.runFuture { implicit ec =>
       val urlString = appConfig.backendUrl.toString
       val headers = Seq(
         HeaderNames.ACCEPT       -> ContentTypes.JSON,
         HeaderNames.CONTENT_TYPE -> ContentTypes.JSON
       )
-      http.POST[BalanceRequest, Either[UpstreamErrorResponse, RequestId]](
+      http.POST[BalanceRequest, Either[UpstreamErrorResponse, BalanceId]](
         urlString,
         request,
         headers

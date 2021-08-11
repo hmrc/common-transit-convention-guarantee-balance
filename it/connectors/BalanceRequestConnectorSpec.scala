@@ -21,7 +21,7 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import models.request.BalanceRequest
 import models.values.AccessCode
 import models.values.GuaranteeReference
-import models.values.RequestId
+import models.values.BalanceId
 import models.values.TaxIdentifier
 import org.scalatest.EitherValues
 import org.scalatest.Inside
@@ -60,7 +60,7 @@ class BalanceRequestConnectorSpec
     AccessCode("1234")
   )
 
-  "BalanceRequestConnector" should "send XML message to downstream component" in {
+  "BalanceRequestConnector" should "send JSON message to downstream component" in {
     val connector = injector.instanceOf[BalanceRequestConnector]
 
     wireMockServer.stubFor(
@@ -79,7 +79,7 @@ class BalanceRequestConnectorSpec
       .sendRequest(request)
       .map { response =>
         response shouldBe a[Right[_, _]]
-        response.value shouldBe RequestId(1)
+        response.value shouldBe BalanceId(1)
       }
       .unsafeToFuture()
   }
