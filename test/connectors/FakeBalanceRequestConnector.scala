@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-package models.values
+package connectors
 
-import play.api.libs.json.Format
-import play.api.libs.json.Json
+import cats.effect.IO
+import models.request.BalanceRequest
+import models.values.BalanceId
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.UpstreamErrorResponse
 
-case class RequestId(value: Int) extends AnyVal
+case class FakeBalanceRequestConnector(
+  sendRequestResponse: IO[Either[UpstreamErrorResponse, BalanceId]] = IO.stub
+) extends BalanceRequestConnector {
 
-object RequestId {
-  implicit val requestIdFormat: Format[RequestId] =
-    Json.valueFormat[RequestId]
+  override def sendRequest(request: BalanceRequest)(implicit
+    hc: HeaderCarrier
+  ): IO[Either[UpstreamErrorResponse, BalanceId]] =
+    sendRequestResponse
 }
