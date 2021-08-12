@@ -30,6 +30,7 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import javax.inject.Inject
+import javax.inject.Singleton
 
 @ImplementedBy(classOf[BalanceRequestConnectorImpl])
 trait BalanceRequestConnector {
@@ -38,6 +39,7 @@ trait BalanceRequestConnector {
   ): IO[Either[UpstreamErrorResponse, BalanceId]]
 }
 
+@Singleton
 class BalanceRequestConnectorImpl @Inject() (appConfig: AppConfig, http: HttpClient)
     extends BalanceRequestConnector
     with IOFutures {
@@ -46,13 +48,13 @@ class BalanceRequestConnectorImpl @Inject() (appConfig: AppConfig, http: HttpCli
     hc: HeaderCarrier
   ): IO[Either[UpstreamErrorResponse, BalanceId]] =
     IO.runFuture { implicit ec =>
-      val urlString = appConfig.backendUrl.toString
+      val url = appConfig.backendUrl.addPathPart("balances")
       val headers = Seq(
         HeaderNames.ACCEPT       -> ContentTypes.JSON,
         HeaderNames.CONTENT_TYPE -> ContentTypes.JSON
       )
       http.POST[BalanceRequest, Either[UpstreamErrorResponse, BalanceId]](
-        urlString,
+        url.toString,
         request,
         headers
       )

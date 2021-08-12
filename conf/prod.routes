@@ -1,5 +1,5 @@
-->    /common-transit-convention-guarantee-balance    app.Routes
-->    /                                               definition.Routes
-->    /                                               health.Routes
+->     /                 app.Routes
+->     /                 health.Routes
+->     /api              definition.Routes
 
-GET   /admin/metrics                                  com.kenshoo.play.metrics.MetricsController.metrics
+GET    /admin/metrics    com.kenshoo.play.metrics.MetricsController.metrics
