@@ -16,27 +16,22 @@
 
 package controllers
 
-import cats.effect.unsafe.IORuntime
-import controllers.actions.FakeAuthActionProvider
+import controllers.routes.BalanceRequestController
+import models.values.BalanceId
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import play.api.test.FakeRequest
-import play.api.test.Helpers
-import play.api.test.Helpers._
 
-class MicroserviceHelloWorldControllerSpec extends AnyFlatSpec with Matchers {
+import java.util.UUID
 
-  private val fakeRequest = FakeRequest("GET", "/")
+class LocationWithContextSpec extends AnyFlatSpec with Matchers with LocationWithContext {
+  "Call#pathWithContext" should "produce a path string prefixed with the API context" in {
+    val uuid      = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
+    val balanceId = BalanceId(uuid)
 
-  private val controller = new MicroserviceHelloWorldController(
-    FakeAuthActionProvider,
-    Helpers.stubControllerComponents(),
-    IORuntime.global
-  )
+    BalanceRequestController.submitBalanceRequest.pathWithContext shouldBe "/customs/guarantees/balances"
 
-  "GET /" should "return 200" in {
-    val result = controller.hello()(fakeRequest)
-    status(result) shouldBe OK
-    contentAsString(result) shouldBe "Hello world"
+    BalanceRequestController
+      .getBalanceRequest(balanceId)
+      .pathWithContext shouldBe "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
   }
 }
