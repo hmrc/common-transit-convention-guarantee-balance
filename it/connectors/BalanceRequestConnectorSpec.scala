@@ -20,8 +20,8 @@ import cats.effect.unsafe.implicits.global
 import com.github.tomakehurst.wiremock.client.WireMock._
 import models.request.BalanceRequest
 import models.values.AccessCode
-import models.values.GuaranteeReference
 import models.values.BalanceId
+import models.values.GuaranteeReference
 import models.values.TaxIdentifier
 import org.scalatest.EitherValues
 import org.scalatest.Inside
@@ -34,6 +34,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.UpstreamErrorResponse._
 
+import java.util.UUID
 import scala.util.Right
 
 class BalanceRequestConnectorSpec
@@ -64,14 +65,14 @@ class BalanceRequestConnectorSpec
     val connector = injector.instanceOf[BalanceRequestConnector]
 
     wireMockServer.stubFor(
-      post(urlEqualTo("/transit-movements-guarantee-balance"))
+      post(urlEqualTo("/transit-movements-guarantee-balance/balances"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
         .withRequestBody(equalToJson(Json.stringify(requestJson)))
         .willReturn(
           aResponse()
             .withStatus(ACCEPTED)
-            .withBody("1")
+            .withBody(""""22b9899e-24ee-48e6-a189-97d1f45391c4"""")
         )
     )
 
@@ -79,7 +80,7 @@ class BalanceRequestConnectorSpec
       .sendRequest(request)
       .map { response =>
         response shouldBe a[Right[_, _]]
-        response.value shouldBe BalanceId(1)
+        response.value shouldBe BalanceId(UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4"))
       }
       .unsafeToFuture()
   }
@@ -88,7 +89,7 @@ class BalanceRequestConnectorSpec
     val connector = injector.instanceOf[BalanceRequestConnector]
 
     wireMockServer.stubFor(
-      post(urlEqualTo("/transit-movements-guarantee-balance"))
+      post(urlEqualTo("/transit-movements-guarantee-balance/balances"))
         .willReturn(aResponse().withStatus(FORBIDDEN))
     )
 
@@ -107,7 +108,7 @@ class BalanceRequestConnectorSpec
     val connector = injector.instanceOf[BalanceRequestConnector]
 
     wireMockServer.stubFor(
-      post(urlEqualTo("/transit-movements-guarantee-balance"))
+      post(urlEqualTo("/transit-movements-guarantee-balance/balances"))
         .willReturn(aResponse().withStatus(BAD_GATEWAY))
     )
 

@@ -19,7 +19,9 @@ package models.values
 import play.api.libs.json.Format
 import play.api.libs.json.Json
 
-case class BalanceId(value: Int) extends AnyVal
+import java.util.UUID
+
+case class BalanceId(value: UUID) extends AnyVal
 
 object BalanceId {
   implicit val balanceIdFormat: Format[BalanceId] =

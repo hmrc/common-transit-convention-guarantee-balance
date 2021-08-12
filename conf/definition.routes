@@ -1,2 +1,2 @@
-GET    /api/definition   controllers.Assets.at(path="/public/api", file="definition.json")
-GET    /api/conf/*file   controllers.Assets.at(path="/public/api/conf", file)
+GET    /definition   controllers.Assets.at(path="/public/api", file="definition.json")
+GET    /conf/*file   controllers.Assets.at(path="/public/api/conf", file)
