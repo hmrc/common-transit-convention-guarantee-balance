@@ -16,7 +16,6 @@
 
 package controllers
 
-import akka.http.scaladsl.model.ContentTypes
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import connectors.FakeBalanceRequestConnector
@@ -26,6 +25,7 @@ import models.response.PostBalanceRequestResponse
 import models.values._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import play.api.http.ContentTypes
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -69,7 +69,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     ).submitBalanceRequest(FakeRequest().withBody(balanceRequest))
 
     status(result) shouldBe ACCEPTED
-    contentType(result) shouldBe Some(ContentTypes.`application/json`.toString)
+    contentType(result) shouldBe Some(ContentTypes.JSON)
     contentAsJson(result) shouldBe Json.toJson(PostBalanceRequestResponse(balanceId))
     header(HeaderNames.LOCATION, result) shouldBe Some(
       s"/customs/guarantees/balances/${balanceId.value}"
@@ -89,11 +89,11 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     ).submitBalanceRequest(FakeRequest().withBody(balanceRequest))
 
     status(result) shouldBe INTERNAL_SERVER_ERROR
+    contentType(result) shouldBe Some(ContentTypes.JSON)
     contentAsJson(result) shouldBe Json.obj(
       "code"    -> "INTERNAL_SERVER_ERROR",
       "message" -> "Internal server error"
     )
-    contentType(result) shouldBe Some(ContentTypes.`application/json`.toString)
   }
 
   // TODO: Pending while waiting for play-json-union-formatter PR to be merged
@@ -109,11 +109,11 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     ).submitBalanceRequest(FakeRequest().withBody(balanceRequest))
 
     status(result) shouldBe INTERNAL_SERVER_ERROR
+    contentType(result) shouldBe Some(ContentTypes.JSON)
     contentAsJson(result) shouldBe Json.obj(
       "code"    -> "INTERNAL_SERVER_ERROR",
       "message" -> "Internal server error"
     )
-    contentType(result) shouldBe Some(ContentTypes.`application/json`.toString)
   }
 
   "BalanceRequestController.getBalanceRequest" should "return 404 when the balance request is not found" in {
