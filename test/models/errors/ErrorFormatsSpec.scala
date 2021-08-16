@@ -16,24 +16,50 @@
 
 package models.errors
 
-import org.scalatest.Ignore
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import play.api.libs.json.Json
 
-// TODO: Pending while waiting for play-json-union-formatter PR to be merged
-@Ignore
 class ErrorFormatsSpec extends AnyFlatSpec with Matchers {
   "BalanceRequestError.balanceRequestErrorFormat" should "produce errors following HMRC Reference Guide for InternalServiceError" in {
     val error = InternalServiceError()
     val json  = BalanceRequestError.balanceRequestErrorFormat.writes(error)
-    (json \ "code").as[String] shouldBe "INTERNAL_SERVER_ERROR"
-    (json \ "message").as[String] shouldBe "Internal server error"
+    json shouldBe Json.obj(
+      "code"    -> "INTERNAL_SERVER_ERROR",
+      "message" -> "Internal server error"
+    )
   }
 
   it should "produce errors following HMRC Reference Guide for UpstreamServiceError" in {
     val error = UpstreamServiceError()
     val json  = BalanceRequestError.balanceRequestErrorFormat.writes(error)
-    (json \ "code").as[String] shouldBe "INTERNAL_SERVER_ERROR"
-    (json \ "message").as[String] shouldBe "Internal server error"
+    json shouldBe Json.obj(
+      "code"    -> "INTERNAL_SERVER_ERROR",
+      "message" -> "Internal server error"
+    )
+  }
+
+  it should "produce errors following HMRC Reference Guide for BadRequestError" in {
+    val error = BadRequestError(
+      "Argh!!",
+      List(BadRequestError("I don't like field 1!"), BadRequestError("I don't like field 2!"))
+    )
+    val json = BalanceRequestError.balanceRequestErrorFormat.writes(error)
+    json shouldBe Json.obj(
+      "code"    -> "BAD_REQUEST",
+      "message" -> "Argh!!",
+      "errors" -> Json.arr(
+        Json.obj(
+          "code"    -> "BAD_REQUEST",
+          "message" -> "I don't like field 1!",
+          "errors"  -> Json.arr()
+        ),
+        Json.obj(
+          "code"    -> "BAD_REQUEST",
+          "message" -> "I don't like field 2!",
+          "errors"  -> Json.arr()
+        )
+      )
+    )
   }
 }

@@ -76,8 +76,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
   }
 
-  // TODO: Pending while waiting for play-json-union-formatter PR to be merged
-  ignore should "return 500 when there is an upstream service error" in {
+  it should "return 500 when there is an upstream service error" in {
     val balanceRequest = BalanceRequest(
       TaxIdentifier("GB12345678900"),
       GuaranteeReference("05DE3300BE0001067A001017"),
@@ -96,8 +95,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
   }
 
-  // TODO: Pending while waiting for play-json-union-formatter PR to be merged
-  ignore should "return 500 when there is a client error when calling the upstream service" in {
+  it should "return 500 when there is a client error when calling the upstream service" in {
     val balanceRequest = BalanceRequest(
       TaxIdentifier("GB12345678900"),
       GuaranteeReference("05DE3300BE0001067A001017"),

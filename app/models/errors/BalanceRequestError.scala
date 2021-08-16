@@ -54,7 +54,7 @@ object BalanceRequestError {
   implicit def balanceRequestErrorFormat: OFormat[BalanceRequestError] =
     Union
       .from[BalanceRequestError](ErrorCode.FieldName)
-      .and[BadRequestError](ErrorCode.BadRequest)
+      .andLazy[BadRequestError](ErrorCode.BadRequest, badRequestErrorFormat)
       .and[UpstreamServiceError](ErrorCode.InternalServerError)
       .and[InternalServiceError](ErrorCode.InternalServerError)
       .format
