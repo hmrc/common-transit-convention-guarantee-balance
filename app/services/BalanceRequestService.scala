@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-package controllers
+package services
 
 import cats.effect.IO
-import cats.effect.unsafe.IORuntime
-import controllers.actions.AuthActionProvider
-import controllers.actions.IOActions
-import play.api.mvc.Action
-import play.api.mvc.AnyContent
-import play.api.mvc.ControllerComponents
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import cats.syntax.all._
+import connectors.BalanceRequestConnector
+import models.errors._
+import models.request.BalanceRequest
+import models.values.BalanceId
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.UpstreamErrorResponse._
 
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@Singleton()
-class MicroserviceHelloWorldController @Inject() (
-  authenticate: AuthActionProvider,
-  cc: ControllerComponents,
-  val runtime: IORuntime
-) extends BackendController(cc)
-    with IOActions {
-
-  def hello(): Action[AnyContent] = authenticate().io {
-    IO.pure(Ok("Hello world"))
-  }
+@Singleton
+class BalanceRequestService @Inject() (connector: BalanceRequestConnector) {
+  def submitBalanceRequest(request: BalanceRequest)(implicit
+    hc: HeaderCarrier
+  ): IO[Either[BalanceRequestError, BalanceId]] =
+    connector.sendRequest(request).map {
+      _.leftMap {
+        case Upstream4xxResponse(_) => InternalServiceError()
+        case Upstream5xxResponse(_) => UpstreamServiceError()
+      }
+    }
 }
