@@ -77,7 +77,8 @@ class ResponseFormatsSpec extends AnyFlatSpec with Matchers {
       PostBalanceRequestFunctionalErrorResponse(balanceRequestFunctionalError)
 
     Json.toJsObject(response) shouldBe Json.obj(
-      "code" -> "FUNCTIONAL_ERROR",
+      "code"    -> "FUNCTIONAL_ERROR",
+      "message" -> "The request was rejected by the guarantee management system",
       "response" -> Json.obj(
         "errors" -> Json.arr(
           Json.obj(
