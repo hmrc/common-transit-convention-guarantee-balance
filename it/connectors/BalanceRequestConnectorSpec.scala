@@ -18,9 +18,11 @@ package connectors
 
 import cats.effect.unsafe.implicits.global
 import com.github.tomakehurst.wiremock.client.WireMock._
+import models.backend.BalanceRequestSuccess
 import models.request.BalanceRequest
 import models.values.AccessCode
 import models.values.BalanceId
+import models.values.CurrencyCode
 import models.values.GuaranteeReference
 import models.values.TaxIdentifier
 import org.scalatest.EitherValues
@@ -61,7 +63,41 @@ class BalanceRequestConnectorSpec
     AccessCode("1234")
   )
 
-  "BalanceRequestConnector" should "send JSON message to downstream component" in {
+  "BalanceRequestConnector" should "return sync response when downstream component returns OK" in {
+    val connector = injector.instanceOf[BalanceRequestConnector]
+
+    wireMockServer.stubFor(
+      post(urlEqualTo("/transit-movements-guarantee-balance/balances"))
+        .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
+        .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withRequestBody(equalToJson(Json.stringify(requestJson)))
+        .willReturn(
+          aResponse()
+            .withStatus(OK)
+            .withBody(
+              Json.stringify(
+                Json.obj(
+                  "status"   -> "SUCCESS",
+                  "balance"  -> 12345678.9,
+                  "currency" -> "GBP"
+                )
+              )
+            )
+        )
+    )
+
+    connector
+      .sendRequest(request)
+      .map { response =>
+        response shouldBe a[Right[_, _]]
+        response.value shouldBe Right(
+          BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
+        )
+      }
+      .unsafeToFuture()
+  }
+
+  it should "return async response when downstream component returns ACCEPTED" in {
     val connector = injector.instanceOf[BalanceRequestConnector]
 
     wireMockServer.stubFor(
@@ -80,7 +116,9 @@ class BalanceRequestConnectorSpec
       .sendRequest(request)
       .map { response =>
         response shouldBe a[Right[_, _]]
-        response.value shouldBe BalanceId(UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4"))
+        response.value shouldBe Left(
+          BalanceId(UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4"))
+        )
       }
       .unsafeToFuture()
   }

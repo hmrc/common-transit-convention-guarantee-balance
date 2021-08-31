@@ -19,6 +19,8 @@ package services
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import connectors.FakeBalanceRequestConnector
+import models.backend.BalanceRequestResponse
+import models.backend.BalanceRequestSuccess
 import models.errors.InternalServiceError
 import models.errors.UpstreamServiceError
 import models.request.BalanceRequest
@@ -43,14 +45,30 @@ class BalanceRequestServiceSpec extends AsyncFlatSpec with Matchers {
     AccessCode("1234")
   )
 
-  def service(sendRequestResponse: IO[Either[UpstreamErrorResponse, BalanceId]]) =
+  val balanceRequestSuccess =
+    BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
+
+  def service(
+    sendRequestResponse: IO[
+      Either[UpstreamErrorResponse, Either[BalanceId, BalanceRequestResponse]]
+    ]
+  ) =
     new BalanceRequestService(FakeBalanceRequestConnector(sendRequestResponse))
 
-  "BalanceRequestService" should "return balance ID when successful" in {
-    service(IO.pure(Right(balanceId)))
+  "BalanceRequestService" should "pass through sync response" in {
+    service(IO.pure(Right(Right(balanceRequestSuccess))))
       .submitBalanceRequest(request)
       .map {
-        _ shouldBe Right(balanceId)
+        _ shouldBe Right(Right(balanceRequestSuccess))
+      }
+      .unsafeToFuture()
+  }
+
+  it should "pass through async response" in {
+    service(IO.pure(Right(Left(balanceId))))
+      .submitBalanceRequest(request)
+      .map {
+        _ shouldBe Right(Left(balanceId))
       }
       .unsafeToFuture()
   }

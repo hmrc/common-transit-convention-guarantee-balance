@@ -21,29 +21,21 @@ import play.api.libs.json.OFormat
 import uk.gov.hmrc.play.json.Union
 
 sealed abstract class BalanceRequestError extends Product with Serializable {
-  def statusCode: Int
   def message: String
 }
 
-case class BadRequestError(
-  message: String,
-  errors: List[BalanceRequestError] = List.empty
-) extends BalanceRequestError {
-  def statusCode: Int = 400
-}
-
 case class UpstreamServiceError(message: String = "Internal server error")
-    extends BalanceRequestError {
-  def statusCode: Int = 500
-}
+    extends BalanceRequestError
+
 case class InternalServiceError(message: String = "Internal server error")
-    extends BalanceRequestError {
-  def statusCode: Int = 500
-}
+    extends BalanceRequestError
 
 object BalanceRequestError {
-  implicit def badRequestErrorFormat: OFormat[BadRequestError] =
-    Json.format[BadRequestError]
+  def upstreamServiceError(message: String = "Internal server error"): BalanceRequestError =
+    UpstreamServiceError(message)
+
+  def internalServiceError(message: String = "Internal server error"): BalanceRequestError =
+    InternalServiceError(message)
 
   implicit def upstreamServiceErrorFormat: OFormat[UpstreamServiceError] =
     Json.format[UpstreamServiceError]
@@ -54,7 +46,6 @@ object BalanceRequestError {
   implicit def balanceRequestErrorFormat: OFormat[BalanceRequestError] =
     Union
       .from[BalanceRequestError](ErrorCode.FieldName)
-      .andLazy[BadRequestError](ErrorCode.BadRequest, badRequestErrorFormat)
       .and[UpstreamServiceError](ErrorCode.InternalServerError)
       .and[InternalServiceError](ErrorCode.InternalServerError)
       .format

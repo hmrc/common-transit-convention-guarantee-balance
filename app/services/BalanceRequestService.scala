@@ -19,6 +19,7 @@ package services
 import cats.effect.IO
 import cats.syntax.all._
 import connectors.BalanceRequestConnector
+import models.backend.BalanceRequestResponse
 import models.errors._
 import models.request.BalanceRequest
 import models.values.BalanceId
@@ -32,11 +33,13 @@ import javax.inject.Singleton
 class BalanceRequestService @Inject() (connector: BalanceRequestConnector) {
   def submitBalanceRequest(request: BalanceRequest)(implicit
     hc: HeaderCarrier
-  ): IO[Either[BalanceRequestError, BalanceId]] =
+  ): IO[Either[BalanceRequestError, Either[BalanceId, BalanceRequestResponse]]] =
     connector.sendRequest(request).map {
       _.leftMap {
-        case Upstream4xxResponse(_) => InternalServiceError()
-        case Upstream5xxResponse(_) => UpstreamServiceError()
+        case Upstream4xxResponse(_) =>
+          BalanceRequestError.internalServiceError()
+        case Upstream5xxResponse(_) =>
+          BalanceRequestError.upstreamServiceError()
       }
     }
 }

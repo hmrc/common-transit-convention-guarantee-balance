@@ -19,14 +19,18 @@ package connectors
 import cats.effect.IO
 import com.google.inject.ImplementedBy
 import config.AppConfig
+import models.backend.BalanceRequestResponse
 import models.request.BalanceRequest
 import models.values.BalanceId
 import play.api.http.ContentTypes
 import play.api.http.HeaderNames
+import play.api.http.Status
 import runtime.IOFutures
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.http.HttpReads
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import javax.inject.Inject
@@ -36,7 +40,7 @@ import javax.inject.Singleton
 trait BalanceRequestConnector {
   def sendRequest(request: BalanceRequest)(implicit
     hc: HeaderCarrier
-  ): IO[Either[UpstreamErrorResponse, BalanceId]]
+  ): IO[Either[UpstreamErrorResponse, Either[BalanceId, BalanceRequestResponse]]]
 }
 
 @Singleton
@@ -44,16 +48,32 @@ class BalanceRequestConnectorImpl @Inject() (appConfig: AppConfig, http: HttpCli
     extends BalanceRequestConnector
     with IOFutures {
 
+  implicit val eitherBalanceIdOrResponseReads
+    : HttpReads[Either[BalanceId, BalanceRequestResponse]] =
+    HttpReads[HttpResponse].map { response =>
+      response.status match {
+        case Status.ACCEPTED =>
+          Left(response.json.as[BalanceId])
+        case Status.OK =>
+          Right(response.json.as[BalanceRequestResponse])
+      }
+    }
+
   def sendRequest(request: BalanceRequest)(implicit
     hc: HeaderCarrier
-  ): IO[Either[UpstreamErrorResponse, BalanceId]] =
+  ): IO[Either[UpstreamErrorResponse, Either[BalanceId, BalanceRequestResponse]]] =
     IO.runFuture { implicit ec =>
       val url = appConfig.backendUrl.addPathPart("balances")
+
       val headers = Seq(
         HeaderNames.ACCEPT       -> ContentTypes.JSON,
         HeaderNames.CONTENT_TYPE -> ContentTypes.JSON
       )
-      http.POST[BalanceRequest, Either[UpstreamErrorResponse, BalanceId]](
+
+      http.POST[BalanceRequest, Either[
+        UpstreamErrorResponse,
+        Either[BalanceId, BalanceRequestResponse]
+      ]](
         url.toString,
         request,
         headers

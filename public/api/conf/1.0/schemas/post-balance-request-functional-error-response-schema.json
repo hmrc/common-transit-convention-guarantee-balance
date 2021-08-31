@@ -1,12 +1,12 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$id": "#/post-balance-request-response-schema.json",
-    "title": "Balance Request",
-    "description": "A balance request response from the CTC Guarantee Balance API",
+    "$id": "#/post-balance-request-functional-error-response-schema.json",
+    "description": "A functional error response from the CTC Guarantee Balance API",
     "type": "object",
     "required": [
-        "_links",
-        "balanceId"
+        "code",
+        "message",
+        "response"
     ],
     "properties": {
         "_links": {
@@ -23,9 +23,16 @@
                 "$ref": "hal-document-schema.json#"
             }
         },
-        "balanceId": {
-            "description": "The ID of the balance request",
+        "code": {
+            "enum": [
+                "FUNCTIONAL_ERROR"
+            ]
+        },
+        "message": {
             "type": "string"
+        },
+        "response": {
+            "$ref": "balance-request-functional-error-schema.json#"
         }
     }
 }

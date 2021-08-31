@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-package models.errors
+package models.backend.errors
 
-/** Common error codes documented in [[https://developer.service.hmrc.gov.uk/api-documentation/docs/reference-guide#errors Developer Hub Reference Guide]]
-  */
-object ErrorCode {
-  val FieldName           = "code"
-  val BadRequest          = "BAD_REQUEST"
-  val InternalServerError = "INTERNAL_SERVER_ERROR"
-  val FunctionalError     = "FUNCTIONAL_ERROR"
+import models.values.ErrorType
+import play.api.libs.json.Json
+import play.api.libs.json.OFormat
+
+case class FunctionalError(
+  errorType: ErrorType,
+  errorPointer: String,
+  errorReason: Option[String]
+)
+
+object FunctionalError {
+  implicit lazy val functionalErrorFormat: OFormat[FunctionalError] =
+    Json.format[FunctionalError]
 }

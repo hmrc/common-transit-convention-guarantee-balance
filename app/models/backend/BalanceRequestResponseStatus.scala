@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package models.errors
+package models.backend
 
-/** Common error codes documented in [[https://developer.service.hmrc.gov.uk/api-documentation/docs/reference-guide#errors Developer Hub Reference Guide]]
-  */
-object ErrorCode {
-  val FieldName           = "code"
-  val BadRequest          = "BAD_REQUEST"
-  val InternalServerError = "INTERNAL_SERVER_ERROR"
-  val FunctionalError     = "FUNCTIONAL_ERROR"
+object BalanceRequestResponseStatus {
+  val FieldName       = "status"
+  val Success         = "SUCCESS"
+  val FunctionalError = "FUNCTIONAL_ERROR"
 }

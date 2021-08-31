@@ -38,28 +38,4 @@ class ErrorFormatsSpec extends AnyFlatSpec with Matchers {
       "message" -> "Internal server error"
     )
   }
-
-  it should "produce errors following HMRC Reference Guide for BadRequestError" in {
-    val error = BadRequestError(
-      "Argh!!",
-      List(BadRequestError("I don't like field 1!"), BadRequestError("I don't like field 2!"))
-    )
-    val json = BalanceRequestError.balanceRequestErrorFormat.writes(error)
-    json shouldBe Json.obj(
-      "code"    -> "BAD_REQUEST",
-      "message" -> "Argh!!",
-      "errors" -> Json.arr(
-        Json.obj(
-          "code"    -> "BAD_REQUEST",
-          "message" -> "I don't like field 1!",
-          "errors"  -> Json.arr()
-        ),
-        Json.obj(
-          "code"    -> "BAD_REQUEST",
-          "message" -> "I don't like field 2!",
-          "errors"  -> Json.arr()
-        )
-      )
-    )
-  }
 }

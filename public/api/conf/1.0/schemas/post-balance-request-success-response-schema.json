@@ -1,0 +1,28 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$id": "#/post-balance-request-success-response-schema.json",
+    "description": "A successful balance request response from the CTC Guarantee Balance API",
+    "type": "object",
+    "required": [
+        "response"
+    ],
+    "properties": {
+        "_links": {
+            "description": "An object containing links to other resources",
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "hal-document-schema.json#/definitions/halLink"
+            }
+        },
+        "_embedded": {
+            "description": "An object containing embedded resources",
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "hal-document-schema.json#"
+            }
+        },
+        "response": {
+            "$ref": "balance-request-success-schema.json#"
+        }
+    }
+}

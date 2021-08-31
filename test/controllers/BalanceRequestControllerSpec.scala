@@ -16,12 +16,18 @@
 
 package controllers
 
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import connectors.FakeBalanceRequestConnector
 import controllers.actions.FakeAuthActionProvider
+import models.backend.BalanceRequestFunctionalError
+import models.backend.BalanceRequestResponse
+import models.backend.BalanceRequestSuccess
+import models.backend.errors.FunctionalError
 import models.request.BalanceRequest
-import models.response.PostBalanceRequestResponse
+import models.response.PostBalanceRequestFunctionalErrorResponse
+import models.response._
 import models.values._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -39,7 +45,9 @@ import java.util.UUID
 class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
 
   def controller(
-    sendRequestResponse: IO[Either[UpstreamErrorResponse, BalanceId]] = IO.stub
+    sendRequestResponse: IO[
+      Either[UpstreamErrorResponse, Either[BalanceId, BalanceRequestResponse]]
+    ] = IO.stub
   ) = {
     val service = new BalanceRequestService(
       FakeBalanceRequestConnector(
@@ -55,7 +63,51 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
   }
 
-  "BalanceRequestController.submitBalanceRequest" should "return 202 when successful" in {
+  "BalanceRequestController.submitBalanceRequest" should "return 200 when there is a successful sync response" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB12345678900"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("1234")
+    )
+
+    val balanceRequestSuccess =
+      BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
+
+    val result = controller(
+      sendRequestResponse = IO(Right(Right(balanceRequestSuccess)))
+    ).submitBalanceRequest(FakeRequest().withBody(balanceRequest))
+
+    status(result) shouldBe OK
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.toJson(
+      PostBalanceRequestSuccessResponse(balanceRequestSuccess)
+    )
+  }
+
+  it should "return 400 when there is a functional error sync response" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB12345678900"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("1234")
+    )
+
+    val balanceRequestFunctionalError =
+      BalanceRequestFunctionalError(
+        NonEmptyList.one(FunctionalError(ErrorType(14), "Foo.Bar(1).Baz", None))
+      )
+
+    val result = controller(
+      sendRequestResponse = IO(Right(Right(balanceRequestFunctionalError)))
+    ).submitBalanceRequest(FakeRequest().withBody(balanceRequest))
+
+    status(result) shouldBe BAD_REQUEST
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.toJson(
+      PostBalanceRequestFunctionalErrorResponse(balanceRequestFunctionalError)
+    )
+  }
+
+  it should "return 202 when there is a valid async response" in {
     val balanceRequest = BalanceRequest(
       TaxIdentifier("GB12345678900"),
       GuaranteeReference("05DE3300BE0001067A001017"),
@@ -65,12 +117,12 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     val balanceId = BalanceId(UUID.randomUUID())
 
     val result = controller(
-      sendRequestResponse = IO(Right(balanceId))
+      sendRequestResponse = IO(Right(Left(balanceId)))
     ).submitBalanceRequest(FakeRequest().withBody(balanceRequest))
 
     status(result) shouldBe ACCEPTED
     contentType(result) shouldBe Some(ContentTypes.JSON)
-    contentAsJson(result) shouldBe Json.toJson(PostBalanceRequestResponse(balanceId))
+    contentAsJson(result) shouldBe Json.toJson(PostBalanceRequestPendingResponse(balanceId))
     header(HeaderNames.LOCATION, result) shouldBe Some(
       s"/customs/guarantees/balances/${balanceId.value}"
     )
