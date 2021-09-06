@@ -52,24 +52,52 @@ traits:
             "accessCode": "ABC1"
           }
     responses:
-      202:
-        headers:
-          Location:
-            description: The path of the newly created balance request
-            type: string
-            example: "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+      200:
         body:
           application/json:
-            type: !include schemas/post-balance-request-response-schema.json
+            type: !include schemas/post-balance-request-success-response-schema.json
             example: |
               {
-                "_links": {
-                  "self": {
-                    "href": "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
-                  }
-                },
-                "balanceId": "22b9899e-24ee-48e6-a189-97d1f45391c4"
+                "response": {
+                  "balance": 12345678.9,
+                  "currency": "GBP"
+                }
               }
+      # 202:
+      #   headers:
+      #     Location:
+      #       description: The path of the newly created balance request
+      #       type: string
+      #       example: "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+      #   body:
+      #     application/json:
+      #       type: !include schemas/post-balance-request-pending-response-schema.json
+      #       example: |
+      #         {
+      #           "_links": {
+      #             "self": {
+      #               "href": "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+      #             }
+      #           },
+      #           "balanceId": "22b9899e-24ee-48e6-a189-97d1f45391c4"
+      #         }
+      400:
+        body:
+          application/json:
+            type: !include schemas/post-balance-request-functional-error-response-schema.json
+            description: The request was rejected by the guarantee management system
+            example: |
+              {
+                "code": "FUNCTIONAL_ERROR",
+                "message": "The request was rejected by the guarantee management system",
+                "response": {
+                  "errors": [{
+                    "errorType": 14,
+                    "errorPointer": "Foo.Bar(1).Baz"
+                  }]
+                }
+              }
+
 
   /{balanceId}:
     uriParameters:

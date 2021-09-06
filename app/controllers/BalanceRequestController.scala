@@ -20,10 +20,15 @@ import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import controllers.actions.AuthActionProvider
 import controllers.actions.IOActions
+import models.backend.BalanceRequestFunctionalError
+import models.backend.BalanceRequestSuccess
+import models.errors.BalanceRequestError
+import models.errors.InternalServiceError
+import models.errors.UpstreamServiceError
+import models.errors.UpstreamTimeoutError
 import models.request.BalanceRequest
-import models.response.PostBalanceRequestResponse
+import models.response._
 import models.values.BalanceId
-import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.AnyContent
@@ -47,14 +52,30 @@ class BalanceRequestController @Inject() (
   def submitBalanceRequest: Action[BalanceRequest] =
     authenticate().io(parse.json[BalanceRequest]) { implicit request =>
       service.submitBalanceRequest(request.body).map {
-        case Left(error) =>
-          Status(error.statusCode)(Json.toJson(error))
-        case Right(id) =>
-          Accepted(Json.toJson(PostBalanceRequestResponse(id))).withHeaders(
-            HeaderNames.LOCATION -> routes.BalanceRequestController
-              .getBalanceRequest(id)
-              .pathWithContext
-          )
+        case Right(Right(success @ BalanceRequestSuccess(_, _))) =>
+          Ok(Json.toJson(PostBalanceRequestSuccessResponse(success)))
+
+        case Right(Right(error @ BalanceRequestFunctionalError(_))) =>
+          BadRequest(Json.toJson(PostBalanceRequestFunctionalErrorResponse(error)))
+
+        case Right(Left(_)) =>
+          // Accepted(Json.toJson(PostBalanceRequestPendingResponse(balanceId))).withHeaders(
+          //   HeaderNames.LOCATION -> routes.BalanceRequestController
+          //     .getBalanceRequest(balanceId)
+          //     .pathWithContext
+          // )
+          val error     = UpstreamTimeoutError()
+          val errorJson = Json.toJson[BalanceRequestError](error)
+          GatewayTimeout(errorJson)
+
+        case Left(error @ UpstreamTimeoutError(_)) =>
+          GatewayTimeout(Json.toJson[BalanceRequestError](error))
+
+        case Left(error @ UpstreamServiceError(_)) =>
+          InternalServerError(Json.toJson[BalanceRequestError](error))
+
+        case Left(error @ InternalServiceError(_)) =>
+          InternalServerError(Json.toJson[BalanceRequestError](error))
       }
     }
 

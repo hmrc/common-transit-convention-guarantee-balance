@@ -1,0 +1,42 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$id": "#/balance-request-functional-error-schema.json",
+    "description": "A functional error response from the guarantee management system",
+    "type": "object",
+    "definitions": {
+        "functionalError": {
+            "description": "A functional error",
+            "type": "object",
+            "required": [
+                "errorType",
+                "errorPointer"
+            ],
+            "properties": {
+                "errorType": {
+                    "type": "number",
+                    "description": "The numeric error code of the functional error"
+                },
+                "errorPointer": {
+                    "type": "string",
+                    "description": "The pointer string indicating the data item that was in error"
+                },
+                "errorReason": {
+                    "type": "string",
+                    "description": "The reason message indicating additional information about the cause of the error"
+                }
+            }
+        }
+    },
+    "required": [
+        "errors"
+    ],
+    "properties": {
+        "errors": {
+            "type": "array",
+            "description": "The functional errors returned when attempting to make the balance request",
+            "items": {
+                "$ref": "#/definitions/functionalError"
+            }
+        }
+    }
+}

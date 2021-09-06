@@ -17,6 +17,9 @@
 package models.response
 
 import controllers.routes.BalanceRequestController
+import models.backend.BalanceRequestFunctionalError
+import models.backend.BalanceRequestSuccess
+import models.errors.ErrorCode
 import models.values.BalanceId
 import play.api.libs.json.Json
 import play.api.libs.json.OWrites
@@ -26,28 +29,76 @@ sealed abstract class HalResponse {
   def _embedded: Option[Map[String, HalResponse]]
 }
 
-case class PostBalanceRequestResponse(
+case class PostBalanceRequestPendingResponse(
   _links: Option[Map[String, Link]],
   _embedded: Option[Map[String, HalResponse]] = None,
   balanceId: BalanceId
 ) extends HalResponse
 
-object PostBalanceRequestResponse {
-  def apply(id: BalanceId): PostBalanceRequestResponse = {
+object PostBalanceRequestPendingResponse {
+  def apply(id: BalanceId): PostBalanceRequestPendingResponse = {
     val selfRoute = BalanceRequestController.getBalanceRequest(id)
-    PostBalanceRequestResponse(
+    PostBalanceRequestPendingResponse(
       _links = Links(Link.self(selfRoute)),
       balanceId = id
     )
   }
 }
 
+case class PostBalanceRequestSuccessResponse(
+  _links: Option[Map[String, Link]],
+  _embedded: Option[Map[String, HalResponse]] = None,
+  response: BalanceRequestSuccess
+) extends HalResponse
+
+object PostBalanceRequestSuccessResponse {
+  def apply(response: BalanceRequestSuccess): PostBalanceRequestSuccessResponse = {
+    PostBalanceRequestSuccessResponse(
+      _links = None,
+      response = response
+    )
+  }
+}
+
+case class PostBalanceRequestFunctionalErrorResponse(
+  _links: Option[Map[String, Link]],
+  _embedded: Option[Map[String, HalResponse]] = None,
+  code: String,
+  message: String,
+  response: BalanceRequestFunctionalError
+) extends HalResponse
+
+object PostBalanceRequestFunctionalErrorResponse {
+  def apply(response: BalanceRequestFunctionalError): PostBalanceRequestFunctionalErrorResponse = {
+    PostBalanceRequestFunctionalErrorResponse(
+      _links = None,
+      code = ErrorCode.FunctionalError,
+      message = "The request was rejected by the guarantee management system",
+      response = response
+    )
+  }
+}
+
 object HalResponse {
-  implicit lazy val balanceRequestResponseWrites: OWrites[PostBalanceRequestResponse] =
-    Json.writes[PostBalanceRequestResponse]
+  implicit lazy val balanceRequestPendingResponseWrites
+    : OWrites[PostBalanceRequestPendingResponse] =
+    Json.writes[PostBalanceRequestPendingResponse]
+
+  implicit lazy val balanceRequestSuccessResponseWrites
+    : OWrites[PostBalanceRequestSuccessResponse] =
+    Json.writes[PostBalanceRequestSuccessResponse]
+
+  implicit lazy val balanceRequestFunctionalErrorResponseWrites
+    : OWrites[PostBalanceRequestFunctionalErrorResponse] =
+    Json.writes[PostBalanceRequestFunctionalErrorResponse]
 
   implicit lazy val halResponseWrites: OWrites[HalResponse] =
-    OWrites { case postResponse: PostBalanceRequestResponse =>
-      balanceRequestResponseWrites.writes(postResponse)
+    OWrites {
+      case postResponse: PostBalanceRequestPendingResponse =>
+        balanceRequestPendingResponseWrites.writes(postResponse)
+      case postResponse: PostBalanceRequestSuccessResponse =>
+        balanceRequestSuccessResponseWrites.writes(postResponse)
+      case postResponse: PostBalanceRequestFunctionalErrorResponse =>
+        balanceRequestFunctionalErrorResponseWrites.writes(postResponse)
     }
 }

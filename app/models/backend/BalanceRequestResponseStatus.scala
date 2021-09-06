@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package config
+package models.backend
 
-object Constants {
-  val Context       = "/customs/guarantees"
-  val ChannelHeader = "Channel"
+object BalanceRequestResponseStatus {
+  val FieldName       = "status"
+  val Success         = "SUCCESS"
+  val FunctionalError = "FUNCTIONAL_ERROR"
 }

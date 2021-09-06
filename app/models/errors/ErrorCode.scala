@@ -22,4 +22,6 @@ object ErrorCode {
   val FieldName           = "code"
   val BadRequest          = "BAD_REQUEST"
   val InternalServerError = "INTERNAL_SERVER_ERROR"
+  val GatewayTimeout      = "GATEWAY_TIMEOUT"
+  val FunctionalError     = "FUNCTIONAL_ERROR"
 }

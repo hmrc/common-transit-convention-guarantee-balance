@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package config
+package models.request
 
-object Constants {
-  val Context       = "/customs/guarantees"
-  val ChannelHeader = "Channel"
+sealed abstract class Channel(val name: String) extends Product with Serializable
+
+object Channel {
+  case object Api extends Channel("api")
 }

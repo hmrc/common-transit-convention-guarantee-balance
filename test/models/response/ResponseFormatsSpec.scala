@@ -16,8 +16,14 @@
 
 package models.response
 
+import cats.data.NonEmptyList
 import controllers.routes.BalanceRequestController
+import models.backend.BalanceRequestFunctionalError
+import models.backend.BalanceRequestSuccess
+import models.backend.errors.FunctionalError
 import models.values.BalanceId
+import models.values.CurrencyCode
+import models.values.ErrorType
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json
@@ -34,9 +40,10 @@ class ResponseFormatsSpec extends AnyFlatSpec with Matchers {
     )
   }
 
-  "HalResponse.halResponseWrites" should "write a balance request response" in {
+  "HalResponse.halResponseWrites" should "write a pending balance request response" in {
     val uuid     = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
-    val response = PostBalanceRequestResponse(BalanceId(uuid))
+    val response = PostBalanceRequestPendingResponse(BalanceId(uuid))
+
     Json.toJsObject(response) shouldBe Json.obj(
       "_links" -> Json.obj(
         "self" -> Json.obj(
@@ -44,6 +51,42 @@ class ResponseFormatsSpec extends AnyFlatSpec with Matchers {
         )
       ),
       "balanceId" -> "22b9899e-24ee-48e6-a189-97d1f45391c4"
+    )
+  }
+
+  it should "write a successful balance request response" in {
+    val balanceRequestSuccess =
+      BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
+    val response =
+      PostBalanceRequestSuccessResponse(balanceRequestSuccess)
+
+    Json.toJsObject(response) shouldBe Json.obj(
+      "response" -> Json.obj(
+        "balance"  -> 12345678.9,
+        "currency" -> "GBP"
+      )
+    )
+  }
+
+  it should "write a functional error response" in {
+    val balanceRequestFunctionalError =
+      BalanceRequestFunctionalError(
+        NonEmptyList.one(FunctionalError(ErrorType(14), "Foo.Bar(1).Baz", None))
+      )
+    val response =
+      PostBalanceRequestFunctionalErrorResponse(balanceRequestFunctionalError)
+
+    Json.toJsObject(response) shouldBe Json.obj(
+      "code"    -> "FUNCTIONAL_ERROR",
+      "message" -> "The request was rejected by the guarantee management system",
+      "response" -> Json.obj(
+        "errors" -> Json.arr(
+          Json.obj(
+            "errorType"    -> 14,
+            "errorPointer" -> "Foo.Bar(1).Baz"
+          )
+        )
+      )
     )
   }
 }

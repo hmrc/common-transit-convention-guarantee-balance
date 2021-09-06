@@ -14,9 +14,19 @@
  * limitations under the License.
  */
 
-package config
+package models.backend.errors
 
-object Constants {
-  val Context       = "/customs/guarantees"
-  val ChannelHeader = "Channel"
+import models.values.ErrorType
+import play.api.libs.json.Json
+import play.api.libs.json.OFormat
+
+case class FunctionalError(
+  errorType: ErrorType,
+  errorPointer: String,
+  errorReason: Option[String]
+)
+
+object FunctionalError {
+  implicit lazy val functionalErrorFormat: OFormat[FunctionalError] =
+    Json.format[FunctionalError]
 }
