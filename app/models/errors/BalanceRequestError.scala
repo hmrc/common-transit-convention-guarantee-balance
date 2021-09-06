@@ -27,6 +27,8 @@ sealed abstract class BalanceRequestError extends Product with Serializable {
 case class UpstreamServiceError(message: String = "Internal server error")
     extends BalanceRequestError
 
+case class UpstreamTimeoutError(message: String = "Request timed out") extends BalanceRequestError
+
 case class InternalServiceError(message: String = "Internal server error")
     extends BalanceRequestError
 
@@ -43,10 +45,14 @@ object BalanceRequestError {
   implicit def internalServiceErrorFormat: OFormat[InternalServiceError] =
     Json.format[InternalServiceError]
 
+  implicit def upstreamTimeoutErrorFormat: OFormat[UpstreamTimeoutError] =
+    Json.format[UpstreamTimeoutError]
+
   implicit def balanceRequestErrorFormat: OFormat[BalanceRequestError] =
     Union
       .from[BalanceRequestError](ErrorCode.FieldName)
       .and[UpstreamServiceError](ErrorCode.InternalServerError)
+      .and[UpstreamTimeoutError](ErrorCode.GatewayTimeout)
       .and[InternalServiceError](ErrorCode.InternalServerError)
       .format
 }

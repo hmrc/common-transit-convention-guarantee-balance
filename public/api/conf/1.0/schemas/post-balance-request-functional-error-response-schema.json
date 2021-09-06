@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "$id": "#/post-balance-request-functional-error-response-schema.json",
-    "description": "A functional error response from the CTC Guarantee Balance API",
+    "description": "A functional error response from the guarantee management system",
     "type": "object",
     "required": [
         "code",
@@ -29,6 +29,7 @@
             ]
         },
         "message": {
+            "description": "The description of the error",
             "type": "string"
         },
         "response": {

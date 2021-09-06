@@ -32,7 +32,6 @@ import models.values._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.http.ContentTypes
-import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers
@@ -107,7 +106,28 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
   }
 
-  it should "return 202 when there is a valid async response" in {
+  // it should "return 202 when there is a valid async response" in {
+  //   val balanceRequest = BalanceRequest(
+  //     TaxIdentifier("GB12345678900"),
+  //     GuaranteeReference("05DE3300BE0001067A001017"),
+  //     AccessCode("1234")
+  //   )
+
+  //   val balanceId = BalanceId(UUID.randomUUID())
+
+  //   val result = controller(
+  //     sendRequestResponse = IO(Right(Left(balanceId)))
+  //   ).submitBalanceRequest(FakeRequest().withBody(balanceRequest))
+
+  //   status(result) shouldBe ACCEPTED
+  //   contentType(result) shouldBe Some(ContentTypes.JSON)
+  //   contentAsJson(result) shouldBe Json.toJson(PostBalanceRequestPendingResponse(balanceId))
+  //   header(HeaderNames.LOCATION, result) shouldBe Some(
+  //     s"/customs/guarantees/balances/${balanceId.value}"
+  //   )
+  // }
+
+  it should "return 504 when the upstream service times out" in {
     val balanceRequest = BalanceRequest(
       TaxIdentifier("GB12345678900"),
       GuaranteeReference("05DE3300BE0001067A001017"),
@@ -120,11 +140,11 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       sendRequestResponse = IO(Right(Left(balanceId)))
     ).submitBalanceRequest(FakeRequest().withBody(balanceRequest))
 
-    status(result) shouldBe ACCEPTED
+    status(result) shouldBe GATEWAY_TIMEOUT
     contentType(result) shouldBe Some(ContentTypes.JSON)
-    contentAsJson(result) shouldBe Json.toJson(PostBalanceRequestPendingResponse(balanceId))
-    header(HeaderNames.LOCATION, result) shouldBe Some(
-      s"/customs/guarantees/balances/${balanceId.value}"
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "GATEWAY_TIMEOUT",
+      "message" -> "Request timed out"
     )
   }
 

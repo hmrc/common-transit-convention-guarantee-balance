@@ -25,10 +25,10 @@ import models.backend.BalanceRequestSuccess
 import models.errors.BalanceRequestError
 import models.errors.InternalServiceError
 import models.errors.UpstreamServiceError
+import models.errors.UpstreamTimeoutError
 import models.request.BalanceRequest
 import models.response._
 import models.values.BalanceId
-import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.AnyContent
@@ -58,12 +58,18 @@ class BalanceRequestController @Inject() (
         case Right(Right(error @ BalanceRequestFunctionalError(_))) =>
           BadRequest(Json.toJson(PostBalanceRequestFunctionalErrorResponse(error)))
 
-        case Right(Left(balanceId)) =>
-          Accepted(Json.toJson(PostBalanceRequestPendingResponse(balanceId))).withHeaders(
-            HeaderNames.LOCATION -> routes.BalanceRequestController
-              .getBalanceRequest(balanceId)
-              .pathWithContext
-          )
+        case Right(Left(_)) =>
+          // Accepted(Json.toJson(PostBalanceRequestPendingResponse(balanceId))).withHeaders(
+          //   HeaderNames.LOCATION -> routes.BalanceRequestController
+          //     .getBalanceRequest(balanceId)
+          //     .pathWithContext
+          // )
+          val error     = UpstreamTimeoutError()
+          val errorJson = Json.toJson[BalanceRequestError](error)
+          GatewayTimeout(errorJson)
+
+        case Left(error @ UpstreamTimeoutError(_)) =>
+          GatewayTimeout(Json.toJson[BalanceRequestError](error))
 
         case Left(error @ UpstreamServiceError(_)) =>
           InternalServerError(Json.toJson[BalanceRequestError](error))

@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "$id": "#/post-balance-request-pending-response-schema.json",
-    "description": "A pending balance request response from the CTC Guarantee Balance API",
+    "description": "A pending balance request response",
     "type": "object",
     "required": [
         "_links",

@@ -70,6 +70,7 @@ class BalanceRequestConnectorSpec
       post(urlEqualTo("/transit-movements-guarantee-balance/balances"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withHeader("Channel", equalTo("api"))
         .withRequestBody(equalToJson(Json.stringify(requestJson)))
         .willReturn(
           aResponse()
@@ -104,6 +105,7 @@ class BalanceRequestConnectorSpec
       post(urlEqualTo("/transit-movements-guarantee-balance/balances"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withHeader("Channel", equalTo("api"))
         .withRequestBody(equalToJson(Json.stringify(requestJson)))
         .willReturn(
           aResponse()

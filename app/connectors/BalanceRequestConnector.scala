@@ -19,8 +19,10 @@ package connectors
 import cats.effect.IO
 import com.google.inject.ImplementedBy
 import config.AppConfig
+import config.Constants
 import models.backend.BalanceRequestResponse
 import models.request.BalanceRequest
+import models.request.Channel
 import models.values.BalanceId
 import play.api.http.ContentTypes
 import play.api.http.HeaderNames
@@ -67,7 +69,8 @@ class BalanceRequestConnectorImpl @Inject() (appConfig: AppConfig, http: HttpCli
 
       val headers = Seq(
         HeaderNames.ACCEPT       -> ContentTypes.JSON,
-        HeaderNames.CONTENT_TYPE -> ContentTypes.JSON
+        HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
+        Constants.ChannelHeader  -> Channel.Api.name
       )
 
       http.POST[BalanceRequest, Either[
