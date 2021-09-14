@@ -19,14 +19,17 @@ package connectors
 import cats.effect.unsafe.implicits.global
 import com.github.tomakehurst.wiremock.client.WireMock._
 import models.backend.BalanceRequestSuccess
+import models.backend.PendingBalanceRequest
 import models.request.BalanceRequest
 import models.values.AccessCode
 import models.values.BalanceId
 import models.values.CurrencyCode
+import models.values.EnrolmentId
 import models.values.GuaranteeReference
 import models.values.TaxIdentifier
 import org.scalatest.EitherValues
 import org.scalatest.Inside
+import org.scalatest.OptionValues
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.http.ContentTypes
@@ -36,13 +39,16 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.UpstreamErrorResponse._
 
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
-import scala.util.Right
 
 class BalanceRequestConnectorSpec
     extends AsyncFlatSpec
     with Matchers
     with EitherValues
+    with OptionValues
     with Inside
     with WireMockSpec {
 
@@ -63,7 +69,7 @@ class BalanceRequestConnectorSpec
     AccessCode("1234")
   )
 
-  "BalanceRequestConnector" should "return sync response when downstream component returns OK" in {
+  "BalanceRequestConnector.sendRequest" should "return sync response when downstream component returns OK" in {
     val connector = injector.instanceOf[BalanceRequestConnector]
 
     wireMockServer.stubFor(
@@ -159,6 +165,127 @@ class BalanceRequestConnectorSpec
         inside(response.left.value) { case Upstream5xxResponse(response) =>
           response.statusCode shouldBe BAD_GATEWAY
         }
+      }
+      .unsafeToFuture()
+  }
+
+  "BalanceRequestConnector.getRequest" should "return pending request when the downstream component returns OK" in {
+    val connector = injector.instanceOf[BalanceRequestConnector]
+
+    val balanceId = BalanceId(UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4"))
+
+    wireMockServer.stubFor(
+      get(urlEqualTo(s"/transit-movements-guarantee-balance/balances/${balanceId.value}"))
+        .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
+        .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withHeader("Channel", equalTo("api"))
+        .willReturn(
+          aResponse()
+            .withStatus(OK)
+            .withBody(
+              Json.stringify(
+                Json.obj(
+                  "balanceId"          -> "22b9899e-24ee-48e6-a189-97d1f45391c4",
+                  "enrolmentId"        -> "12345678ABC",
+                  "taxIdentifier"      -> "GB12345678900",
+                  "guaranteeReference" -> "05DE3300BE0001067A001017",
+                  "requestedAt"        -> "2021-09-14T09:52:15Z",
+                  "completedAt"        -> "2021-09-14T09:53:05Z",
+                  "response" -> Json.obj(
+                    "status"   -> "SUCCESS",
+                    "balance"  -> 12345678.9,
+                    "currency" -> "GBP"
+                  )
+                )
+              )
+            )
+        )
+    )
+
+    connector
+      .getRequest(balanceId)
+      .map { response =>
+        response shouldBe a[Some[_]]
+        response.value shouldBe Right(
+          PendingBalanceRequest(
+            balanceId,
+            EnrolmentId("12345678ABC"),
+            TaxIdentifier("GB12345678900"),
+            GuaranteeReference("05DE3300BE0001067A001017"),
+            OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 52, 15), ZoneOffset.UTC).toInstant,
+            completedAt = Some(
+              OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 53, 5), ZoneOffset.UTC).toInstant
+            ),
+            response = Some(BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP")))
+          )
+        )
+      }
+      .unsafeToFuture()
+  }
+
+  it should "return None if the downstream component returns a not found error" in {
+    val connector = injector.instanceOf[BalanceRequestConnector]
+
+    val balanceId = BalanceId(UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4"))
+
+    wireMockServer.stubFor(
+      get(urlEqualTo(s"/transit-movements-guarantee-balance/balances/${balanceId.value}"))
+        .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
+        .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withHeader("Channel", equalTo("api"))
+        .willReturn(aResponse().withStatus(NOT_FOUND))
+    )
+
+    connector
+      .getRequest(balanceId)
+      .map { response =>
+        response shouldBe None
+      }
+      .unsafeToFuture()
+  }
+
+  it should "return the error wrapped in Left if the downstream component returns a different client error" in {
+    val connector = injector.instanceOf[BalanceRequestConnector]
+
+    val balanceId = BalanceId(UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4"))
+
+    wireMockServer.stubFor(
+      get(urlEqualTo(s"/transit-movements-guarantee-balance/balances/${balanceId.value}"))
+        .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
+        .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withHeader("Channel", equalTo("api"))
+        .willReturn(aResponse().withStatus(METHOD_NOT_ALLOWED))
+    )
+
+    connector
+      .getRequest(balanceId)
+      .map { response =>
+        response shouldBe a[Some[_]]
+        response.value shouldBe a[Left[_, _]]
+        response.value.left.value.statusCode shouldBe METHOD_NOT_ALLOWED
+      }
+      .unsafeToFuture()
+  }
+
+  it should "return the error wrapped in Left if the downstream component returns a server error" in {
+    val connector = injector.instanceOf[BalanceRequestConnector]
+
+    val balanceId = BalanceId(UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4"))
+
+    wireMockServer.stubFor(
+      get(urlEqualTo(s"/transit-movements-guarantee-balance/balances/${balanceId.value}"))
+        .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
+        .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withHeader("Channel", equalTo("api"))
+        .willReturn(aResponse().withStatus(GATEWAY_TIMEOUT))
+    )
+
+    connector
+      .getRequest(balanceId)
+      .map { response =>
+        response shouldBe a[Some[_]]
+        response.value shouldBe a[Left[_, _]]
+        response.value.left.value.statusCode shouldBe GATEWAY_TIMEOUT
       }
       .unsafeToFuture()
   }

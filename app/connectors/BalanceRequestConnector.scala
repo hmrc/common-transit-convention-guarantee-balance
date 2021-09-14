@@ -21,6 +21,7 @@ import com.google.inject.ImplementedBy
 import config.AppConfig
 import config.Constants
 import models.backend.BalanceRequestResponse
+import models.backend.PendingBalanceRequest
 import models.request.BalanceRequest
 import models.request.Channel
 import models.values.BalanceId
@@ -43,6 +44,10 @@ trait BalanceRequestConnector {
   def sendRequest(request: BalanceRequest)(implicit
     hc: HeaderCarrier
   ): IO[Either[UpstreamErrorResponse, Either[BalanceId, BalanceRequestResponse]]]
+
+  def getRequest(balanceId: BalanceId)(implicit
+    hc: HeaderCarrier
+  ): IO[Option[Either[UpstreamErrorResponse, PendingBalanceRequest]]]
 }
 
 @Singleton
@@ -80,6 +85,25 @@ class BalanceRequestConnectorImpl @Inject() (appConfig: AppConfig, http: HttpCli
         url.toString,
         request,
         headers
+      )
+    }
+
+  def getRequest(balanceId: BalanceId)(implicit
+    hc: HeaderCarrier
+  ): IO[Option[Either[UpstreamErrorResponse, PendingBalanceRequest]]] =
+    IO.runFuture { implicit ec =>
+      val url = appConfig.backendUrl.addPathPart("balances").addPathPart(balanceId.value)
+
+      val headers = Seq(
+        HeaderNames.ACCEPT       -> ContentTypes.JSON,
+        HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
+        Constants.ChannelHeader  -> Channel.Api.name
+      )
+
+      http.GET[Option[Either[UpstreamErrorResponse, PendingBalanceRequest]]](
+        url.toString,
+        queryParams = Seq.empty,
+        headers = headers
       )
     }
 }

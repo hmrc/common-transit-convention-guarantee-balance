@@ -20,6 +20,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import connectors.BalanceRequestConnector
 import models.backend.BalanceRequestResponse
+import models.backend.PendingBalanceRequest
 import models.errors._
 import models.request.BalanceRequest
 import models.values.BalanceId
@@ -36,10 +37,25 @@ class BalanceRequestService @Inject() (connector: BalanceRequestConnector) {
   ): IO[Either[BalanceRequestError, Either[BalanceId, BalanceRequestResponse]]] =
     connector.sendRequest(request).map {
       _.leftMap {
-        case Upstream4xxResponse(_) =>
-          BalanceRequestError.internalServiceError()
-        case Upstream5xxResponse(_) =>
-          BalanceRequestError.upstreamServiceError()
+        case error @ Upstream4xxResponse(_) =>
+          InternalServiceError.causedBy(error)
+        case error @ Upstream5xxResponse(_) =>
+          UpstreamServiceError.causedBy(error)
       }
+    }
+
+  def getBalanceRequest(balanceId: BalanceId)(implicit
+    hc: HeaderCarrier
+  ): IO[Either[BalanceRequestError, PendingBalanceRequest]] =
+    connector.getRequest(balanceId).map {
+      case Some(requestOrError) =>
+        requestOrError.leftMap {
+          case error @ Upstream4xxResponse(_) =>
+            InternalServiceError.causedBy(error)
+          case error @ Upstream5xxResponse(_) =>
+            UpstreamServiceError.causedBy(error)
+        }
+      case None =>
+        Left(BalanceRequestError.notFoundError(balanceId))
     }
 }

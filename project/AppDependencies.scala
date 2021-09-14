@@ -6,6 +6,7 @@ import sbt._
 object AppDependencies {
   val catsVersion       = "2.6.1"
   val catsEffectVersion = "3.2.1"
+  val log4catsVersion   = "2.1.1"
   val bootstrapVersion  = "5.10.0"
 
   val compile = Seq(
@@ -14,6 +15,7 @@ object AppDependencies {
     "io.lemonlabs"  %% "scala-uri"                 % "3.5.0",
     "org.typelevel" %% "cats-core"                 % catsVersion,
     "org.typelevel" %% "cats-effect"               % catsEffectVersion,
+    "org.typelevel" %% "log4cats-slf4j"            % log4catsVersion,
     compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
   )
 

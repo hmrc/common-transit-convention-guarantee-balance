@@ -1,0 +1,43 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$id": "#/pending-balance-request-schema.json",
+    "description": "A request to the guarantee management system",
+    "type": "object",
+    "required": [
+        "balanceId",
+        "enrolmentId",
+        "taxIdentifier",
+        "guaranteeReference",
+        "requestedAt"
+    ],
+    "properties": {
+        "balanceId": {
+            "type": "string",
+            "description": "The ID of the balance request"
+        },
+        "enrolmentId": {
+            "type": "string",
+            "description": "The ID of the user that made the balance request"
+        },
+        "taxIdentifier": {
+            "type": "string",
+            "description": "The tax identifier of the holder of the guarantee"
+        },
+        "guaranteeReference": {
+            "type": "string",
+            "description": "The guarantee reference number (GRN) of the guarantee"
+        },
+        "requestedAt": {
+            "type": "string",
+            "description": "The timestamp when the balance request was created"
+        },
+        "completedAt": {
+            "type": "string",
+            "description": "The timestamp when the balance response was received"
+        },
+        "response": {
+            "type": "object",
+            "description": "The response from the guarantee management system"
+        }
+    }
+}

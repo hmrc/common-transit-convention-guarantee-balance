@@ -16,43 +16,83 @@
 
 package models.errors
 
-import play.api.libs.json.Json
-import play.api.libs.json.OFormat
-import uk.gov.hmrc.play.json.Union
+import models.values.BalanceId
+import play.api.libs.json._
+import uk.gov.hmrc.http.UpstreamErrorResponse
 
 sealed abstract class BalanceRequestError extends Product with Serializable {
   def message: String
 }
 
-case class UpstreamServiceError(message: String = "Internal server error")
-    extends BalanceRequestError
+case class NotFoundError(message: String) extends BalanceRequestError
 
 case class UpstreamTimeoutError(message: String = "Request timed out") extends BalanceRequestError
 
-case class InternalServiceError(message: String = "Internal server error")
-    extends BalanceRequestError
+case class InternalServiceError(
+  message: String = "Internal server error",
+  cause: Option[Throwable] = None
+) extends BalanceRequestError
+
+object InternalServiceError {
+  def causedBy(cause: Throwable): BalanceRequestError =
+    InternalServiceError(cause = Some(cause))
+}
+
+case class UpstreamServiceError(
+  message: String = "Internal server error",
+  cause: UpstreamErrorResponse
+) extends BalanceRequestError
+
+object UpstreamServiceError {
+  def causedBy(cause: UpstreamErrorResponse): BalanceRequestError =
+    UpstreamServiceError(cause = cause)
+}
 
 object BalanceRequestError {
-  def upstreamServiceError(message: String = "Internal server error"): BalanceRequestError =
-    UpstreamServiceError(message)
+  def upstreamServiceError(
+    message: String = "Internal server error",
+    cause: UpstreamErrorResponse
+  ): BalanceRequestError =
+    UpstreamServiceError(message, cause)
 
-  def internalServiceError(message: String = "Internal server error"): BalanceRequestError =
-    InternalServiceError(message)
+  def internalServiceError(
+    message: String = "Internal server error",
+    cause: Option[Throwable] = None
+  ): BalanceRequestError =
+    InternalServiceError(message, cause)
 
-  implicit def upstreamServiceErrorFormat: OFormat[UpstreamServiceError] =
-    Json.format[UpstreamServiceError]
+  def notFoundError(balanceId: BalanceId): BalanceRequestError =
+    NotFoundError(
+      s"The balance request with ID ${balanceId.value} was not found"
+    )
 
-  implicit def internalServiceErrorFormat: OFormat[InternalServiceError] =
-    Json.format[InternalServiceError]
+  implicit lazy val upstreamServiceErrorWrites: OWrites[UpstreamServiceError] =
+    (__ \ "message").write[String].contramap(_.message)
 
-  implicit def upstreamTimeoutErrorFormat: OFormat[UpstreamTimeoutError] =
-    Json.format[UpstreamTimeoutError]
+  implicit lazy val internalServiceErrorWrites: OWrites[InternalServiceError] =
+    (__ \ "message").write[String].contramap(_.message)
 
-  implicit def balanceRequestErrorFormat: OFormat[BalanceRequestError] =
-    Union
-      .from[BalanceRequestError](ErrorCode.FieldName)
-      .and[UpstreamServiceError](ErrorCode.InternalServerError)
-      .and[UpstreamTimeoutError](ErrorCode.GatewayTimeout)
-      .and[InternalServiceError](ErrorCode.InternalServerError)
-      .format
+  implicit lazy val upstreamTimeoutErrorWrites: OWrites[UpstreamTimeoutError] =
+    (__ \ "message").write[String].contramap(_.message)
+
+  implicit lazy val notFoundErrorWrites: OWrites[NotFoundError] =
+    (__ \ "message").write[String].contramap(_.message)
+
+  def withErrorCode(jsObject: JsObject, code: String): JsObject =
+    jsObject ++ Json.obj(ErrorCode.FieldName -> code)
+
+  implicit lazy val balanceRequestErrorWrites: OWrites[BalanceRequestError] =
+    OWrites {
+      case err @ UpstreamServiceError(_, _) =>
+        withErrorCode(upstreamServiceErrorWrites.writes(err), ErrorCode.InternalServerError)
+
+      case err @ InternalServiceError(_, _) =>
+        withErrorCode(internalServiceErrorWrites.writes(err), ErrorCode.InternalServerError)
+
+      case err @ UpstreamTimeoutError(_) =>
+        withErrorCode(upstreamTimeoutErrorWrites.writes(err), ErrorCode.GatewayTimeout)
+
+      case err @ NotFoundError(_) =>
+        withErrorCode(notFoundErrorWrites.writes(err), ErrorCode.NotFound)
+    }
 }

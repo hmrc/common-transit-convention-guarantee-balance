@@ -14,16 +14,11 @@
  * limitations under the License.
  */
 
-package models.errors
+package logging
 
-/** Common error codes documented in [[https://developer.service.hmrc.gov.uk/api-documentation/docs/reference-guide#errors Developer Hub Reference Guide]]
-  */
-object ErrorCode {
-  val FieldName           = "code"
-  val BadRequest          = "BAD_REQUEST"
-  val NotFound            = "NOT_FOUND"
-  val InternalServerError = "INTERNAL_SERVER_ERROR"
-  val GatewayTimeout      = "GATEWAY_TIMEOUT"
-  val FunctionalError     = "FUNCTIONAL_ERROR"
-  val AcceptHeaderInvalid = "ACCEPT_HEADER_INVALID"
+import cats.effect.IO
+import org.typelevel.log4cats.slf4j.Slf4jLogger
+
+trait Logging {
+  val logger = Slf4jLogger.getLoggerFromClass[IO](getClass())
 }

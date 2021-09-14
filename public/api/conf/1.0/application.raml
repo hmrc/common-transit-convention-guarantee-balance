@@ -114,3 +114,80 @@ traits:
         - acceptHeaderInvalid
       (annotations.scope): "common-transit-convention-guarantee-balance"
       securedBy: [ sec.oauth_2_0: { scopes: [ "common-transit-convention-guarantee-balance" ] } ]
+      responses:
+        200:
+          body:
+            application/json:
+              type: !include schemas/get-balance-request-response-schema.json
+              examples:
+                pending-request:
+                  value: |
+                    {
+                      "_links": {
+                        "self": {
+                          "href": "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+                        }
+                      },
+                      "request": {
+                        "balanceId": "22b9899e-24ee-48e6-a189-97d1f45391c4",
+                        "taxIdentifier": "GB123456789012",
+                        "enrolmentId": "GB987654321012",
+                        "guaranteeReference": "20GB0000010000GX1",
+                        "requestedAt": "2021-09-14T09:52:15Z"
+                      }
+                    }
+                successful-request:
+                  value: |
+                    {
+                      "_links": {
+                        "self": {
+                          "href": "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+                        }
+                      },
+                      "request": {
+                        "balanceId": "22b9899e-24ee-48e6-a189-97d1f45391c4",
+                        "taxIdentifier": "GB123456789012",
+                        "enrolmentId": "GB987654321012",
+                        "guaranteeReference": "20GB0000010000GX1",
+                        "requestedAt": "2021-09-14T09:52:15Z",
+                        "completedAt": "2021-09-14T09:53:05Z",
+                        "response": {
+                          "status": "SUCCESS",
+                          "balance": 12345678.9,
+                          "currency": "EUR"
+                        }
+                      }
+                    }
+                failed-request:
+                  value: |
+                    {
+                      "_links": {
+                        "self": {
+                          "href": "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+                        }
+                      },
+                      "request": {
+                        "balanceId": "22b9899e-24ee-48e6-a189-97d1f45391c4",
+                        "taxIdentifier": "GB123456789012",
+                        "enrolmentId": "GB987654321012",
+                        "guaranteeReference": "20GB0000010000GX1",
+                        "requestedAt": "2021-09-14T09:52:15Z",
+                        "completedAt": "2021-09-14T09:53:05Z",
+                        "response": {
+                          "status": "FUNCTIONAL_ERROR",
+                          "errors": [{
+                            "errorType": 12,
+                            "errorPointer": "Foo.Bar(1).Baz"
+                          }]
+                        }
+                      }
+                    }
+        404:
+          body:
+            application/json:
+              type: types.errorResponse
+              examples:
+                badRequest:
+                  description: The balance request was not found
+                  value:
+                    code: NOT_FOUND
