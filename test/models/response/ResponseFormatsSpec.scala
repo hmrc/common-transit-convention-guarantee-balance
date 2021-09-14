@@ -18,17 +18,17 @@ package models.response
 
 import cats.data.NonEmptyList
 import controllers.routes.BalanceRequestController
-import models.backend.BalanceRequestFunctionalError
-import models.backend.BalanceRequestSuccess
+import models.backend._
 import models.backend.errors.FunctionalError
-import models.values.BalanceId
-import models.values.CurrencyCode
-import models.values.ErrorType
+import models.values._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json
 
 import java.util.UUID
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class ResponseFormatsSpec extends AnyFlatSpec with Matchers {
   "Link.linkWrites" should "write link as a HAL JSON link" in {
@@ -40,11 +40,11 @@ class ResponseFormatsSpec extends AnyFlatSpec with Matchers {
     )
   }
 
-  "HalResponse.halResponseWrites" should "write a pending balance request response" in {
-    val uuid     = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
-    val response = PostBalanceRequestPendingResponse(BalanceId(uuid))
+  "HalResponse.halResponseWrites" should "write a pending balance request POST response" in {
+    val uuid         = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
+    val postResponse = PostBalanceRequestPendingResponse(BalanceId(uuid))
 
-    Json.toJsObject(response) shouldBe Json.obj(
+    Json.toJsObject(postResponse) shouldBe Json.obj(
       "_links" -> Json.obj(
         "self" -> Json.obj(
           "href" -> "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
@@ -54,13 +54,13 @@ class ResponseFormatsSpec extends AnyFlatSpec with Matchers {
     )
   }
 
-  it should "write a successful balance request response" in {
+  it should "write a successful balance request POST response" in {
     val balanceRequestSuccess =
       BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
-    val response =
+    val postResponse =
       PostBalanceRequestSuccessResponse(balanceRequestSuccess)
 
-    Json.toJsObject(response) shouldBe Json.obj(
+    Json.toJsObject(postResponse) shouldBe Json.obj(
       "response" -> Json.obj(
         "balance"  -> 12345678.9,
         "currency" -> "GBP"
@@ -68,15 +68,15 @@ class ResponseFormatsSpec extends AnyFlatSpec with Matchers {
     )
   }
 
-  it should "write a functional error response" in {
+  it should "write a functional error POST response" in {
     val balanceRequestFunctionalError =
       BalanceRequestFunctionalError(
         NonEmptyList.one(FunctionalError(ErrorType(14), "Foo.Bar(1).Baz", None))
       )
-    val response =
+    val postResponse =
       PostBalanceRequestFunctionalErrorResponse(balanceRequestFunctionalError)
 
-    Json.toJsObject(response) shouldBe Json.obj(
+    Json.toJsObject(postResponse) shouldBe Json.obj(
       "code"    -> "FUNCTIONAL_ERROR",
       "message" -> "The request was rejected by the guarantee management system",
       "response" -> Json.obj(
@@ -84,6 +84,133 @@ class ResponseFormatsSpec extends AnyFlatSpec with Matchers {
           Json.obj(
             "errorType"    -> 14,
             "errorPointer" -> "Foo.Bar(1).Baz"
+          )
+        )
+      )
+    )
+  }
+
+  it should "write a pending balance request GET response" in {
+    val uuid      = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
+    val balanceId = BalanceId(uuid)
+
+    val pendingBalanceRequest = PendingBalanceRequest(
+      balanceId,
+      EnrolmentId("12345678ABC"),
+      TaxIdentifier("GB12345678900"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 52, 15), ZoneOffset.UTC).toInstant,
+      completedAt = None,
+      response = None
+    )
+
+    val getBalanceRequestResponse =
+      GetBalanceRequestResponse(balanceId, pendingBalanceRequest)
+
+    Json.toJsObject(getBalanceRequestResponse) shouldBe Json.obj(
+      "_links" -> Json.obj(
+        "self" -> Json.obj(
+          "href" -> "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+        )
+      ),
+      "request" -> Json.obj(
+        "balanceId"          -> "22b9899e-24ee-48e6-a189-97d1f45391c4",
+        "enrolmentId"        -> "12345678ABC",
+        "taxIdentifier"      -> "GB12345678900",
+        "guaranteeReference" -> "05DE3300BE0001067A001017",
+        "requestedAt"        -> "2021-09-14T09:52:15Z"
+      )
+    )
+  }
+
+  it should "write a successful balance request GET response" in {
+    val uuid      = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
+    val balanceId = BalanceId(uuid)
+
+    val balanceRequestSuccess =
+      BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
+
+    val pendingBalanceRequest = PendingBalanceRequest(
+      balanceId,
+      EnrolmentId("12345678ABC"),
+      TaxIdentifier("GB12345678900"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 52, 15), ZoneOffset.UTC).toInstant,
+      completedAt = Some(
+        OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 53, 5), ZoneOffset.UTC).toInstant
+      ),
+      response = Some(balanceRequestSuccess)
+    )
+
+    val getResponse =
+      GetBalanceRequestResponse(balanceId, pendingBalanceRequest)
+
+    Json.toJsObject(getResponse) shouldBe Json.obj(
+      "_links" -> Json.obj(
+        "self" -> Json.obj(
+          "href" -> "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+        )
+      ),
+      "request" -> Json.obj(
+        "balanceId"          -> "22b9899e-24ee-48e6-a189-97d1f45391c4",
+        "enrolmentId"        -> "12345678ABC",
+        "taxIdentifier"      -> "GB12345678900",
+        "guaranteeReference" -> "05DE3300BE0001067A001017",
+        "requestedAt"        -> "2021-09-14T09:52:15Z",
+        "completedAt"        -> "2021-09-14T09:53:05Z",
+        "response" -> Json.obj(
+          "status"   -> "SUCCESS",
+          "balance"  -> 12345678.9,
+          "currency" -> "GBP"
+        )
+      )
+    )
+  }
+
+  it should "write a functional error GET response" in {
+    val uuid      = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
+    val balanceId = BalanceId(uuid)
+
+    val balanceRequestFunctionalError =
+      BalanceRequestFunctionalError(
+        NonEmptyList.one(FunctionalError(ErrorType(14), "Foo.Bar(1).Baz", None))
+      )
+
+    val pendingBalanceRequest = PendingBalanceRequest(
+      balanceId,
+      EnrolmentId("12345678ABC"),
+      TaxIdentifier("GB12345678900"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 52, 15), ZoneOffset.UTC).toInstant,
+      completedAt = Some(
+        OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 53, 5), ZoneOffset.UTC).toInstant
+      ),
+      response = Some(balanceRequestFunctionalError)
+    )
+
+    val getResponse =
+      GetBalanceRequestResponse(balanceId, pendingBalanceRequest)
+
+    Json.toJsObject(getResponse) shouldBe Json.obj(
+      "_links" -> Json.obj(
+        "self" -> Json.obj(
+          "href" -> "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+        )
+      ),
+      "request" -> Json.obj(
+        "balanceId"          -> "22b9899e-24ee-48e6-a189-97d1f45391c4",
+        "enrolmentId"        -> "12345678ABC",
+        "taxIdentifier"      -> "GB12345678900",
+        "guaranteeReference" -> "05DE3300BE0001067A001017",
+        "requestedAt"        -> "2021-09-14T09:52:15Z",
+        "completedAt"        -> "2021-09-14T09:53:05Z",
+        "response" -> Json.obj(
+          "status" -> "FUNCTIONAL_ERROR",
+          "errors" -> Json.arr(
+            Json.obj(
+              "errorType"    -> 14,
+              "errorPointer" -> "Foo.Bar(1).Baz"
+            )
           )
         )
       )
