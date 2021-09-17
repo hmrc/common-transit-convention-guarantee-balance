@@ -19,6 +19,7 @@ package controllers
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cats.syntax.all._
+import config.AppConfig
 import controllers.actions.AuthActionProvider
 import controllers.actions.IOActions
 import logging.Logging
@@ -48,6 +49,7 @@ import scala.util.control.NonFatal
 
 @Singleton
 class BalanceRequestController @Inject() (
+  appConfig: AppConfig,
   authenticate: AuthActionProvider,
   service: BalanceRequestService,
   cc: ControllerComponents,
@@ -86,15 +88,18 @@ class BalanceRequestController @Inject() (
             case Right(Right(error @ BalanceRequestFunctionalError(_))) =>
               BadRequest(Json.toJson(PostBalanceRequestFunctionalErrorResponse(error)))
 
-            case Right(Left(_)) =>
-              // Accepted(Json.toJson(PostBalanceRequestPendingResponse(balanceId))).withHeaders(
-              //   HeaderNames.LOCATION -> routes.BalanceRequestController
-              //     .getBalanceRequest(balanceId)
-              //     .pathWithContext
-              // )
-              val error     = UpstreamTimeoutError()
-              val errorJson = Json.toJson[BalanceRequestError](error)
-              GatewayTimeout(errorJson)
+            case Right(Left(balanceId)) =>
+              if (!appConfig.asyncBalanceResponse) {
+                val error     = UpstreamTimeoutError()
+                val errorJson = Json.toJson[BalanceRequestError](error)
+                GatewayTimeout(errorJson)
+              } else {
+                Accepted(Json.toJson(PostBalanceRequestPendingResponse(balanceId))).withHeaders(
+                  HeaderNames.LOCATION -> routes.BalanceRequestController
+                    .getBalanceRequest(balanceId)
+                    .pathWithContext
+                )
+              }
 
             case Left(error @ UpstreamTimeoutError(_)) =>
               GatewayTimeout(Json.toJson[BalanceRequestError](error))

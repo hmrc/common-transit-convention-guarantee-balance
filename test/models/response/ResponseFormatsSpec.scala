@@ -25,10 +25,10 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json
 
-import java.util.UUID
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 
 class ResponseFormatsSpec extends AnyFlatSpec with Matchers {
   "Link.linkWrites" should "write link as a HAL JSON link" in {

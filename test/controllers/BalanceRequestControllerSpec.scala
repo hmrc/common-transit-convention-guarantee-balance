@@ -19,6 +19,7 @@ package controllers
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
+import config.AppConfig
 import connectors.FakeBalanceRequestConnector
 import controllers.actions.FakeAuthActionProvider
 import models.backend.BalanceRequestFunctionalError
@@ -32,6 +33,7 @@ import models.response._
 import models.values._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import play.api.Configuration
 import play.api.http.ContentTypes
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
@@ -40,6 +42,7 @@ import play.api.test.Helpers
 import play.api.test.Helpers._
 import services.BalanceRequestService
 import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -48,11 +51,17 @@ import java.util.UUID
 
 class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
 
+  def mkAppConfig(config: Configuration) = {
+    val servicesConfig = new ServicesConfig(config)
+    new AppConfig(config, servicesConfig)
+  }
+
   def controller(
     getRequestResponse: IO[Option[Either[UpstreamErrorResponse, PendingBalanceRequest]]] = IO.stub,
     sendRequestResponse: IO[
       Either[UpstreamErrorResponse, Either[BalanceId, BalanceRequestResponse]]
-    ] = IO.stub
+    ] = IO.stub,
+    appConfig: AppConfig = mkAppConfig(Configuration())
   ) = {
     val service = new BalanceRequestService(
       FakeBalanceRequestConnector(
@@ -62,6 +71,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
 
     new BalanceRequestController(
+      appConfig,
       FakeAuthActionProvider,
       service,
       Helpers.stubControllerComponents(),
@@ -121,31 +131,6 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
   }
 
-  // it should "return 202 when there is a valid async response" in {
-  //   val balanceRequest = BalanceRequest(
-  //     TaxIdentifier("GB12345678900"),
-  //     GuaranteeReference("05DE3300BE0001067A001017"),
-  //     AccessCode("1234")
-  //   )
-
-  //   val balanceId = BalanceId(UUID.randomUUID())
-
-  //   val request = FakeRequest()
-  //     .withBody(balanceRequest)
-  //     .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
-
-  //   val result = controller(
-  //     sendRequestResponse = IO(Right(Left(balanceId)))
-  //   ).submitBalanceRequest(request)
-
-  //   status(result) shouldBe ACCEPTED
-  //   contentType(result) shouldBe Some(ContentTypes.JSON)
-  //   contentAsJson(result) shouldBe Json.toJson(PostBalanceRequestPendingResponse(balanceId))
-  //   header(HeaderNames.LOCATION, result) shouldBe Some(
-  //     s"/customs/guarantees/balances/${balanceId.value}"
-  //   )
-  // }
-
   it should "return 406 when the accept header is missing" in {
     val balanceRequest = BalanceRequest(
       TaxIdentifier("GB12345678900"),
@@ -170,7 +155,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
   }
 
-  it should "return 504 when the upstream service times out" in {
+  it should "return 504 when the upstream service times out and async response feature is disabled" in {
     val balanceRequest = BalanceRequest(
       TaxIdentifier("GB12345678900"),
       GuaranteeReference("05DE3300BE0001067A001017"),
@@ -184,7 +169,8 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
     val result = controller(
-      sendRequestResponse = IO(Right(Left(balanceId)))
+      sendRequestResponse = IO(Right(Left(balanceId))),
+      appConfig = mkAppConfig(Configuration("features.async-balance-response" -> "false"))
     ).submitBalanceRequest(request)
 
     status(result) shouldBe GATEWAY_TIMEOUT
@@ -192,6 +178,32 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     contentAsJson(result) shouldBe Json.obj(
       "code"    -> "GATEWAY_TIMEOUT",
       "message" -> "Request timed out"
+    )
+  }
+
+  it should "return 202 when the upstream service times out and async response feature is enabled" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB12345678900"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("1234")
+    )
+
+    val balanceId = BalanceId(UUID.randomUUID())
+
+    val request = FakeRequest()
+      .withBody(balanceRequest)
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      sendRequestResponse = IO(Right(Left(balanceId))),
+      appConfig = mkAppConfig(Configuration("features.async-balance-response" -> "true"))
+    ).submitBalanceRequest(request)
+
+    status(result) shouldBe ACCEPTED
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.toJson(PostBalanceRequestPendingResponse(balanceId))
+    header(HeaderNames.LOCATION, result) shouldBe Some(
+      s"/customs/guarantees/balances/${balanceId.value}"
     )
   }
 

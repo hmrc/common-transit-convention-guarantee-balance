@@ -35,7 +35,7 @@ case class InternalServiceError(
 
 object InternalServiceError {
   def causedBy(cause: Throwable): BalanceRequestError =
-    InternalServiceError(cause = Some(cause))
+    BalanceRequestError.internalServiceError(cause = Some(cause))
 }
 
 case class UpstreamServiceError(
@@ -45,7 +45,7 @@ case class UpstreamServiceError(
 
 object UpstreamServiceError {
   def causedBy(cause: UpstreamErrorResponse): BalanceRequestError =
-    UpstreamServiceError(cause = cause)
+    BalanceRequestError.upstreamServiceError(cause = cause)
 }
 
 object BalanceRequestError {

@@ -64,4 +64,21 @@ class AppConfigSpec extends AnyFlatSpec with Matchers {
 
     appConfig.features shouldBe Map("fooBar" -> true, "bazQuu" -> false)
   }
+
+  it should "recognise async balance response config" in {
+    val appConfigCheckEnabled =
+      mkAppConfig(Configuration("features.async-balance-response" -> "true"))
+
+    appConfigCheckEnabled.asyncBalanceResponse shouldBe true
+
+    val appConfigCheckDisabled =
+      mkAppConfig(Configuration("features.async-balance-response" -> "false"))
+
+    appConfigCheckDisabled.asyncBalanceResponse shouldBe false
+
+    val appConfigCheckImplicitlyDisabled =
+      mkAppConfig(Configuration())
+
+    appConfigCheckImplicitlyDisabled.asyncBalanceResponse shouldBe false
+  }
 }
