@@ -19,6 +19,7 @@ package models.response
 import controllers.routes.BalanceRequestController
 import models.backend.BalanceRequestFunctionalError
 import models.backend.BalanceRequestSuccess
+import models.backend.PendingBalanceRequest
 import models.errors.ErrorCode
 import models.values.BalanceId
 import play.api.libs.json.Json
@@ -79,6 +80,22 @@ object PostBalanceRequestFunctionalErrorResponse {
   }
 }
 
+case class GetBalanceRequestResponse(
+  _links: Option[Map[String, Link]],
+  _embedded: Option[Map[String, HalResponse]] = None,
+  request: PendingBalanceRequest
+) extends HalResponse
+
+object GetBalanceRequestResponse {
+  def apply(balanceId: BalanceId, request: PendingBalanceRequest): GetBalanceRequestResponse = {
+    val selfRoute = BalanceRequestController.getBalanceRequest(balanceId)
+    GetBalanceRequestResponse(
+      _links = Links(Link.self(selfRoute)),
+      request = request
+    )
+  }
+}
+
 object HalResponse {
   implicit lazy val balanceRequestPendingResponseWrites
     : OWrites[PostBalanceRequestPendingResponse] =
@@ -92,6 +109,9 @@ object HalResponse {
     : OWrites[PostBalanceRequestFunctionalErrorResponse] =
     Json.writes[PostBalanceRequestFunctionalErrorResponse]
 
+  implicit lazy val getBalanceRequestResponseWrites: OWrites[GetBalanceRequestResponse] =
+    Json.writes[GetBalanceRequestResponse]
+
   implicit lazy val halResponseWrites: OWrites[HalResponse] =
     OWrites {
       case postResponse: PostBalanceRequestPendingResponse =>
@@ -100,5 +120,7 @@ object HalResponse {
         balanceRequestSuccessResponseWrites.writes(postResponse)
       case postResponse: PostBalanceRequestFunctionalErrorResponse =>
         balanceRequestFunctionalErrorResponseWrites.writes(postResponse)
+      case getResponse: GetBalanceRequestResponse =>
+        getBalanceRequestResponseWrites.writes(getResponse)
     }
 }

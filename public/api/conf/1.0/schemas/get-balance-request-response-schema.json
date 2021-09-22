@@ -1,0 +1,29 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$id": "#/get-balance-request-response-schema.json",
+    "description": "A balance request response",
+    "type": "object",
+    "required": [
+        "_links",
+        "request"
+    ],
+    "properties": {
+        "_links": {
+            "description": "An object containing links to other resources",
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "hal-document-schema.json#/definitions/halLink"
+            }
+        },
+        "_embedded": {
+            "description": "An object containing embedded resources",
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "hal-document-schema.json#"
+            }
+        },
+        "request": {
+            "$ref": "pending-balance-request-schema.json#"
+        }
+    }
+}

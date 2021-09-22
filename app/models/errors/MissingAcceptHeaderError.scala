@@ -16,14 +16,16 @@
 
 package models.errors
 
-/** Common error codes documented in [[https://developer.service.hmrc.gov.uk/api-documentation/docs/reference-guide#errors Developer Hub Reference Guide]]
-  */
-object ErrorCode {
-  val FieldName           = "code"
-  val BadRequest          = "BAD_REQUEST"
-  val NotFound            = "NOT_FOUND"
-  val InternalServerError = "INTERNAL_SERVER_ERROR"
-  val GatewayTimeout      = "GATEWAY_TIMEOUT"
-  val FunctionalError     = "FUNCTIONAL_ERROR"
-  val AcceptHeaderInvalid = "ACCEPT_HEADER_INVALID"
+import play.api.libs.json._
+
+case class MissingAcceptHeaderError(message: String = "The accept header is missing or invalid")
+
+object MissingAcceptHeaderError {
+  implicit lazy val missingAcceptHeaderErrorWrites: OWrites[MissingAcceptHeaderError] =
+    OWrites { error =>
+      Json.obj(
+        ErrorCode.FieldName -> ErrorCode.AcceptHeaderInvalid,
+        "message"           -> error.message
+      )
+    }
 }

@@ -18,16 +18,23 @@ package connectors
 
 import cats.effect.IO
 import models.backend.BalanceRequestResponse
+import models.backend.PendingBalanceRequest
 import models.request.BalanceRequest
 import models.values.BalanceId
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
 case class FakeBalanceRequestConnector(
+  getRequestResponse: IO[Option[Either[UpstreamErrorResponse, PendingBalanceRequest]]] = IO.stub,
   sendRequestResponse: IO[
     Either[UpstreamErrorResponse, Either[BalanceId, BalanceRequestResponse]]
   ] = IO.stub
 ) extends BalanceRequestConnector {
+
+  override def getRequest(balanceId: BalanceId)(implicit
+    hc: HeaderCarrier
+  ): IO[Option[Either[UpstreamErrorResponse, PendingBalanceRequest]]] =
+    getRequestResponse
 
   override def sendRequest(request: BalanceRequest)(implicit
     hc: HeaderCarrier

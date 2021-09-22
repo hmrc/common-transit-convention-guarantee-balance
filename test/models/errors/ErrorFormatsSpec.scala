@@ -16,26 +16,50 @@
 
 package models.errors
 
+import models.values.BalanceId
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.Json
+import uk.gov.hmrc.http.UpstreamErrorResponse
+
+import java.util.UUID
 
 class ErrorFormatsSpec extends AnyFlatSpec with Matchers {
-  "BalanceRequestError.balanceRequestErrorFormat" should "produce errors following HMRC Reference Guide for InternalServiceError" in {
+  "BalanceRequestError.balanceRequestErrorFormat" should "produce a valid format for InternalServiceError" in {
     val error = InternalServiceError()
-    val json  = BalanceRequestError.balanceRequestErrorFormat.writes(error)
+    val json  = BalanceRequestError.balanceRequestErrorWrites.writes(error)
     json shouldBe Json.obj(
       "code"    -> "INTERNAL_SERVER_ERROR",
       "message" -> "Internal server error"
     )
   }
 
-  it should "produce errors following HMRC Reference Guide for UpstreamServiceError" in {
-    val error = UpstreamServiceError()
-    val json  = BalanceRequestError.balanceRequestErrorFormat.writes(error)
+  it should "produce a valid format for UpstreamServiceError" in {
+    val error = UpstreamServiceError.causedBy(UpstreamErrorResponse("Argh!!!", 400))
+    val json  = BalanceRequestError.balanceRequestErrorWrites.writes(error)
     json shouldBe Json.obj(
       "code"    -> "INTERNAL_SERVER_ERROR",
       "message" -> "Internal server error"
+    )
+  }
+
+  it should "produce a valid format for UpstreamTimeoutError" in {
+    val error = UpstreamTimeoutError()
+    val json  = BalanceRequestError.balanceRequestErrorWrites.writes(error)
+    json shouldBe Json.obj(
+      "code"    -> "GATEWAY_TIMEOUT",
+      "message" -> "Request timed out"
+    )
+  }
+
+  it should "produce a valid format for NotFoundError" in {
+    val uuid      = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
+    val balanceId = BalanceId(uuid)
+    val error     = BalanceRequestError.notFoundError(balanceId)
+    val json      = BalanceRequestError.balanceRequestErrorWrites.writes(error)
+    json shouldBe Json.obj(
+      "code"    -> "NOT_FOUND",
+      "message" -> "The balance request with ID 22b9899e-24ee-48e6-a189-97d1f45391c4 was not found"
     )
   }
 }
