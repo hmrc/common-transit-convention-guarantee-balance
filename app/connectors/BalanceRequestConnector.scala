@@ -18,8 +18,11 @@ package connectors
 
 import cats.effect.IO
 import com.google.inject.ImplementedBy
+import com.kenshoo.play.metrics.Metrics
 import config.AppConfig
 import config.Constants
+import metrics.IOMetrics
+import metrics.MetricsKeys
 import models.backend.BalanceRequestResponse
 import models.backend.PendingBalanceRequest
 import models.request.BalanceRequest
@@ -51,9 +54,15 @@ trait BalanceRequestConnector {
 }
 
 @Singleton
-class BalanceRequestConnectorImpl @Inject() (appConfig: AppConfig, http: HttpClient)
-    extends BalanceRequestConnector
-    with IOFutures {
+class BalanceRequestConnectorImpl @Inject() (
+  appConfig: AppConfig,
+  http: HttpClient,
+  val metrics: Metrics
+) extends BalanceRequestConnector
+  with IOFutures
+  with IOMetrics {
+
+  import MetricsKeys.Connectors._
 
   implicit val eitherBalanceIdOrResponseReads
     : HttpReads[Either[BalanceId, BalanceRequestResponse]] =
@@ -69,41 +78,57 @@ class BalanceRequestConnectorImpl @Inject() (appConfig: AppConfig, http: HttpCli
   def sendRequest(request: BalanceRequest)(implicit
     hc: HeaderCarrier
   ): IO[Either[UpstreamErrorResponse, Either[BalanceId, BalanceRequestResponse]]] =
-    IO.runFuture { implicit ec =>
-      val url = appConfig.backendUrl.addPathPart("balances")
+    withMetricsTimerResponse(SendRequest) {
+      IO.runFuture { implicit ec =>
+        val url = appConfig.backendUrl.addPathPart("balances")
 
-      val headers = Seq(
-        HeaderNames.ACCEPT       -> ContentTypes.JSON,
-        HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
-        Constants.ChannelHeader  -> Channel.Api.name
-      )
+        val headers = Seq(
+          HeaderNames.ACCEPT       -> ContentTypes.JSON,
+          HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
+          Constants.ChannelHeader  -> Channel.Api.name
+        )
 
-      http.POST[BalanceRequest, Either[
-        UpstreamErrorResponse,
-        Either[BalanceId, BalanceRequestResponse]
-      ]](
-        url.toString,
-        request,
-        headers
-      )
+        http.POST[BalanceRequest, Either[
+          UpstreamErrorResponse,
+          Either[BalanceId, BalanceRequestResponse]
+        ]](
+          url.toString,
+          request,
+          headers
+        )
+      }
     }
 
   def getRequest(balanceId: BalanceId)(implicit
     hc: HeaderCarrier
   ): IO[Option[Either[UpstreamErrorResponse, PendingBalanceRequest]]] =
-    IO.runFuture { implicit ec =>
-      val url = appConfig.backendUrl.addPathPart("balances").addPathPart(balanceId.value)
+    withMetricsTimer(GetRequest) { timer =>
+      val runGet = IO.runFuture { implicit ec =>
+        val url = appConfig.backendUrl.addPathPart("balances").addPathPart(balanceId.value)
 
-      val headers = Seq(
-        HeaderNames.ACCEPT       -> ContentTypes.JSON,
-        HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
-        Constants.ChannelHeader  -> Channel.Api.name
-      )
+        val headers = Seq(
+          HeaderNames.ACCEPT       -> ContentTypes.JSON,
+          HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
+          Constants.ChannelHeader  -> Channel.Api.name
+        )
 
-      http.GET[Option[Either[UpstreamErrorResponse, PendingBalanceRequest]]](
-        url.toString,
-        queryParams = Seq.empty,
-        headers = headers
-      )
+        http.GET[Option[Either[UpstreamErrorResponse, PendingBalanceRequest]]](
+          url.toString,
+          queryParams = Seq.empty,
+          headers = headers
+        )
+      }
+
+      for {
+        result <- runGet
+
+        _ <- {
+          if (result.exists(_.isLeft))
+            timer.completeWithFailure()
+          else
+            timer.completeWithSuccess()
+        }
+
+      } yield result
     }
 }

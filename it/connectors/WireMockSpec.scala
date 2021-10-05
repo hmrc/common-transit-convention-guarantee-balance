@@ -29,9 +29,9 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.inject.guice.GuiceableModule
 
 trait WireMockSpec
-    extends BeforeAndAfterEach
-    with BeforeAndAfterAll
-    with GuiceFakeApplicationFactory { suite: Suite =>
+  extends BeforeAndAfterEach
+  with BeforeAndAfterAll
+  with GuiceFakeApplicationFactory { suite: Suite =>
 
   protected val wireMockConfig =
     WireMockConfiguration.wireMockConfig().notifier(new ConsoleNotifier(false))

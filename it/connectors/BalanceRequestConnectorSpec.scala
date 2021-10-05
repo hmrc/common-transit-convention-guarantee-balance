@@ -45,12 +45,12 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 class BalanceRequestConnectorSpec
-    extends AsyncFlatSpec
-    with Matchers
-    with EitherValues
-    with OptionValues
-    with Inside
-    with WireMockSpec {
+  extends AsyncFlatSpec
+  with Matchers
+  with EitherValues
+  with OptionValues
+  with Inside
+  with WireMockSpec {
 
   override def portConfigKeys = Seq(
     "microservice.services.transit-movements-guarantee-balance.port"

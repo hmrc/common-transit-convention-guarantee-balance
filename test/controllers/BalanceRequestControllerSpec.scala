@@ -22,6 +22,7 @@ import cats.effect.unsafe.IORuntime
 import config.AppConfig
 import connectors.FakeBalanceRequestConnector
 import controllers.actions.FakeAuthActionProvider
+import metrics.FakeMetrics
 import models.backend.BalanceRequestFunctionalError
 import models.backend.BalanceRequestResponse
 import models.backend.BalanceRequestSuccess
@@ -75,7 +76,8 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       FakeAuthActionProvider,
       service,
       Helpers.stubControllerComponents(),
-      IORuntime.global
+      IORuntime.global,
+      new FakeMetrics
     )
   }
 
