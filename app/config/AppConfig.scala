@@ -36,9 +36,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   lazy val backendUrl: AbsoluteUrl =
     backendBaseUrl.withPath(backendPath)
 
-  lazy val enrolmentKey        = config.get[String]("auth.enrolmentKey")
-  lazy val enrolmentIdentifier = config.get[String]("auth.enrolmentIdentifier")
-
   lazy val features = config.getOptional[Map[String, Boolean]]("features").getOrElse(Map.empty)
 
   lazy val asyncBalanceResponse = features.get("async-balance-response").getOrElse(false)

@@ -24,7 +24,6 @@ import models.request.BalanceRequest
 import models.values.AccessCode
 import models.values.BalanceId
 import models.values.CurrencyCode
-import models.values.EnrolmentId
 import models.values.GuaranteeReference
 import models.values.TaxIdentifier
 import org.scalatest.EitherValues
@@ -186,7 +185,6 @@ class BalanceRequestConnectorSpec
               Json.stringify(
                 Json.obj(
                   "balanceId"          -> "22b9899e-24ee-48e6-a189-97d1f45391c4",
-                  "enrolmentId"        -> "12345678ABC",
                   "taxIdentifier"      -> "GB12345678900",
                   "guaranteeReference" -> "05DE3300BE0001067A001017",
                   "requestedAt"        -> "2021-09-14T09:52:15Z",
@@ -209,7 +207,6 @@ class BalanceRequestConnectorSpec
         response.value shouldBe Right(
           PendingBalanceRequest(
             balanceId,
-            EnrolmentId("12345678ABC"),
             TaxIdentifier("GB12345678900"),
             GuaranteeReference("05DE3300BE0001067A001017"),
             OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 52, 15), ZoneOffset.UTC).toInstant,

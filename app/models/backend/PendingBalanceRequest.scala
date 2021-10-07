@@ -17,7 +17,6 @@
 package models.backend
 
 import models.values.BalanceId
-import models.values.EnrolmentId
 import models.values.GuaranteeReference
 import models.values.TaxIdentifier
 import play.api.libs.json.Json
@@ -27,7 +26,6 @@ import java.time.Instant
 
 case class PendingBalanceRequest(
   balanceId: BalanceId,
-  enrolmentId: EnrolmentId,
   taxIdentifier: TaxIdentifier,
   guaranteeReference: GuaranteeReference,
   requestedAt: Instant,
