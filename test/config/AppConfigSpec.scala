@@ -42,18 +42,6 @@ class AppConfigSpec extends AnyFlatSpec with Matchers {
     appConfig.backendUrl shouldBe AbsoluteUrl.parse("https://foo:101010/bar/baz/quu")
   }
 
-  it should "deserialize enrolment config" in {
-    val appConfig = mkAppConfig(
-      Configuration(
-        "auth.enrolmentKey"        -> "HMRC-TEST-ORG",
-        "auth.enrolmentIdentifier" -> "FooBarIdentifier"
-      )
-    )
-
-    appConfig.enrolmentKey shouldBe "HMRC-TEST-ORG"
-    appConfig.enrolmentIdentifier shouldBe "FooBarIdentifier"
-  }
-
   it should "deserialize features config" in {
     val appConfig = mkAppConfig(
       Configuration(
