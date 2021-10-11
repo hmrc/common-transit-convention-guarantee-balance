@@ -28,6 +28,8 @@ import metrics.IOMetrics
 import metrics.MetricsKeys
 import models.backend.BalanceRequestFunctionalError
 import models.backend.BalanceRequestSuccess
+import models.backend.BalanceRequestXmlError
+import models.backend.PendingBalanceRequest
 import models.errors.BalanceRequestError
 import models.errors.InternalServiceError
 import models.errors.MissingAcceptHeaderError
@@ -49,8 +51,6 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.Inject
 import javax.inject.Singleton
 import scala.util.control.NonFatal
-import models.backend.PendingBalanceRequest
-import models.backend.BalanceRequestXmlError
 
 @Singleton
 class BalanceRequestController @Inject() (
