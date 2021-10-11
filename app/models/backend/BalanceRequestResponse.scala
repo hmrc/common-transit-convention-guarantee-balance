@@ -18,6 +18,7 @@ package models.backend
 
 import cats.data.NonEmptyList
 import models.backend.errors.FunctionalError
+import models.backend.errors.XmlError
 import models.formats.CommonFormats
 import models.values.CurrencyCode
 import play.api.libs.json.Json
@@ -35,6 +36,10 @@ case class BalanceRequestFunctionalError(
   errors: NonEmptyList[FunctionalError]
 ) extends BalanceRequestResponse
 
+case class BalanceRequestXmlError(
+  errors: NonEmptyList[XmlError]
+) extends BalanceRequestResponse
+
 object BalanceRequestResponse extends CommonFormats {
   implicit lazy val balanceRequestSuccessFormat: OFormat[BalanceRequestSuccess] =
     Json.format[BalanceRequestSuccess]
@@ -42,10 +47,14 @@ object BalanceRequestResponse extends CommonFormats {
   implicit lazy val balanceRequestFunctionalErrorFormat: OFormat[BalanceRequestFunctionalError] =
     Json.format[BalanceRequestFunctionalError]
 
+  implicit lazy val balanceRequestXmlErrorFormat: OFormat[BalanceRequestXmlError] =
+    Json.format[BalanceRequestXmlError]
+
   implicit lazy val balanceRequestResponseFormat: OFormat[BalanceRequestResponse] =
     Union
       .from[BalanceRequestResponse](BalanceRequestResponseStatus.FieldName)
       .and[BalanceRequestSuccess](BalanceRequestResponseStatus.Success)
       .and[BalanceRequestFunctionalError](BalanceRequestResponseStatus.FunctionalError)
+      .and[BalanceRequestXmlError](BalanceRequestResponseStatus.XmlError)
       .format
 }

@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-package models.backend
+package models.backend.errors
 
-object BalanceRequestResponseStatus {
-  val FieldName       = "status"
-  val Success         = "SUCCESS"
-  val FunctionalError = "FUNCTIONAL_ERROR"
-  val XmlError        = "XML_ERROR"
+import models.values.ErrorType
+import play.api.libs.json.Json
+import play.api.libs.json.OFormat
+
+case class XmlError(
+  errorType: ErrorType,
+  errorPointer: String,
+  errorReason: Option[String]
+)
+
+object XmlError {
+  implicit lazy val xmlErrorFormat: OFormat[XmlError] =
+    Json.format[XmlError]
 }
