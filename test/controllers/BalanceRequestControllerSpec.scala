@@ -26,8 +26,10 @@ import metrics.FakeMetrics
 import models.backend.BalanceRequestFunctionalError
 import models.backend.BalanceRequestResponse
 import models.backend.BalanceRequestSuccess
+import models.backend.BalanceRequestXmlError
 import models.backend.PendingBalanceRequest
 import models.backend.errors.FunctionalError
+import models.backend.errors.XmlError
 import models.request.BalanceRequest
 import models.response.PostBalanceRequestFunctionalErrorResponse
 import models.response._
@@ -306,6 +308,40 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     contentType(result) shouldBe Some(ContentTypes.JSON)
     contentAsJson(result) shouldBe Json.toJson(
       GetBalanceRequestResponse(balanceId, pendingBalanceRequest)
+    )
+  }
+
+  it should "return 500 when the balance request response is an XML error" in {
+    val uuid      = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
+    val balanceId = BalanceId(uuid)
+
+    val balanceRequestXmlError =
+      BalanceRequestXmlError(
+        NonEmptyList.one(XmlError(ErrorType(14), "Foo.Bar(1).Baz", None))
+      )
+
+    val pendingBalanceRequest = PendingBalanceRequest(
+      balanceId,
+      TaxIdentifier("GB12345678900"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 52, 15), ZoneOffset.UTC).toInstant,
+      completedAt = Some(
+        OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 53, 5), ZoneOffset.UTC).toInstant
+      ),
+      response = Some(balanceRequestXmlError)
+    )
+
+    val request = FakeRequest().withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      getRequestResponse = IO.some(Right(pendingBalanceRequest))
+    ).getBalanceRequest(balanceId)(request)
+
+    status(result) shouldBe INTERNAL_SERVER_ERROR
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "INTERNAL_SERVER_ERROR",
+      "message" -> "Internal server error"
     )
   }
 

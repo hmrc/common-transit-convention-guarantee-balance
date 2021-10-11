@@ -28,6 +28,8 @@ import metrics.IOMetrics
 import metrics.MetricsKeys
 import models.backend.BalanceRequestFunctionalError
 import models.backend.BalanceRequestSuccess
+import models.backend.BalanceRequestXmlError
+import models.backend.PendingBalanceRequest
 import models.errors.BalanceRequestError
 import models.errors.InternalServiceError
 import models.errors.MissingAcceptHeaderError
@@ -96,6 +98,9 @@ class BalanceRequestController @Inject() (
               case Right(Right(error @ BalanceRequestFunctionalError(_))) =>
                 BadRequest(Json.toJson(PostBalanceRequestFunctionalErrorResponse(error)))
 
+              case Right(Right(BalanceRequestXmlError(_))) =>
+                InternalServerError(Json.toJson(BalanceRequestError.internalServiceError()))
+
               case Right(Left(balanceId)) =>
                 if (!appConfig.asyncBalanceResponse) {
                   val error     = UpstreamTimeoutError()
@@ -134,6 +139,9 @@ class BalanceRequestController @Inject() (
             .getBalanceRequest(balanceId)
             .flatTap(logServiceError("fetching balance request", _))
             .map {
+              case Right(PendingBalanceRequest(_, _, _, _, _, Some(BalanceRequestXmlError(_)))) =>
+                InternalServerError(Json.toJson(BalanceRequestError.internalServiceError()))
+
               case Right(pendingRequest) =>
                 Ok(Json.toJson(GetBalanceRequestResponse(balanceId, pendingRequest)))
 
