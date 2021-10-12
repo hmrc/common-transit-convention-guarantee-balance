@@ -39,4 +39,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   lazy val features = config.getOptional[Map[String, Boolean]]("features").getOrElse(Map.empty)
 
   lazy val asyncBalanceResponse = features.get("async-balance-response").getOrElse(false)
+
+  lazy val backendCircuitBreakerConfig =
+    CircuitBreakerConfig.fromServicesConfig("transit-movements-guarantee-balance", config)
 }
