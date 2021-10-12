@@ -16,11 +16,13 @@
 
 package connectors
 
+import akka.stream.Materializer
 import cats.effect.IO
 import com.google.inject.ImplementedBy
 import com.kenshoo.play.metrics.Metrics
 import config.AppConfig
 import config.Constants
+import logging.Logging
 import metrics.IOMetrics
 import metrics.MetricsKeys
 import models.backend.BalanceRequestResponse
@@ -41,6 +43,9 @@ import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import javax.inject.Inject
 import javax.inject.Singleton
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 @ImplementedBy(classOf[BalanceRequestConnectorImpl])
 trait BalanceRequestConnector {
@@ -58,11 +63,17 @@ class BalanceRequestConnectorImpl @Inject() (
   appConfig: AppConfig,
   http: HttpClient,
   val metrics: Metrics
-) extends BalanceRequestConnector
+)(implicit val materializer: Materializer)
+  extends BalanceRequestConnector
   with IOFutures
-  with IOMetrics {
+  with IOMetrics
+  with CircuitBreakers
+  with Logging {
 
   import MetricsKeys.Connectors._
+
+  override lazy val circuitBreakerConfig =
+    appConfig.backendCircuitBreakerConfig
 
   implicit val eitherBalanceIdOrResponseReads
     : HttpReads[Either[BalanceId, BalanceRequestResponse]] =
@@ -75,47 +86,70 @@ class BalanceRequestConnectorImpl @Inject() (
       }
     }
 
+  type SendRequestResponse =
+    Either[UpstreamErrorResponse, Either[BalanceId, BalanceRequestResponse]]
+
   def sendRequest(request: BalanceRequest)(implicit
     hc: HeaderCarrier
-  ): IO[Either[UpstreamErrorResponse, Either[BalanceId, BalanceRequestResponse]]] =
+  ): IO[SendRequestResponse] =
     withMetricsTimerResponse(SendRequest) {
       IO.runFuture { implicit ec =>
-        val url = appConfig.backendUrl.addPathPart("balances")
+        circuitBreaker.withCircuitBreaker(
+          {
+            val url = appConfig.backendUrl.addPathPart("balances")
 
-        val headers = Seq(
-          HeaderNames.ACCEPT       -> ContentTypes.JSON,
-          HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
-          Constants.ChannelHeader  -> Channel.Api.name
-        )
+            val headers = Seq(
+              HeaderNames.ACCEPT       -> ContentTypes.JSON,
+              HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
+              Constants.ChannelHeader  -> Channel.Api.name
+            )
 
-        http.POST[BalanceRequest, Either[
-          UpstreamErrorResponse,
-          Either[BalanceId, BalanceRequestResponse]
-        ]](
-          url.toString,
-          request,
-          headers
+            http.POST[BalanceRequest, SendRequestResponse](
+              url.toString,
+              request,
+              headers
+            )
+          },
+          defineFailureFn = (result: Try[SendRequestResponse]) =>
+            result match {
+              case Success(Left(_)) => true
+              case Failure(_)       => true
+              case _                => false
+            }
         )
       }
     }
 
+  type GetRequestResponse =
+    Option[Either[UpstreamErrorResponse, PendingBalanceRequest]]
+
   def getRequest(balanceId: BalanceId)(implicit
     hc: HeaderCarrier
-  ): IO[Option[Either[UpstreamErrorResponse, PendingBalanceRequest]]] =
+  ): IO[GetRequestResponse] =
     withMetricsTimer(GetRequest) { timer =>
       val runGet = IO.runFuture { implicit ec =>
-        val url = appConfig.backendUrl.addPathPart("balances").addPathPart(balanceId.value)
+        circuitBreaker.withCircuitBreaker(
+          {
+            val url = appConfig.backendUrl.addPathPart("balances").addPathPart(balanceId.value)
 
-        val headers = Seq(
-          HeaderNames.ACCEPT       -> ContentTypes.JSON,
-          HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
-          Constants.ChannelHeader  -> Channel.Api.name
-        )
+            val headers = Seq(
+              HeaderNames.ACCEPT       -> ContentTypes.JSON,
+              HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
+              Constants.ChannelHeader  -> Channel.Api.name
+            )
 
-        http.GET[Option[Either[UpstreamErrorResponse, PendingBalanceRequest]]](
-          url.toString,
-          queryParams = Seq.empty,
-          headers = headers
+            http.GET[GetRequestResponse](
+              url.toString,
+              queryParams = Seq.empty,
+              headers = headers
+            )
+          },
+          defineFailureFn = (result: Try[GetRequestResponse]) =>
+            result match {
+              case Success(Some(Left(_))) => true
+              case Failure(_)             => true
+              case _                      => false
+            }
         )
       }
 
