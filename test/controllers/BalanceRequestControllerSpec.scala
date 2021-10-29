@@ -167,14 +167,9 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       AccessCode("1234")
     )
 
-    val balanceRequestSuccess =
-      BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
-
     val request = FakeRequest().withBody(Json.toJson(balanceRequest))
 
-    val result = controller(
-      sendRequestResponse = IO(Right(Right(balanceRequestSuccess)))
-    ).submitBalanceRequest(request)
+    val result = controller().submitBalanceRequest(request)
 
     status(result) shouldBe NOT_ACCEPTABLE
     contentType(result) shouldBe Some(ContentTypes.JSON)
@@ -246,9 +241,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       )
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
-    val missingAccessCodeResult = controller(
-      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
-    ).submitBalanceRequest(missingAccessCodeRequest)
+    val missingAccessCodeResult = controller().submitBalanceRequest(missingAccessCodeRequest)
 
     status(missingAccessCodeResult) shouldBe BAD_REQUEST
     contentType(missingAccessCodeResult) shouldBe Some(ContentTypes.JSON)
@@ -264,9 +257,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       .withBody(Json.obj())
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
-    val emptyObjectResult = controller(
-      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
-    ).submitBalanceRequest(emptyObjectRequest)
+    val emptyObjectResult = controller().submitBalanceRequest(emptyObjectRequest)
 
     status(emptyObjectResult) shouldBe BAD_REQUEST
     contentType(emptyObjectResult) shouldBe Some(ContentTypes.JSON)
@@ -290,9 +281,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       )
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
-    val wrongAccessCodeTypeResult = controller(
-      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
-    ).submitBalanceRequest(wrongAccessCodeTypeRequest)
+    val wrongAccessCodeTypeResult = controller().submitBalanceRequest(wrongAccessCodeTypeRequest)
 
     status(wrongAccessCodeTypeResult) shouldBe BAD_REQUEST
     contentType(wrongAccessCodeTypeResult) shouldBe Some(ContentTypes.JSON)
@@ -308,9 +297,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       .withBody(JsString(""))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
-    val wrongRootElementResult = controller(
-      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
-    ).submitBalanceRequest(wrongRootElementRequest)
+    val wrongRootElementResult = controller().submitBalanceRequest(wrongRootElementRequest)
 
     status(wrongRootElementResult) shouldBe BAD_REQUEST
     contentType(wrongRootElementResult) shouldBe Some(ContentTypes.JSON)
@@ -336,9 +323,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
-    val result = controller(
-      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
-    ).submitBalanceRequest(request)
+    val result = controller().submitBalanceRequest(request)
 
     status(result) shouldBe BAD_REQUEST
     contentType(result) shouldBe Some(ContentTypes.JSON)
@@ -366,9 +351,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
-    val result = controller(
-      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
-    ).submitBalanceRequest(request)
+    val result = controller().submitBalanceRequest(request)
 
     status(result) shouldBe BAD_REQUEST
     contentType(result) shouldBe Some(ContentTypes.JSON)
@@ -401,9 +384,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
-    val result = controller(
-      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
-    ).submitBalanceRequest(request)
+    val result = controller().submitBalanceRequest(request)
 
     status(result) shouldBe BAD_REQUEST
     contentType(result) shouldBe Some(ContentTypes.JSON)
@@ -431,9 +412,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
-    val result = controller(
-      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
-    ).submitBalanceRequest(request)
+    val result = controller().submitBalanceRequest(request)
 
     status(result) shouldBe BAD_REQUEST
     contentType(result) shouldBe Some(ContentTypes.JSON)
@@ -461,9 +440,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
-    val result = controller(
-      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
-    ).submitBalanceRequest(request)
+    val result = controller().submitBalanceRequest(request)
 
     status(result) shouldBe BAD_REQUEST
     contentType(result) shouldBe Some(ContentTypes.JSON)
@@ -496,9 +473,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
-    val result = controller(
-      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
-    ).submitBalanceRequest(request)
+    val result = controller().submitBalanceRequest(request)
 
     status(result) shouldBe BAD_REQUEST
     contentType(result) shouldBe Some(ContentTypes.JSON)
@@ -526,9 +501,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
-    val result = controller(
-      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
-    ).submitBalanceRequest(request)
+    val result = controller().submitBalanceRequest(request)
 
     status(result) shouldBe BAD_REQUEST
     contentType(result) shouldBe Some(ContentTypes.JSON)
@@ -556,9 +529,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
-    val result = controller(
-      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
-    ).submitBalanceRequest(request)
+    val result = controller().submitBalanceRequest(request)
 
     status(result) shouldBe BAD_REQUEST
     contentType(result) shouldBe Some(ContentTypes.JSON)
@@ -736,23 +707,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     val uuid      = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
     val balanceId = BalanceId(uuid)
 
-    val balanceRequestSuccess =
-      BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
-
-    val pendingBalanceRequest = PendingBalanceRequest(
-      balanceId,
-      TaxIdentifier("GB12345678900"),
-      GuaranteeReference("05DE3300BE0001067A001017"),
-      OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 52, 15), ZoneOffset.UTC).toInstant,
-      completedAt = Some(
-        OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 53, 5), ZoneOffset.UTC).toInstant
-      ),
-      response = Some(balanceRequestSuccess)
-    )
-
-    val result = controller(
-      getRequestResponse = IO.some(Right(pendingBalanceRequest))
-    ).getBalanceRequest(balanceId)(FakeRequest())
+    val result = controller().getBalanceRequest(balanceId)(FakeRequest())
 
     status(result) shouldBe NOT_ACCEPTABLE
     contentType(result) shouldBe Some(ContentTypes.JSON)

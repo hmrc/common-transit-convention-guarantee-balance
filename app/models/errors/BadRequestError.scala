@@ -57,7 +57,7 @@ object BadRequestError extends CommonFormats {
     Json.format[InvalidAccessCode]
 
   implicit val badRequestErrorFormat: Format[BadRequestError] = Union
-    .from[BadRequestError]("code")
+    .from[BadRequestError](ErrorCode.FieldName)
     .and[InvalidTaxIdentifier](ErrorCode.InvalidTaxIdentifier)
     .and[InvalidGuaranteeReference](ErrorCode.InvalidGuaranteeReference)
     .and[InvalidAccessCode](ErrorCode.InvalidAccessCode)
