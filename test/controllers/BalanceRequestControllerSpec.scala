@@ -39,6 +39,8 @@ import org.scalatest.matchers.should.Matchers
 import play.api.Configuration
 import play.api.http.ContentTypes
 import play.api.http.HeaderNames
+import play.api.i18n.DefaultMessagesApi
+import play.api.libs.json.JsString
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers
@@ -77,7 +79,30 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       appConfig,
       FakeAuthActionProvider,
       service,
-      Helpers.stubControllerComponents(),
+      Helpers.stubControllerComponents(
+        messagesApi = new DefaultMessagesApi(
+          Map(
+            "en" -> Map(
+              "error.expected.date"               -> "Date value expected",
+              "error.expected.date.isoformat"     -> "Iso date value expected",
+              "error.expected.time"               -> "Time value expected",
+              "error.expected.jsarray"            -> "Array value expected",
+              "error.expected.jsboolean"          -> "Boolean value expected",
+              "error.expected.jsnumber"           -> "Number value expected",
+              "error.expected.jsobject"           -> "Object value expected",
+              "error.expected.jsstring"           -> "String value expected",
+              "error.expected.jsnumberorjsstring" -> "String or number expected",
+              "error.expected.keypathnode"        -> "Node value expected",
+              "error.expected.uuid"               -> "UUID value expected",
+              "error.expected.validenumvalue"     -> "Valid enumeration value expected",
+              "error.expected.enumstring"         -> "String value expected",
+              "error.path.empty"                  -> "Empty path",
+              "error.path.missing"                -> "Missing path",
+              "error.path.result.multiple"        -> "Multiple results for the given path"
+            )
+          )
+        )
+      ),
       IORuntime.global,
       new FakeMetrics
     )
@@ -94,7 +119,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
 
     val request = FakeRequest()
-      .withBody(balanceRequest)
+      .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
     val result = controller(
@@ -121,7 +146,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       )
 
     val request = FakeRequest()
-      .withBody(balanceRequest)
+      .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
     val result = controller(
@@ -145,7 +170,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     val balanceRequestSuccess =
       BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
 
-    val request = FakeRequest().withBody(balanceRequest)
+    val request = FakeRequest().withBody(Json.toJson(balanceRequest))
 
     val result = controller(
       sendRequestResponse = IO(Right(Right(balanceRequestSuccess)))
@@ -169,7 +194,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     val balanceId = BalanceId(UUID.randomUUID())
 
     val request = FakeRequest()
-      .withBody(balanceRequest)
+      .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
     val result = controller(
@@ -195,7 +220,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     val balanceId = BalanceId(UUID.randomUUID())
 
     val request = FakeRequest()
-      .withBody(balanceRequest)
+      .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
     val result = controller(
@@ -211,6 +236,350 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
   }
 
+  it should "return 400 when the request JSON is not a valid balance request" in {
+    val missingAccessCodeRequest = FakeRequest()
+      .withBody(
+        Json.obj(
+          "taxIdentifier"      -> "GB12345678900",
+          "guaranteeReference" -> "05DE3300BE0001067A001017"
+        )
+      )
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val missingAccessCodeResult = controller(
+      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
+    ).submitBalanceRequest(missingAccessCodeRequest)
+
+    status(missingAccessCodeResult) shouldBe BAD_REQUEST
+    contentType(missingAccessCodeResult) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(missingAccessCodeResult) shouldBe Json.obj(
+      "code"    -> "INVALID_REQUEST_JSON",
+      "message" -> "Invalid request JSON",
+      "errors" -> Json.obj(
+        "$.accessCode" -> Json.arr("Missing path")
+      )
+    )
+
+    val emptyObjectRequest = FakeRequest()
+      .withBody(Json.obj())
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val emptyObjectResult = controller(
+      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
+    ).submitBalanceRequest(emptyObjectRequest)
+
+    status(emptyObjectResult) shouldBe BAD_REQUEST
+    contentType(emptyObjectResult) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(emptyObjectResult) shouldBe Json.obj(
+      "code"    -> "INVALID_REQUEST_JSON",
+      "message" -> "Invalid request JSON",
+      "errors" -> Json.obj(
+        "$.taxIdentifier"      -> Json.arr("Missing path"),
+        "$.guaranteeReference" -> Json.arr("Missing path"),
+        "$.accessCode"         -> Json.arr("Missing path")
+      )
+    )
+
+    val wrongAccessCodeTypeRequest = FakeRequest()
+      .withBody(
+        Json.obj(
+          "taxIdentifier"      -> "GB12345678900",
+          "guaranteeReference" -> "05DE3300BE0001067A001017",
+          "accessCode"         -> 1234
+        )
+      )
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val wrongAccessCodeTypeResult = controller(
+      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
+    ).submitBalanceRequest(wrongAccessCodeTypeRequest)
+
+    status(wrongAccessCodeTypeResult) shouldBe BAD_REQUEST
+    contentType(wrongAccessCodeTypeResult) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(wrongAccessCodeTypeResult) shouldBe Json.obj(
+      "code"    -> "INVALID_REQUEST_JSON",
+      "message" -> "Invalid request JSON",
+      "errors" -> Json.obj(
+        "$.accessCode" -> Json.arr("String value expected")
+      )
+    )
+
+    val wrongRootElementRequest = FakeRequest()
+      .withBody(JsString(""))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val wrongRootElementResult = controller(
+      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
+    ).submitBalanceRequest(wrongRootElementRequest)
+
+    status(wrongRootElementResult) shouldBe BAD_REQUEST
+    contentType(wrongRootElementResult) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(wrongRootElementResult) shouldBe Json.obj(
+      "code"    -> "INVALID_REQUEST_JSON",
+      "message" -> "Invalid request JSON",
+      "errors" -> Json.obj(
+        "$.taxIdentifier"      -> Json.arr("Missing path"),
+        "$.guaranteeReference" -> Json.arr("Missing path"),
+        "$.accessCode"         -> Json.arr("Missing path")
+      )
+    )
+  }
+
+  it should "return 400 when the request contains a tax identifier that is too long" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB123456789001920319203"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("1234")
+    )
+
+    val request = FakeRequest()
+      .withBody(Json.toJson(balanceRequest))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
+    ).submitBalanceRequest(request)
+
+    status(result) shouldBe BAD_REQUEST
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "BAD_REQUEST",
+      "message" -> "Bad request",
+      "errors" -> Json.arr(
+        Json.obj(
+          "code"    -> "INVALID_TAX_IDENTIFIER",
+          "message" -> "Invalid tax identifier value",
+          "reason"  -> "Tax identifier value has a maximum length of 17 characters"
+        )
+      )
+    )
+  }
+
+  it should "return 400 when the request contains a tax identifier which includes invalid characters" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB123456789001920319203####"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("1234")
+    )
+
+    val request = FakeRequest()
+      .withBody(Json.toJson(balanceRequest))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
+    ).submitBalanceRequest(request)
+
+    status(result) shouldBe BAD_REQUEST
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "BAD_REQUEST",
+      "message" -> "Bad request",
+      "errors" -> Json.arr(
+        Json.obj(
+          "code"    -> "INVALID_TAX_IDENTIFIER",
+          "message" -> "Invalid tax identifier value",
+          "reason"  -> "Tax identifier value has a maximum length of 17 characters"
+        ),
+        Json.obj(
+          "code"    -> "INVALID_TAX_IDENTIFIER",
+          "message" -> "Invalid tax identifier value",
+          "reason"  -> "Tax identifier value must be alphanumeric"
+        )
+      )
+    )
+  }
+
+  it should "return 400 when the request contains a guarantee reference that is too long" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB123456789001"),
+      GuaranteeReference("05DE3300BE0001067A00101723232"),
+      AccessCode("1234")
+    )
+
+    val request = FakeRequest()
+      .withBody(Json.toJson(balanceRequest))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
+    ).submitBalanceRequest(request)
+
+    status(result) shouldBe BAD_REQUEST
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "BAD_REQUEST",
+      "message" -> "Bad request",
+      "errors" -> Json.arr(
+        Json.obj(
+          "code"    -> "INVALID_GUARANTEE_REFERENCE",
+          "message" -> "Invalid guarantee reference value",
+          "reason"  -> "Guarantee reference value has a maximum length of 24 characters"
+        )
+      )
+    )
+  }
+
+  it should "return 400 when the request contains a guarantee reference that is too short" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB123456789001"),
+      GuaranteeReference("05DE3300BE000106"),
+      AccessCode("1234")
+    )
+
+    val request = FakeRequest()
+      .withBody(Json.toJson(balanceRequest))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
+    ).submitBalanceRequest(request)
+
+    status(result) shouldBe BAD_REQUEST
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "BAD_REQUEST",
+      "message" -> "Bad request",
+      "errors" -> Json.arr(
+        Json.obj(
+          "code"    -> "INVALID_GUARANTEE_REFERENCE",
+          "message" -> "Invalid guarantee reference value",
+          "reason"  -> "Guarantee reference value has a minimum length of 17 characters"
+        )
+      )
+    )
+  }
+
+  it should "return 400 when the request contains a guarantee reference which includes invalid characters" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB123456789001"),
+      GuaranteeReference("05DE3300B@€€01067A00101712931"),
+      AccessCode("1234")
+    )
+
+    val request = FakeRequest()
+      .withBody(Json.toJson(balanceRequest))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
+    ).submitBalanceRequest(request)
+
+    status(result) shouldBe BAD_REQUEST
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "BAD_REQUEST",
+      "message" -> "Bad request",
+      "errors" -> Json.arr(
+        Json.obj(
+          "code"    -> "INVALID_GUARANTEE_REFERENCE",
+          "message" -> "Invalid guarantee reference value",
+          "reason"  -> "Guarantee reference value has a maximum length of 24 characters"
+        ),
+        Json.obj(
+          "code"    -> "INVALID_GUARANTEE_REFERENCE",
+          "message" -> "Invalid guarantee reference value",
+          "reason"  -> "Guarantee reference value must be alphanumeric"
+        )
+      )
+    )
+  }
+
+  it should "return 400 when the request contains an access code that is too long" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB123456789001"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("12345")
+    )
+
+    val request = FakeRequest()
+      .withBody(Json.toJson(balanceRequest))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
+    ).submitBalanceRequest(request)
+
+    status(result) shouldBe BAD_REQUEST
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "BAD_REQUEST",
+      "message" -> "Bad request",
+      "errors" -> Json.arr(
+        Json.obj(
+          "code"    -> "INVALID_ACCESS_CODE",
+          "message" -> "Invalid access code value",
+          "reason"  -> "Access code value must be 4 characters in length"
+        )
+      )
+    )
+  }
+
+  it should "return 400 when the request contains an access code that is too short" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB123456789001"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("123")
+    )
+
+    val request = FakeRequest()
+      .withBody(Json.toJson(balanceRequest))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
+    ).submitBalanceRequest(request)
+
+    status(result) shouldBe BAD_REQUEST
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "BAD_REQUEST",
+      "message" -> "Bad request",
+      "errors" -> Json.arr(
+        Json.obj(
+          "code"    -> "INVALID_ACCESS_CODE",
+          "message" -> "Invalid access code value",
+          "reason"  -> "Access code value must be 4 characters in length"
+        )
+      )
+    )
+  }
+
+  it should "return 400 when the request contains an access code which includes invalid characters" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB123456789001"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("1234#£@$#")
+    )
+
+    val request = FakeRequest()
+      .withBody(Json.toJson(balanceRequest))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      sendRequestResponse = IO(Left(UpstreamErrorResponse("Argh!!!", 400)))
+    ).submitBalanceRequest(request)
+
+    status(result) shouldBe BAD_REQUEST
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "BAD_REQUEST",
+      "message" -> "Bad request",
+      "errors" -> Json.arr(
+        Json.obj(
+          "code"    -> "INVALID_ACCESS_CODE",
+          "message" -> "Invalid access code value",
+          "reason"  -> "Access code value must be 4 characters in length"
+        ),
+        Json.obj(
+          "code"    -> "INVALID_ACCESS_CODE",
+          "message" -> "Invalid access code value",
+          "reason"  -> "Access code value must be alphanumeric"
+        )
+      )
+    )
+  }
+
   it should "return 500 when there is an upstream service error" in {
     val balanceRequest = BalanceRequest(
       TaxIdentifier("GB12345678900"),
@@ -219,7 +588,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
 
     val request = FakeRequest()
-      .withBody(balanceRequest)
+      .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
     val result = controller(
@@ -242,7 +611,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
 
     val request = FakeRequest()
-      .withBody(balanceRequest)
+      .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
     val result = controller(
@@ -265,7 +634,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
 
     val request = FakeRequest()
-      .withBody(balanceRequest)
+      .withBody(Json.toJson(balanceRequest))
       .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
 
     val result = controller(

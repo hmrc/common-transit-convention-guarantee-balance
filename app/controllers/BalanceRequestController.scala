@@ -16,6 +16,8 @@
 
 package controllers
 
+import cats.data.Validated
+import cats.data.ValidatedNel
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cats.syntax.all._
@@ -30,15 +32,28 @@ import models.backend.BalanceRequestFunctionalError
 import models.backend.BalanceRequestSuccess
 import models.backend.BalanceRequestXmlError
 import models.backend.PendingBalanceRequest
+import models.errors.BadRequestError
 import models.errors.BalanceRequestError
 import models.errors.InternalServiceError
+import models.errors.InvalidAccessCode
+import models.errors.InvalidGuaranteeReference
+import models.errors.InvalidTaxIdentifier
+import models.errors.JsonParsingError
 import models.errors.MissingAcceptHeaderError
+import models.errors.MultipleErrors
 import models.errors.NotFoundError
 import models.errors.UpstreamTimeoutError
 import models.request.BalanceRequest
 import models.response._
+import models.values.AccessCode
 import models.values.BalanceId
+import models.values.GuaranteeReference
+import models.values.TaxIdentifier
 import play.api.http.HeaderNames
+import play.api.i18n.I18nSupport
+import play.api.libs.json.JsError
+import play.api.libs.json.JsSuccess
+import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.AnyContent
@@ -63,6 +78,7 @@ class BalanceRequestController @Inject() (
 ) extends BackendController(cc)
   with IOActions
   with IOMetrics
+  with I18nSupport
   with Logging
   with ErrorLogging
   with LocationWithContext {
@@ -72,61 +88,151 @@ class BalanceRequestController @Inject() (
   private val AcceptHeaderRegex = """application/vnd\.hmrc\.(1.0)\+json""".r
 
   private def requireAcceptHeader[A](
-    result: => IO[Result]
+    continue: => IO[Result]
   )(implicit request: Request[A]): IO[Result] =
     request.headers
       .get(HeaderNames.ACCEPT)
       .flatMap(AcceptHeaderRegex.findFirstIn)
-      .map(_ => result)
+      .map(_ => continue)
       .getOrElse {
         val error     = MissingAcceptHeaderError()
         val errorJson = Json.toJson(error)
         IO.pure(NotAcceptable(errorJson))
       }
 
-  def submitBalanceRequest: Action[BalanceRequest] =
-    authenticate().io(parse.json[BalanceRequest]) { implicit request =>
+  private def validateTaxIdentifier(
+    taxId: TaxIdentifier
+  ): ValidatedNel[BadRequestError, TaxIdentifier] = {
+    (
+      Validated.condNel(
+        taxId.value.length <= 17,
+        taxId,
+        InvalidTaxIdentifier(reason = "Tax identifier value has a maximum length of 17 characters")
+      ),
+      Validated.condNel(
+        taxId.value.forall(_.isLetterOrDigit),
+        taxId,
+        InvalidTaxIdentifier(reason = "Tax identifier value must be alphanumeric")
+      )
+    ).tupled.as(taxId)
+  }
+
+  private def validateGuaranteeReference(
+    grn: GuaranteeReference
+  ): ValidatedNel[BadRequestError, GuaranteeReference] = {
+    (
+      Validated.condNel(
+        grn.value.length >= 17,
+        grn,
+        InvalidGuaranteeReference(reason =
+          "Guarantee reference value has a minimum length of 17 characters"
+        )
+      ),
+      Validated.condNel(
+        grn.value.length <= 24,
+        grn,
+        InvalidGuaranteeReference(reason =
+          "Guarantee reference value has a maximum length of 24 characters"
+        )
+      ),
+      Validated.condNel(
+        grn.value.forall(_.isLetterOrDigit),
+        grn,
+        InvalidGuaranteeReference(reason = "Guarantee reference value must be alphanumeric")
+      )
+    ).tupled.as(grn)
+  }
+
+  private def validateAccessCode(
+    code: AccessCode
+  ): ValidatedNel[BadRequestError, AccessCode] = {
+    (
+      Validated.condNel(
+        code.value.length == 4,
+        code,
+        InvalidAccessCode(reason = "Access code value must be 4 characters in length")
+      ),
+      Validated.condNel(
+        code.value.forall(_.isLetterOrDigit),
+        code,
+        InvalidAccessCode(reason = "Access code value must be alphanumeric")
+      )
+    ).tupled.as(code)
+  }
+
+  private def validateBalanceRequest(
+    request: BalanceRequest
+  ): ValidatedNel[BadRequestError, BalanceRequest] = {
+    (
+      validateTaxIdentifier(request.taxIdentifier),
+      validateGuaranteeReference(request.guaranteeReference),
+      validateAccessCode(request.accessCode)
+    ).tupled.as(request)
+  }
+
+  private def validateRequest(
+    continue: BalanceRequest => IO[Result]
+  )(implicit request: Request[JsValue]): IO[Result] =
+    IO(request.body.validate[BalanceRequest]).flatMap {
+      case JsError(errors) =>
+        val error     = JsonParsingError(errors = errors)
+        val errorJson = Json.toJson(error)
+        IO.pure(BadRequest(errorJson))
+      case JsSuccess(balanceRequest, _) =>
+        validateBalanceRequest(balanceRequest)
+          .map(continue)
+          .valueOr { errors =>
+            val error     = MultipleErrors(errors = errors)
+            val errorJson = Json.toJson[BadRequestError](error)
+            IO.pure(BadRequest(errorJson))
+          }
+    }
+
+  def submitBalanceRequest: Action[JsValue] =
+    authenticate().io(parse.json) { implicit request =>
       withMetricsTimerResult(SubmitBalanceRequest) {
         requireAcceptHeader {
-          service
-            .submitBalanceRequest(request.body)
-            .flatTap(logServiceError("submitting balance request", _))
-            .map {
-              case Right(Right(success @ BalanceRequestSuccess(_, _))) =>
-                Ok(Json.toJson(PostBalanceRequestSuccessResponse(success)))
+          validateRequest { balanceRequest =>
+            service
+              .submitBalanceRequest(balanceRequest)
+              .flatTap(logServiceError("submitting balance request", _))
+              .map {
+                case Right(Right(success @ BalanceRequestSuccess(_, _))) =>
+                  Ok(Json.toJson(PostBalanceRequestSuccessResponse(success)))
 
-              case Right(Right(error @ BalanceRequestFunctionalError(_))) =>
-                BadRequest(Json.toJson(PostBalanceRequestFunctionalErrorResponse(error)))
+                case Right(Right(error @ BalanceRequestFunctionalError(_))) =>
+                  BadRequest(Json.toJson(PostBalanceRequestFunctionalErrorResponse(error)))
 
-              case Right(Right(BalanceRequestXmlError(_))) =>
-                InternalServerError(Json.toJson(BalanceRequestError.internalServiceError()))
+                case Right(Right(BalanceRequestXmlError(_))) =>
+                  InternalServerError(Json.toJson(BalanceRequestError.internalServiceError()))
 
-              case Right(Left(balanceId)) =>
-                if (!appConfig.asyncBalanceResponse) {
-                  val error     = UpstreamTimeoutError()
-                  val errorJson = Json.toJson[BalanceRequestError](error)
-                  GatewayTimeout(errorJson)
-                } else {
-                  Accepted(Json.toJson(PostBalanceRequestPendingResponse(balanceId))).withHeaders(
-                    HeaderNames.LOCATION -> routes.BalanceRequestController
-                      .getBalanceRequest(balanceId)
-                      .pathWithContext
-                  )
-                }
+                case Right(Left(balanceId)) =>
+                  if (!appConfig.asyncBalanceResponse) {
+                    val error     = UpstreamTimeoutError()
+                    val errorJson = Json.toJson[BalanceRequestError](error)
+                    GatewayTimeout(errorJson)
+                  } else {
+                    Accepted(Json.toJson(PostBalanceRequestPendingResponse(balanceId))).withHeaders(
+                      HeaderNames.LOCATION -> routes.BalanceRequestController
+                        .getBalanceRequest(balanceId)
+                        .pathWithContext
+                    )
+                  }
 
-              case Left(error @ UpstreamTimeoutError(_)) =>
-                GatewayTimeout(Json.toJson[BalanceRequestError](error))
+                case Left(error @ UpstreamTimeoutError(_)) =>
+                  GatewayTimeout(Json.toJson[BalanceRequestError](error))
 
-              case Left(error) =>
-                InternalServerError(Json.toJson[BalanceRequestError](error))
-            }
-            .recoverWith { case NonFatal(e) =>
-              logger.error(e)("Unhandled exception thrown").map { _ =>
-                val error     = InternalServiceError.causedBy(e)
-                val errorJson = Json.toJson[BalanceRequestError](error)
-                InternalServerError(errorJson)
+                case Left(error) =>
+                  InternalServerError(Json.toJson[BalanceRequestError](error))
               }
-            }
+              .recoverWith { case NonFatal(e) =>
+                logger.error(e)("Unhandled exception thrown").map { _ =>
+                  val error     = InternalServiceError.causedBy(e)
+                  val errorJson = Json.toJson[BalanceRequestError](error)
+                  InternalServerError(errorJson)
+                }
+              }
+          }
         }
       }
     }

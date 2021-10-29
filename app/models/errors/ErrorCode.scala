@@ -19,11 +19,15 @@ package models.errors
 /** Common error codes documented in [[https://developer.service.hmrc.gov.uk/api-documentation/docs/reference-guide#errors Developer Hub Reference Guide]]
   */
 object ErrorCode {
-  val FieldName           = "code"
-  val BadRequest          = "BAD_REQUEST"
-  val NotFound            = "NOT_FOUND"
-  val InternalServerError = "INTERNAL_SERVER_ERROR"
-  val GatewayTimeout      = "GATEWAY_TIMEOUT"
-  val FunctionalError     = "FUNCTIONAL_ERROR"
-  val AcceptHeaderInvalid = "ACCEPT_HEADER_INVALID"
+  val FieldName                 = "code"
+  val BadRequest                = "BAD_REQUEST"
+  val NotFound                  = "NOT_FOUND"
+  val InternalServerError       = "INTERNAL_SERVER_ERROR"
+  val GatewayTimeout            = "GATEWAY_TIMEOUT"
+  val FunctionalError           = "FUNCTIONAL_ERROR"
+  val AcceptHeaderInvalid       = "ACCEPT_HEADER_INVALID"
+  val InvalidRequestJson        = "INVALID_REQUEST_JSON"
+  val InvalidTaxIdentifier      = "INVALID_TAX_IDENTIFIER"
+  val InvalidGuaranteeReference = "INVALID_GUARANTEE_REFERENCE"
+  val InvalidAccessCode         = "INVALID_ACCESS_CODE"
 }
