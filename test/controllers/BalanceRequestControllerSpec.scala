@@ -46,6 +46,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers
 import play.api.test.Helpers._
 import services.BalanceRequestService
+import services.BalanceRequestValidationService
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -79,6 +80,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       appConfig,
       FakeAuthActionProvider,
       service,
+      new BalanceRequestValidationService,
       Helpers.stubControllerComponents(
         messagesApi = new DefaultMessagesApi(
           Map(
@@ -334,7 +336,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
         Json.obj(
           "code"    -> "INVALID_TAX_IDENTIFIER",
           "message" -> "Invalid tax identifier value",
-          "reason"  -> "Tax identifier value has a maximum length of 17 characters"
+          "reason"  -> "Tax identifier has a maximum length of 17 characters"
         )
       )
     )
@@ -362,12 +364,12 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
         Json.obj(
           "code"    -> "INVALID_TAX_IDENTIFIER",
           "message" -> "Invalid tax identifier value",
-          "reason"  -> "Tax identifier value has a maximum length of 17 characters"
+          "reason"  -> "Tax identifier has a maximum length of 17 characters"
         ),
         Json.obj(
           "code"    -> "INVALID_TAX_IDENTIFIER",
           "message" -> "Invalid tax identifier value",
-          "reason"  -> "Tax identifier value must be alphanumeric"
+          "reason"  -> "Tax identifier must be alphanumeric"
         )
       )
     )
@@ -395,7 +397,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
         Json.obj(
           "code"    -> "INVALID_GUARANTEE_REFERENCE",
           "message" -> "Invalid guarantee reference value",
-          "reason"  -> "Guarantee reference value has a maximum length of 24 characters"
+          "reason"  -> "Guarantee reference has a maximum length of 24 characters"
         )
       )
     )
@@ -423,7 +425,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
         Json.obj(
           "code"    -> "INVALID_GUARANTEE_REFERENCE",
           "message" -> "Invalid guarantee reference value",
-          "reason"  -> "Guarantee reference value has a minimum length of 17 characters"
+          "reason"  -> "Guarantee reference has a minimum length of 17 characters"
         )
       )
     )
@@ -451,12 +453,12 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
         Json.obj(
           "code"    -> "INVALID_GUARANTEE_REFERENCE",
           "message" -> "Invalid guarantee reference value",
-          "reason"  -> "Guarantee reference value has a maximum length of 24 characters"
+          "reason"  -> "Guarantee reference has a maximum length of 24 characters"
         ),
         Json.obj(
           "code"    -> "INVALID_GUARANTEE_REFERENCE",
           "message" -> "Invalid guarantee reference value",
-          "reason"  -> "Guarantee reference value must be alphanumeric"
+          "reason"  -> "Guarantee reference must be alphanumeric"
         )
       )
     )
@@ -484,7 +486,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
         Json.obj(
           "code"    -> "INVALID_ACCESS_CODE",
           "message" -> "Invalid access code value",
-          "reason"  -> "Access code value must be 4 characters in length"
+          "reason"  -> "Access code must be 4 characters in length"
         )
       )
     )
@@ -512,7 +514,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
         Json.obj(
           "code"    -> "INVALID_ACCESS_CODE",
           "message" -> "Invalid access code value",
-          "reason"  -> "Access code value must be 4 characters in length"
+          "reason"  -> "Access code must be 4 characters in length"
         )
       )
     )
@@ -540,12 +542,12 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
         Json.obj(
           "code"    -> "INVALID_ACCESS_CODE",
           "message" -> "Invalid access code value",
-          "reason"  -> "Access code value must be 4 characters in length"
+          "reason"  -> "Access code must be 4 characters in length"
         ),
         Json.obj(
           "code"    -> "INVALID_ACCESS_CODE",
           "message" -> "Invalid access code value",
-          "reason"  -> "Access code value must be alphanumeric"
+          "reason"  -> "Access code must be alphanumeric"
         )
       )
     )

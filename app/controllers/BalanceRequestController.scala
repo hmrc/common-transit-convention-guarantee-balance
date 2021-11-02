@@ -16,8 +16,6 @@
 
 package controllers
 
-import cats.data.Validated
-import cats.data.ValidatedNel
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cats.syntax.all._
@@ -35,9 +33,6 @@ import models.backend.PendingBalanceRequest
 import models.errors.BadRequestError
 import models.errors.BalanceRequestError
 import models.errors.InternalServiceError
-import models.errors.InvalidAccessCode
-import models.errors.InvalidGuaranteeReference
-import models.errors.InvalidTaxIdentifier
 import models.errors.JsonParsingError
 import models.errors.MissingAcceptHeaderError
 import models.errors.MultipleErrors
@@ -45,10 +40,7 @@ import models.errors.NotFoundError
 import models.errors.UpstreamTimeoutError
 import models.request.BalanceRequest
 import models.response._
-import models.values.AccessCode
 import models.values.BalanceId
-import models.values.GuaranteeReference
-import models.values.TaxIdentifier
 import play.api.http.HeaderNames
 import play.api.i18n.I18nSupport
 import play.api.libs.json.JsError
@@ -61,6 +53,7 @@ import play.api.mvc.ControllerComponents
 import play.api.mvc.Request
 import play.api.mvc.Result
 import services.BalanceRequestService
+import services.BalanceRequestValidationService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
@@ -72,6 +65,7 @@ class BalanceRequestController @Inject() (
   appConfig: AppConfig,
   authenticate: AuthActionProvider,
   service: BalanceRequestService,
+  validator: BalanceRequestValidationService,
   cc: ControllerComponents,
   val runtime: IORuntime,
   val metrics: Metrics
@@ -100,76 +94,6 @@ class BalanceRequestController @Inject() (
         IO.pure(NotAcceptable(errorJson))
       }
 
-  private def validateTaxIdentifier(
-    taxId: TaxIdentifier
-  ): ValidatedNel[BadRequestError, TaxIdentifier] = {
-    (
-      Validated.condNel(
-        taxId.value.length <= 17,
-        taxId,
-        InvalidTaxIdentifier(reason = "Tax identifier value has a maximum length of 17 characters")
-      ),
-      Validated.condNel(
-        taxId.value.forall(_.isLetterOrDigit),
-        taxId,
-        InvalidTaxIdentifier(reason = "Tax identifier value must be alphanumeric")
-      )
-    ).tupled.as(taxId)
-  }
-
-  private def validateGuaranteeReference(
-    grn: GuaranteeReference
-  ): ValidatedNel[BadRequestError, GuaranteeReference] = {
-    (
-      Validated.condNel(
-        grn.value.length >= 17,
-        grn,
-        InvalidGuaranteeReference(reason =
-          "Guarantee reference value has a minimum length of 17 characters"
-        )
-      ),
-      Validated.condNel(
-        grn.value.length <= 24,
-        grn,
-        InvalidGuaranteeReference(reason =
-          "Guarantee reference value has a maximum length of 24 characters"
-        )
-      ),
-      Validated.condNel(
-        grn.value.forall(_.isLetterOrDigit),
-        grn,
-        InvalidGuaranteeReference(reason = "Guarantee reference value must be alphanumeric")
-      )
-    ).tupled.as(grn)
-  }
-
-  private def validateAccessCode(
-    code: AccessCode
-  ): ValidatedNel[BadRequestError, AccessCode] = {
-    (
-      Validated.condNel(
-        code.value.length == 4,
-        code,
-        InvalidAccessCode(reason = "Access code value must be 4 characters in length")
-      ),
-      Validated.condNel(
-        code.value.forall(_.isLetterOrDigit),
-        code,
-        InvalidAccessCode(reason = "Access code value must be alphanumeric")
-      )
-    ).tupled.as(code)
-  }
-
-  private def validateBalanceRequest(
-    request: BalanceRequest
-  ): ValidatedNel[BadRequestError, BalanceRequest] = {
-    (
-      validateTaxIdentifier(request.taxIdentifier),
-      validateGuaranteeReference(request.guaranteeReference),
-      validateAccessCode(request.accessCode)
-    ).tupled.as(request)
-  }
-
   private def validateRequest(
     continue: BalanceRequest => IO[Result]
   )(implicit request: Request[JsValue]): IO[Result] =
@@ -179,7 +103,8 @@ class BalanceRequestController @Inject() (
         val errorJson = Json.toJson(error)
         IO.pure(BadRequest(errorJson))
       case JsSuccess(balanceRequest, _) =>
-        validateBalanceRequest(balanceRequest)
+        validator
+          .validate(balanceRequest)
           .map(continue)
           .valueOr { errors =>
             val error     = MultipleErrors(errors = errors)
