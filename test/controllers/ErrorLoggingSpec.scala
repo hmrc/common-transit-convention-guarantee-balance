@@ -93,19 +93,6 @@ class ErrorLoggingSpec
       event.getThrowableProxy shouldBe null
   }
 
-  it should "log an error when there is a NotFoundError for a given BalanceId" in withLogAppender {
-    appender =>
-      val uuid      = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
-      val balanceId = BalanceId(uuid)
-      val error     = BalanceRequestError.notFoundError(balanceId)
-      logServiceError("running tests", Left(error)).unsafeRunSync()
-      assert(!appender.list.isEmpty, appender.list)
-      val event = appender.list.get(0)
-      event.getLevel shouldBe Level.ERROR
-      event.getMessage shouldBe "Error when running tests: The balance request with ID 22b9899e-24ee-48e6-a189-97d1f45391c4 was not found"
-      event.getThrowableProxy shouldBe null
-  }
-
   it should "log an error when there is an UpstreamTimeoutError" in withLogAppender { appender =>
     val error = UpstreamTimeoutError()
     logServiceError("running tests", Left(error)).unsafeRunSync()
@@ -114,5 +101,14 @@ class ErrorLoggingSpec
     event.getLevel shouldBe Level.ERROR
     event.getMessage shouldBe "Timed out awaiting upstream response while running tests: Request timed out"
     event.getThrowableProxy shouldBe null
+  }
+
+  it should "not log anything when there is a NotFoundError for a given BalanceId" in withLogAppender {
+    appender =>
+      val uuid      = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
+      val balanceId = BalanceId(uuid)
+      val error     = BalanceRequestError.notFoundError(balanceId)
+      logServiceError("running tests", Left(error)).unsafeRunSync()
+      assert(appender.list.isEmpty, appender.list)
   }
 }
