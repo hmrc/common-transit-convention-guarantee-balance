@@ -34,6 +34,9 @@ case class InvalidTaxIdentifier(message: String = "Invalid tax identifier value"
   extends BadRequestError
 
 object InvalidTaxIdentifier {
+  val nonEmpty =
+    InvalidTaxIdentifier(reason = "Tax identifier must not be empty")
+
   val alphanumeric =
     InvalidTaxIdentifier(reason = "Tax identifier must be alphanumeric")
 
@@ -47,12 +50,11 @@ case class InvalidGuaranteeReference(
 ) extends BadRequestError
 
 object InvalidGuaranteeReference {
+  val nonEmpty =
+    InvalidGuaranteeReference(reason = "Guarantee reference must not be empty")
+
   val alphanumeric =
     InvalidGuaranteeReference(reason = "Guarantee reference must be alphanumeric")
-
-  def minLength(length: Int) = InvalidGuaranteeReference(reason =
-    s"Guarantee reference has a minimum length of $length characters"
-  )
 
   def maxLength(length: Int) = InvalidGuaranteeReference(reason =
     s"Guarantee reference has a maximum length of $length characters"

@@ -42,6 +42,18 @@ class BalanceRequestValidationServiceSpec extends AnyFlatSpec with Matchers with
     validator.validate(request).value shouldBe request
   }
 
+  it should "return an error when tax identifier is empty" in {
+    val request = BalanceRequest(
+      TaxIdentifier(""),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("1234")
+    )
+
+    validator.validate(request).left.value shouldBe NonEmptyList.one(
+      InvalidTaxIdentifier.nonEmpty
+    )
+  }
+
   it should "return an error when tax identifier is too long" in {
     val request = BalanceRequest(
       TaxIdentifier("GB1234567890012312312"),
@@ -66,15 +78,15 @@ class BalanceRequestValidationServiceSpec extends AnyFlatSpec with Matchers with
     )
   }
 
-  it should "return an error when guarantee reference is too short" in {
+  it should "return an error when guarantee reference is empty" in {
     val request = BalanceRequest(
       TaxIdentifier("GB12345678900"),
-      GuaranteeReference("05DE3300BE000106"),
+      GuaranteeReference(""),
       AccessCode("1234")
     )
 
     validator.validate(request).left.value shouldBe NonEmptyList.one(
-      InvalidGuaranteeReference.minLength(17)
+      InvalidGuaranteeReference.nonEmpty
     )
   }
 
@@ -148,7 +160,6 @@ class BalanceRequestValidationServiceSpec extends AnyFlatSpec with Matchers with
     validator.validate(request).left.value shouldBe NonEmptyList.of(
       InvalidTaxIdentifier.maxLength(17),
       InvalidTaxIdentifier.alphanumeric,
-      InvalidGuaranteeReference.minLength(17),
       InvalidGuaranteeReference.alphanumeric,
       InvalidAccessCode.exactLength(4),
       InvalidAccessCode.alphanumeric

@@ -314,6 +314,34 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
   }
 
+  it should "return 400 when the request contains a tax identifier that is empty" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier(""),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("1234")
+    )
+
+    val request = FakeRequest()
+      .withBody(Json.toJson(balanceRequest))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller().submitBalanceRequest(request)
+
+    status(result) shouldBe BAD_REQUEST
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "BAD_REQUEST",
+      "message" -> "Bad request",
+      "errors" -> Json.arr(
+        Json.obj(
+          "code"    -> "INVALID_TAX_IDENTIFIER",
+          "message" -> "Invalid tax identifier value",
+          "reason"  -> "Tax identifier must not be empty"
+        )
+      )
+    )
+  }
+
   it should "return 400 when the request contains a tax identifier that is too long" in {
     val balanceRequest = BalanceRequest(
       TaxIdentifier("GB123456789001920319203"),
@@ -403,10 +431,10 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
   }
 
-  it should "return 400 when the request contains a guarantee reference that is too short" in {
+  it should "return 400 when the request contains a guarantee reference that is empty" in {
     val balanceRequest = BalanceRequest(
       TaxIdentifier("GB123456789001"),
-      GuaranteeReference("05DE3300BE000106"),
+      GuaranteeReference(""),
       AccessCode("1234")
     )
 
@@ -425,7 +453,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
         Json.obj(
           "code"    -> "INVALID_GUARANTEE_REFERENCE",
           "message" -> "Invalid guarantee reference value",
-          "reason"  -> "Guarantee reference has a minimum length of 17 characters"
+          "reason"  -> "Guarantee reference must not be empty"
         )
       )
     )

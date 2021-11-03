@@ -33,6 +33,9 @@ import javax.inject.Inject
 class BalanceRequestValidationService @Inject() () {
   type Validate[A] = Validated[NonEmptyList[BadRequestError], A]
 
+  def nonEmpty(value: String, error: => BadRequestError): Validate[Unit] =
+    Validated.condNel(value.nonEmpty, (), error)
+
   def minLength(value: String, length: Int, error: Int => BadRequestError): Validate[Unit] =
     Validated.condNel(value.length >= length, (), error(length))
 
@@ -47,13 +50,14 @@ class BalanceRequestValidationService @Inject() () {
 
   def validateTaxIdentifier(taxId: TaxIdentifier): Validate[Unit] =
     (
+      nonEmpty(taxId.value, InvalidTaxIdentifier.nonEmpty),
       maxLength(taxId.value, 17, InvalidTaxIdentifier.maxLength),
       alphanumeric(taxId.value, InvalidTaxIdentifier.alphanumeric)
     ).tupled.void
 
   def validateGuaranteeReference(grn: GuaranteeReference): Validate[Unit] =
     (
-      minLength(grn.value, 17, InvalidGuaranteeReference.minLength),
+      nonEmpty(grn.value, InvalidGuaranteeReference.nonEmpty),
       maxLength(grn.value, 24, InvalidGuaranteeReference.maxLength),
       alphanumeric(grn.value, InvalidGuaranteeReference.alphanumeric)
     ).tupled.void
