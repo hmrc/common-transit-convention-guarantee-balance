@@ -37,10 +37,9 @@ class BalanceRequestLockServiceImpl @Inject() (lockRepo: MongoLockRepository, ap
   extends BalanceRequestLockService
   with IOFutures {
 
-  val hash = MessageDigest.getInstance("SHA-256")
-
   def isLockedOut(grn: GuaranteeReference, internalId: InternalId): IO[Boolean] = IO.runFuture {
     implicit ec =>
+      val hash          = MessageDigest.getInstance("SHA-256")
       val lockKey       = internalId.value + grn.value
       val lockHashBytes = hash.digest(lockKey.getBytes(StandardCharsets.UTF_8))
       val lockHashHex   = for (hashByte <- lockHashBytes) yield f"$hashByte%02x"
