@@ -23,6 +23,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.Inject
 import javax.inject.Singleton
+import scala.concurrent.duration.Duration
 
 @Singleton
 class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
@@ -42,4 +43,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val backendCircuitBreakerConfig =
     CircuitBreakerConfig.fromServicesConfig("transit-movements-guarantee-balance", config)
+
+  lazy val balanceRequestLockoutTtl =
+    config.get[Duration]("balance-request.lockout-ttl")
 }

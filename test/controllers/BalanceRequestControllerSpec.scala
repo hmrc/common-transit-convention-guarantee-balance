@@ -47,6 +47,7 @@ import play.api.test.Helpers
 import play.api.test.Helpers._
 import services.BalanceRequestService
 import services.BalanceRequestValidationService
+import services.FakeBalanceRequestLockService
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -63,6 +64,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
   }
 
   def controller(
+    isLockedOutResponse: IO[Boolean] = IO.pure(false),
     getRequestResponse: IO[Option[Either[UpstreamErrorResponse, PendingBalanceRequest]]] = IO.stub,
     sendRequestResponse: IO[
       Either[UpstreamErrorResponse, Either[BalanceId, BalanceRequestResponse]]
@@ -80,6 +82,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       appConfig,
       FakeAuthActionProvider,
       service,
+      FakeBalanceRequestLockService(isLockedOutResponse),
       new BalanceRequestValidationService,
       Helpers.stubControllerComponents(
         messagesApi = new DefaultMessagesApi(
@@ -230,6 +233,30 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     contentAsJson(result) shouldBe Json.toJson(PostBalanceRequestPendingResponse(balanceId))
     header(HeaderNames.LOCATION, result) shouldBe Some(
       s"/customs/guarantees/balances/${balanceId.value}"
+    )
+  }
+
+  it should "return 429 when the user has already made a request within the lockout period" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB12345678900"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("1234")
+    )
+
+    val request = FakeRequest()
+      .withBody(Json.toJson(balanceRequest))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      isLockedOutResponse = IO.pure(true),
+      sendRequestResponse = IO.raiseError(new RuntimeException)
+    ).submitBalanceRequest(request)
+
+    status(result) shouldBe TOO_MANY_REQUESTS
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "TOO_MANY_REQUESTS",
+      "message" -> "Too many requests"
     )
   }
 

@@ -30,4 +30,5 @@ object ErrorCode {
   val InvalidTaxIdentifier      = "INVALID_TAX_IDENTIFIER"
   val InvalidGuaranteeReference = "INVALID_GUARANTEE_REFERENCE"
   val InvalidAccessCode         = "INVALID_ACCESS_CODE"
+  val TooManyRequests           = "TOO_MANY_REQUESTS"
 }
