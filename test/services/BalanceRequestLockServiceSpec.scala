@@ -61,7 +61,7 @@ class BalanceRequestLockServiceSpec
     service.isLockedOut(grn, internalId).unsafeToFuture().futureValue shouldBe false
   }
 
-  it should "take the lock for different GRNs without any issue within the timeout period" in {
+  it should "allow the same user to take the lock for two different GRNs within the timeout period" in {
     val internalId = InternalId("12345")
     val grn1       = GuaranteeReference("05DE3300BE0001067A001017")
     val grn2       = GuaranteeReference("20GB0000010000GX1")
@@ -70,6 +70,20 @@ class BalanceRequestLockServiceSpec
       first  <- service.isLockedOut(grn1, internalId)
       _      <- IO.sleep(50.millis)
       second <- service.isLockedOut(grn2, internalId)
+    } yield (first, second)
+
+    assertion.unsafeToFuture().futureValue.shouldBe((false, false))
+  }
+
+  it should "allow two different users to take the lock for the same GRN within the timeout period" in {
+    val internalId1 = InternalId("12345")
+    val internalId2 = InternalId("98765")
+    val grn         = GuaranteeReference("05DE3300BE0001067A001017")
+
+    val assertion = for {
+      first  <- service.isLockedOut(grn, internalId1)
+      _      <- IO.sleep(50.millis)
+      second <- service.isLockedOut(grn, internalId2)
     } yield (first, second)
 
     assertion.unsafeToFuture().futureValue.shouldBe((false, false))

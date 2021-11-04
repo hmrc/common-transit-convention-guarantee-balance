@@ -24,6 +24,8 @@ import models.values.InternalId
 import runtime.IOFutures
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
 
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import javax.inject.Inject
 
 @ImplementedBy(classOf[BalanceRequestLockServiceImpl])
@@ -35,11 +37,17 @@ class BalanceRequestLockServiceImpl @Inject() (lockRepo: MongoLockRepository, ap
   extends BalanceRequestLockService
   with IOFutures {
 
+  val hash = MessageDigest.getInstance("SHA-256")
+
   def isLockedOut(grn: GuaranteeReference, internalId: InternalId): IO[Boolean] = IO.runFuture {
     implicit ec =>
+      val lockKey       = internalId.value + grn.value
+      val lockHashBytes = hash.digest(lockKey.getBytes(StandardCharsets.UTF_8))
+      val lockHashHex   = for (hashByte <- lockHashBytes) yield f"$hashByte%02x"
+
       lockRepo
         .takeLock(
-          lockId = grn.value,
+          lockId = lockHashHex.mkString,
           owner = internalId.value,
           ttl = appConfig.balanceRequestLockoutTtl
         )
