@@ -63,24 +63,24 @@ traits:
                   "currency": "GBP"
                 }
               }
-      # 202:
-      #   headers:
-      #     Location:
-      #       description: The path of the newly created balance request
-      #       type: string
-      #       example: "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
-      #   body:
-      #     application/json:
-      #       type: !include schemas/post-balance-request-pending-response-schema.json
-      #       example: |
-      #         {
-      #           "_links": {
-      #             "self": {
-      #               "href": "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
-      #             }
-      #           },
-      #           "balanceId": "22b9899e-24ee-48e6-a189-97d1f45391c4"
-      #         }
+      202:
+        headers:
+          Location:
+            description: The path of the newly created balance request
+            type: string
+            example: "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+        body:
+          application/json:
+            type: !include schemas/post-balance-request-pending-response-schema.json
+            example: |
+              {
+                "_links": {
+                  "self": {
+                    "href": "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+                  }
+                },
+                "balanceId": "22b9899e-24ee-48e6-a189-97d1f45391c4"
+              }
       400:
         body:
           application/json:
@@ -92,99 +92,104 @@ traits:
                 "message": "The request was rejected by the guarantee management system",
                 "response": {
                   "errors": [{
-                    "errorType": 14,
-                    "errorPointer": "Foo.Bar(1).Baz"
+                    "errorType": 12,
+                    "errorPointer": "GRR(1).Guarantee reference number (GRN)"
                   }]
                 }
               }
 
+  /{balanceId}:
+    uriParameters:
+      balanceId:
+        description: The ID of the balance request to check.
+        type: string
+        example: "22b9899e-24ee-48e6-a189-97d1f45391c4"
+        required: true
 
-  # /{balanceId}:
-  #   uriParameters:
-  #     balanceId:
-  #       description: The ID of the balance request to check.
-  #       type: string
-  #       example: "22b9899e-24ee-48e6-a189-97d1f45391c4"
-  #       required: true
-
-  #   get:
-  #     displayName: Check the status of a Balance Request
-  #     is:
-  #       - headers.acceptHeader
-  #       - acceptHeaderInvalid
-  #     (annotations.scope): "common-transit-convention-guarantee-balance"
-  #     securedBy: [ sec.oauth_2_0: { scopes: [ "common-transit-convention-guarantee-balance" ] } ]
-  #     responses:
-  #       200:
-  #         body:
-  #           application/json:
-  #             type: !include schemas/get-balance-request-response-schema.json
-  #             examples:
-  #               pending-request:
-  #                 value: |
-  #                   {
-  #                     "_links": {
-  #                       "self": {
-  #                         "href": "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
-  #                       }
-  #                     },
-  #                     "request": {
-  #                       "balanceId": "22b9899e-24ee-48e6-a189-97d1f45391c4",
-  #                       "taxIdentifier": "GB123456789012",
-  #                       "guaranteeReference": "20GB0000010000GX1",
-  #                       "requestedAt": "2021-09-14T09:52:15Z"
-  #                     }
-  #                   }
-  #               successful-request:
-  #                 value: |
-  #                   {
-  #                     "_links": {
-  #                       "self": {
-  #                         "href": "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
-  #                       }
-  #                     },
-  #                     "request": {
-  #                       "balanceId": "22b9899e-24ee-48e6-a189-97d1f45391c4",
-  #                       "taxIdentifier": "GB123456789012",
-  #                       "guaranteeReference": "20GB0000010000GX1",
-  #                       "requestedAt": "2021-09-14T09:52:15Z",
-  #                       "completedAt": "2021-09-14T09:53:05Z",
-  #                       "response": {
-  #                         "status": "SUCCESS",
-  #                         "balance": 12345678.9,
-  #                         "currency": "EUR"
-  #                       }
-  #                     }
-  #                   }
-  #               failed-request:
-  #                 value: |
-  #                   {
-  #                     "_links": {
-  #                       "self": {
-  #                         "href": "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
-  #                       }
-  #                     },
-  #                     "request": {
-  #                       "balanceId": "22b9899e-24ee-48e6-a189-97d1f45391c4",
-  #                       "taxIdentifier": "GB123456789012",
-  #                       "guaranteeReference": "20GB0000010000GX1",
-  #                       "requestedAt": "2021-09-14T09:52:15Z",
-  #                       "completedAt": "2021-09-14T09:53:05Z",
-  #                       "response": {
-  #                         "status": "FUNCTIONAL_ERROR",
-  #                         "errors": [{
-  #                           "errorType": 12,
-  #                           "errorPointer": "Foo.Bar(1).Baz"
-  #                         }]
-  #                       }
-  #                     }
-  #                   }
-  #       404:
-  #         body:
-  #           application/json:
-  #             type: types.errorResponse
-  #             examples:
-  #               badRequest:
-  #                 description: The balance request was not found
-  #                 value:
-  #                   code: NOT_FOUND
+    get:
+      displayName: Check the status of a Balance Request
+      is:
+        - headers.acceptHeader
+        - acceptHeaderInvalid
+      (annotations.scope): "common-transit-convention-guarantee-balance"
+      securedBy: [ sec.oauth_2_0: { scopes: [ "common-transit-convention-guarantee-balance" ] } ]
+      responses:
+        200:
+          body:
+            application/json:
+              type: !include schemas/get-balance-request-response-schema.json
+              examples:
+                pending-request:
+                  description: Pending request
+                  (annotations.documentation): This is a pending request that has not yet received a response.
+                  value: |
+                    {
+                      "_links": {
+                        "self": {
+                          "href": "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+                        }
+                      },
+                      "request": {
+                        "balanceId": "22b9899e-24ee-48e6-a189-97d1f45391c4",
+                        "taxIdentifier": "GB123456789012",
+                        "guaranteeReference": "20GB0000010000GX1",
+                        "requestedAt": "2021-09-14T09:52:15Z"
+                      }
+                    }
+                successful-request:
+                  description: Successful request
+                  (annotations.documentation): This is a successful request that has received a balance response.
+                  value: |
+                    {
+                      "_links": {
+                        "self": {
+                          "href": "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+                        }
+                      },
+                      "request": {
+                        "balanceId": "22b9899e-24ee-48e6-a189-97d1f45391c4",
+                        "taxIdentifier": "GB123456789012",
+                        "guaranteeReference": "20GB0000010000GX1",
+                        "requestedAt": "2021-09-14T09:52:15Z",
+                        "completedAt": "2021-09-14T09:53:05Z",
+                        "response": {
+                          "status": "SUCCESS",
+                          "balance": 12345678.9,
+                          "currency": "EUR"
+                        }
+                      }
+                    }
+                failed-request:
+                  description: Failed request
+                  (annotations.documentation): This is a request that has received a functional error response.
+                  value: |
+                    {
+                      "_links": {
+                        "self": {
+                          "href": "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+                        }
+                      },
+                      "request": {
+                        "balanceId": "22b9899e-24ee-48e6-a189-97d1f45391c4",
+                        "taxIdentifier": "GB123456789012",
+                        "guaranteeReference": "20GB0000010000GX1",
+                        "requestedAt": "2021-09-14T09:52:15Z",
+                        "completedAt": "2021-09-14T09:53:05Z",
+                        "response": {
+                          "status": "FUNCTIONAL_ERROR",
+                          "errors": [{
+                            "errorType": 12,
+                            "errorPointer": "GRR(1).Guarantee reference number (GRN)"
+                          }]
+                        }
+                      }
+                    }
+        404:
+          body:
+            application/json:
+              type: types.errorResponse
+              examples:
+                badRequest:
+                  description: The balance request was not found
+                  value:
+                    code: NOT_FOUND
