@@ -18,7 +18,7 @@
         "guaranteeReference": {
             "type": "string",
             "description": "The guarantee reference number (GRN) of the guarantee.",
-            "minLength": 17,
+            "minLength": 1,
             "maxLength": 24
         },
         "accessCode": {
