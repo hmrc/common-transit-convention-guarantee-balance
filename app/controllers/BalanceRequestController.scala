@@ -53,6 +53,7 @@ import play.api.mvc.AnyContent
 import play.api.mvc.ControllerComponents
 import play.api.mvc.Request
 import play.api.mvc.Result
+import services.AuditService
 import services.BalanceRequestLockService
 import services.BalanceRequestService
 import services.BalanceRequestValidationService
@@ -68,6 +69,7 @@ class BalanceRequestController @Inject() (
   authenticate: AuthActionProvider,
   service: BalanceRequestService,
   lockService: BalanceRequestLockService,
+  auditService: AuditService,
   validator: BalanceRequestValidationService,
   cc: ControllerComponents,
   val runtime: IORuntime,
@@ -124,7 +126,10 @@ class BalanceRequestController @Inject() (
             lockService
               .isLockedOut(balanceRequest.guaranteeReference, request.internalId)
               .ifM(
-                ifTrue = IO.pure(TooManyRequests(Json.toJson(TooManyRequestsError()))),
+                ifTrue = for {
+                  result <- IO(TooManyRequests(Json.toJson(TooManyRequestsError())))
+                  _      <- auditService.auditRateLimitedRequest(request, balanceRequest)
+                } yield result,
                 ifFalse = {
                   service
                     .submitBalanceRequest(balanceRequest)
