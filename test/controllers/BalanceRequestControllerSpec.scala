@@ -47,6 +47,7 @@ import play.api.test.Helpers
 import play.api.test.Helpers._
 import services.BalanceRequestService
 import services.BalanceRequestValidationService
+import services.FakeAuditService
 import services.FakeBalanceRequestLockService
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -83,6 +84,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
       FakeAuthActionProvider,
       service,
       FakeBalanceRequestLockService(isLockedOutResponse),
+      new FakeAuditService,
       new BalanceRequestValidationService,
       Helpers.stubControllerComponents(
         messagesApi = new DefaultMessagesApi(
