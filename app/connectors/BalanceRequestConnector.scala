@@ -43,6 +43,7 @@ import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import javax.inject.Inject
 import javax.inject.Singleton
+import scala.concurrent.ExecutionContext
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
@@ -62,8 +63,9 @@ trait BalanceRequestConnector {
 class BalanceRequestConnectorImpl @Inject() (
   appConfig: AppConfig,
   http: HttpClient,
-  val metrics: Metrics
-)(implicit val materializer: Materializer)
+  val metrics: Metrics,
+  val materializer: Materializer
+)(implicit ec: ExecutionContext)
   extends BalanceRequestConnector
   with IOFutures
   with IOMetrics
@@ -93,7 +95,7 @@ class BalanceRequestConnectorImpl @Inject() (
     hc: HeaderCarrier
   ): IO[SendRequestResponse] =
     withMetricsTimerResponse(SendRequest) {
-      IO.runFuture { implicit ec =>
+      IO.runFuture {
         circuitBreaker.withCircuitBreaker(
           {
             val url = appConfig.backendUrl.addPathPart("balances")
@@ -127,7 +129,7 @@ class BalanceRequestConnectorImpl @Inject() (
     hc: HeaderCarrier
   ): IO[GetRequestResponse] =
     withMetricsTimer(GetRequest) { timer =>
-      val runGet = IO.runFuture { implicit ec =>
+      val runGet = IO.runFuture {
         circuitBreaker.withCircuitBreaker(
           {
             val url = appConfig.backendUrl.addPathPart("balances").addPathPart(balanceId.value)

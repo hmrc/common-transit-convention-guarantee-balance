@@ -25,6 +25,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.Configuration
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.CurrentTimestampSupport
 import uk.gov.hmrc.mongo.lock.Lock
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
@@ -40,7 +41,8 @@ class BalanceRequestLockServiceSpec
   with ScalaFutures
   with DefaultPlayMongoRepositorySupport[Lock] {
 
-  implicit val ec = ExecutionContext.global
+  implicit val ec: ExecutionContext = ExecutionContext.global
+  implicit val hc: HeaderCarrier    = HeaderCarrier()
 
   def mkAppConfig(config: Configuration) = {
     val servicesConfig = new ServicesConfig(config)
