@@ -8,3 +8,4 @@ logs/
 target/
 metals.sbt
 *.class
+.DS_Store
