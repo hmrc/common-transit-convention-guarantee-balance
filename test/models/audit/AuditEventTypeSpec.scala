@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ class AuditEventTypeSpec extends AnyFlatSpec {
 
     Json.toJsObject(event) shouldBe Json.obj(
       "userInternalId"     -> "ABC123",
-      "taxIdentifier"      -> "GB12345678900",
+      "eoriNumber"         -> "GB12345678900",
       "guaranteeReference" -> "05DE3300BE0001067A001017",
       "accessCode"         -> "1234"
     )

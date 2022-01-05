@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ sealed abstract class AuditEvent extends Product with Serializable
 
 case class RateLimitedRequestEvent(
   userInternalId: InternalId,
-  taxIdentifier: TaxIdentifier,
+  eoriNumber: TaxIdentifier,
   guaranteeReference: GuaranteeReference,
   accessCode: AccessCode
 ) extends AuditEvent
