@@ -30,7 +30,7 @@ sealed abstract class AuditEvent extends Product with Serializable
 
 case class RateLimitedRequestEvent(
   userInternalId: InternalId,
-  taxIdentifier: TaxIdentifier,
+  eoriNumber: TaxIdentifier,
   guaranteeReference: GuaranteeReference,
   accessCode: AccessCode
 ) extends AuditEvent

@@ -49,7 +49,7 @@ class AuditEventTypeSpec extends AnyFlatSpec {
 
     Json.toJsObject(event) shouldBe Json.obj(
       "userInternalId"     -> "ABC123",
-      "taxIdentifier"      -> "GB12345678900",
+      "eoriNumber"         -> "GB12345678900",
       "guaranteeReference" -> "05DE3300BE0001067A001017",
       "accessCode"         -> "1234"
     )
