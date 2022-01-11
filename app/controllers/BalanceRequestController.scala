@@ -30,6 +30,7 @@ import models.backend.BalanceRequestFunctionalError
 import models.backend.BalanceRequestSuccess
 import models.backend.BalanceRequestXmlError
 import models.backend.PendingBalanceRequest
+import models.backend.errors.FunctionalError
 import models.errors.BadRequestError
 import models.errors.BalanceRequestError
 import models.errors.InternalServiceError
@@ -42,6 +43,8 @@ import models.errors.UpstreamTimeoutError
 import models.request.BalanceRequest
 import models.response._
 import models.values.BalanceId
+import models.values.ErrorPointer
+import models.values.ErrorType
 import play.api.http.HeaderNames
 import play.api.i18n.I18nSupport
 import play.api.libs.json.JsError
@@ -99,6 +102,24 @@ class BalanceRequestController @Inject() (
         IO.pure(NotAcceptable(errorJson))
       }
 
+  /** GMS has a configurable query limit (between 1 and 1000 requests in 24h per requester EORI).
+    *
+    * When the limit is reached for an EORI GMS returns an error of type 26, which usually indicates
+    * a duplicate message ID, but with the error pointer pointing at the requester EORI field.
+    */
+  private def hasQueryLimitError(
+    error: BalanceRequestFunctionalError
+  ): Boolean = {
+    error.errors.collectFirst {
+      case functionalError @ FunctionalError(
+            ErrorType.DuplicateDetected,
+            ErrorPointer.RequesterEori,
+            _
+          ) =>
+        functionalError
+    }.nonEmpty
+  }
+
   private def validateRequest(
     continue: BalanceRequest => IO[Result]
   )(implicit request: Request[JsValue]): IO[Result] =
@@ -137,6 +158,10 @@ class BalanceRequestController @Inject() (
                     .map {
                       case Right(Right(success @ BalanceRequestSuccess(_, _))) =>
                         Ok(Json.toJson(PostBalanceRequestSuccessResponse(success)))
+
+                      case Right(Right(error @ BalanceRequestFunctionalError(_)))
+                          if hasQueryLimitError(error) =>
+                        TooManyRequests(Json.toJson(TooManyRequestsError()))
 
                       case Right(Right(error @ BalanceRequestFunctionalError(_))) =>
                         BadRequest(Json.toJson(PostBalanceRequestFunctionalErrorResponse(error)))

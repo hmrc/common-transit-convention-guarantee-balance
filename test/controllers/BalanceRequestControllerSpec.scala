@@ -149,7 +149,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
 
     val balanceRequestFunctionalError =
       BalanceRequestFunctionalError(
-        NonEmptyList.one(FunctionalError(ErrorType(14), "Foo.Bar(1).Baz", None))
+        NonEmptyList.one(FunctionalError(ErrorType(14), ErrorPointer("Foo.Bar(1).Baz"), None))
       )
 
     val request = FakeRequest()
@@ -252,6 +252,36 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     val result = controller(
       isLockedOutResponse = IO.pure(true),
       sendRequestResponse = IO.raiseError(new RuntimeException)
+    ).submitBalanceRequest(request)
+
+    status(result) shouldBe TOO_MANY_REQUESTS
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "TOO_MANY_REQUESTS",
+      "message" -> "Too many requests"
+    )
+  }
+
+  it should "return 429 when the user has reached their query limit for the given EORI" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB12345678900"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("1234")
+    )
+
+    val queryLimitError =
+      BalanceRequestFunctionalError(
+        NonEmptyList.one(
+          FunctionalError(ErrorType.DuplicateDetected, ErrorPointer.RequesterEori, None)
+        )
+      )
+
+    val request = FakeRequest()
+      .withBody(Json.toJson(balanceRequest))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      sendRequestResponse = IO.pure(Right(Right(queryLimitError)))
     ).submitBalanceRequest(request)
 
     status(result) shouldBe TOO_MANY_REQUESTS
