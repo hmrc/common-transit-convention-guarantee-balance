@@ -148,7 +148,7 @@ class BalanceRequestController @Inject() (
               .isLockedOut(balanceRequest.guaranteeReference, request.internalId)
               .ifM(
                 ifTrue = for {
-                  result <- IO(TooManyRequests(Json.toJson(TooManyRequestsError())))
+                  result <- IO(TooManyRequests(Json.toJson(TooManyRequestsError.apiRateLimit())))
                   _      <- auditService.auditRateLimitedRequest(request, balanceRequest)
                 } yield result,
                 ifFalse = {
@@ -161,7 +161,7 @@ class BalanceRequestController @Inject() (
 
                       case Right(Right(error @ BalanceRequestFunctionalError(_)))
                           if hasQueryLimitError(error) =>
-                        TooManyRequests(Json.toJson(TooManyRequestsError()))
+                        TooManyRequests(Json.toJson(TooManyRequestsError.gmsQueryLimit()))
 
                       case Right(Right(error @ BalanceRequestFunctionalError(_))) =>
                         BadRequest(Json.toJson(PostBalanceRequestFunctionalErrorResponse(error)))

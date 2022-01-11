@@ -17,16 +17,49 @@
 package models.errors
 
 import play.api.libs.json.Json
+import play.api.libs.json.OFormat
 import play.api.libs.json.OWrites
+import uk.gov.hmrc.play.json.Union
 
-case class TooManyRequestsError(message: String = "Too many requests")
+sealed abstract class TooManyRequestsError(val message: String)
+
+case class ApiRateLimitError(override val message: String) extends TooManyRequestsError(message)
+
+case class GmsQueryLimitError(override val message: String) extends TooManyRequestsError(message)
 
 object TooManyRequestsError {
-  implicit lazy val tooManyRequestsErrorWrites: OWrites[TooManyRequestsError] =
-    OWrites { error =>
+  def apiRateLimit(message: String = "Too many requests"): TooManyRequestsError =
+    ApiRateLimitError(message)
+
+  def gmsQueryLimit(message: String = "Too many requests"): TooManyRequestsError =
+    GmsQueryLimitError(message)
+
+  implicit val tooManyRequestsErrorWrites: OWrites[TooManyRequestsError] =
+    OWrites[TooManyRequestsError] { err =>
       Json.obj(
         ErrorCode.FieldName -> ErrorCode.TooManyRequests,
-        "message"           -> error.message
+        "message"           -> err.message
       )
     }
+
+  implicit val apiRateLimitErrorFormat: OFormat[ApiRateLimitError] =
+    OFormat(
+      Json.reads[ApiRateLimitError],
+      // Should use `OWrites#narrow` added in Play JSON 2.9.x but it's not binary compatible
+      tooManyRequestsErrorWrites.asInstanceOf[OWrites[ApiRateLimitError]]
+    )
+
+  implicit val gmsQueryLimitErrorFormat: OFormat[GmsQueryLimitError] =
+    OFormat(
+      Json.reads[GmsQueryLimitError],
+      // Should use `OWrites#narrow` added in Play JSON 2.9.x but it's not binary compatible
+      tooManyRequestsErrorWrites.asInstanceOf[OWrites[GmsQueryLimitError]]
+    )
+
+  implicit val tooManyRequestsErrorFormat: OFormat[TooManyRequestsError] =
+    Union
+      .from[TooManyRequestsError](RateLimitReason.FieldName)
+      .and[ApiRateLimitError](RateLimitReason.ApiRateLimit)
+      .and[GmsQueryLimitError](RateLimitReason.GmsQueryLimit)
+      .format
 }

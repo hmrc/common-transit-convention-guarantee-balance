@@ -258,6 +258,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     contentType(result) shouldBe Some(ContentTypes.JSON)
     contentAsJson(result) shouldBe Json.obj(
       "code"    -> "TOO_MANY_REQUESTS",
+      "reason"  -> "API_RATE_LIMIT",
       "message" -> "Too many requests"
     )
   }
@@ -288,6 +289,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     contentType(result) shouldBe Some(ContentTypes.JSON)
     contentAsJson(result) shouldBe Json.obj(
       "code"    -> "TOO_MANY_REQUESTS",
+      "reason"  -> "GMS_QUERY_LIMIT",
       "message" -> "Too many requests"
     )
   }
