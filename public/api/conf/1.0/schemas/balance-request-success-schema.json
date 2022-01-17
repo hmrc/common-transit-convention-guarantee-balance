@@ -10,11 +10,11 @@
     "properties": {
         "balance": {
             "type": "number",
-            "description": "The remaining guarantee balance"
+            "description": "The remaining guarantee balance."
         },
         "currency": {
             "type": "string",
-            "description": "The alphanumeric 3-character ISO currency code of the currency in which the balance is held",
+            "description": "The alphanumeric 3-character ISO currency code of the currency in which the balance is held.",
             "pattern": "^[A-Z]{3}$"
         }
     }

@@ -9,21 +9,21 @@
     ],
     "properties": {
         "_links": {
-            "description": "An object containing links to other resources",
+            "description": "An object containing links to other resources.",
             "type": "object",
             "additionalProperties": {
                 "$ref": "hal-document-schema.json#/definitions/halLink"
             }
         },
         "_embedded": {
-            "description": "An object containing embedded resources",
+            "description": "An object containing embedded resources.",
             "type": "object",
             "additionalProperties": {
                 "$ref": "hal-document-schema.json#"
             }
         },
         "balanceId": {
-            "description": "The ID of the balance request",
+            "description": "The ID of the balance request.",
             "type": "string"
         }
     }

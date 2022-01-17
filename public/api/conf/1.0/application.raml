@@ -120,7 +120,7 @@ traits:
               type: !include schemas/get-balance-request-response-schema.json
               examples:
                 pending-request:
-                  description: Pending request
+                  description: Pending request:
                   (annotations.documentation): This is a pending request that has not yet received a response.
                   value: |
                     {
@@ -137,7 +137,7 @@ traits:
                       }
                     }
                 successful-request:
-                  description: Successful request
+                  description: Successful request:
                   (annotations.documentation): This is a successful request that has received a balance response.
                   value: |
                     {
@@ -160,7 +160,7 @@ traits:
                       }
                     }
                 failed-request:
-                  description: Failed request
+                  description: Failed request:
                   (annotations.documentation): This is a request that has received a functional error response.
                   value: |
                     {
