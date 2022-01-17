@@ -115,6 +115,7 @@ traits:
       securedBy: [ sec.oauth_2_0: { scopes: [ "common-transit-convention-guarantee-balance" ] } ]
       responses:
         200:
+          description: "HTTP status 200 (OK) responses can be in the states of \"Pending request\", \"Successful request\", and \"Failed request\" as described below."
           body:
             application/json:
               type: !include schemas/get-balance-request-response-schema.json
