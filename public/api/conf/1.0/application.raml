@@ -115,13 +115,17 @@ traits:
       securedBy: [ sec.oauth_2_0: { scopes: [ "common-transit-convention-guarantee-balance" ] } ]
       responses:
         200:
+          description: "HTTP status 200 (OK) responses can be in the states of \"Pending request\", \"Successful request\", and \"Failed request\" as described below."
           body:
             application/json:
               type: !include schemas/get-balance-request-response-schema.json
               examples:
                 pending-request:
-                  description: Pending request
-                  (annotations.documentation): This is a pending request that has not yet received a response.
+                  description: "HTTP status 200 (OK) responses can be in the states of \"Pending request\", \"Successful request\", and \"Failed request\" as described below."
+                  (annotations.documentation): |
+                    Pending request:
+
+                    This is a pending request that has not yet received a response.
                   value: |
                     {
                       "_links": {
@@ -137,7 +141,7 @@ traits:
                       }
                     }
                 successful-request:
-                  description: Successful request
+                  description: "Successful request:"
                   (annotations.documentation): This is a successful request that has received a balance response.
                   value: |
                     {
@@ -160,7 +164,7 @@ traits:
                       }
                     }
                 failed-request:
-                  description: Failed request
+                  description: "Failed request:"
                   (annotations.documentation): This is a request that has received a functional error response.
                   value: |
                     {

@@ -4,15 +4,14 @@ This CTC Guarantee Balance API works alongside the [CTC Traders API](https://dev
 
 You must note:
 
-The Guarantee Balance API is asynchronous and does NOT provide real time data on your users balance. It is possible that even a very short delay could coincide with events that could change their balance information. The balance responses could become out of date quickly if your users have a lot of transit movements progressing at the same time.
+The Guarantee Balance API does not provide real time data on your users balance. It is possible that even a very short delay could coincide with events that could change their balance information. The balance responses could become out of date quickly if your users have a lot of transit movements progressing at the same time.
 
 We have released the Guarantee Balance API to HMRC's sandbox environment. You can now run tests once you have finished your software development.
 
 You should read:
 
-CTC Guarantee Balance Service Guide for how to integrate with this API
-
-Step by step Guide to Testing to learn how to test your software and ensure it is compatible with our CTC Guarantee Balance API
+* CTC Guarantee Balance Service Guide for how to integrate with this API
+* Step by step Guide to Testing to learn how to test your software and ensure it is compatible with our CTC Guarantee Balance API
 
 Further details about the User Restricted Authentication are given on the [Authorisation](https://developer.service.hmrc.gov.uk/api-documentation/docs/authorisation) page.
 
