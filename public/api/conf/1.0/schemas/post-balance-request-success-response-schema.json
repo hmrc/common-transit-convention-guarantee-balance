@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "$id": "#/post-balance-request-success-response-schema.json",
-    "description": "A successful balance request response",
+    "description": "A successful balance request response.",
     "type": "object",
     "required": [
         "response"
