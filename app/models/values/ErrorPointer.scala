@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package models.backend.errors
+package models.values
 
-import models.values.ErrorPointer
-import models.values.ErrorType
+import play.api.libs.json.Format
 import play.api.libs.json.Json
-import play.api.libs.json.OFormat
 
-case class FunctionalError(
-  errorType: ErrorType,
-  errorPointer: ErrorPointer,
-  errorReason: Option[String]
-)
+case class ErrorPointer(value: String) extends AnyVal
 
-object FunctionalError {
-  implicit lazy val functionalErrorFormat: OFormat[FunctionalError] =
-    Json.format[FunctionalError]
+object ErrorPointer {
+  implicit val errorPointerFormat: Format[ErrorPointer] =
+    Json.valueFormat[ErrorPointer]
+
+  val RequesterEori = ErrorPointer("RC1.TIN")
 }

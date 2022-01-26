@@ -71,7 +71,7 @@ class ResponseFormatsSpec extends AnyFlatSpec with Matchers {
   it should "write a functional error POST response" in {
     val balanceRequestFunctionalError =
       BalanceRequestFunctionalError(
-        NonEmptyList.one(FunctionalError(ErrorType(14), "Foo.Bar(1).Baz", None))
+        NonEmptyList.one(FunctionalError(ErrorType(14), ErrorPointer("Foo.Bar(1).Baz"), None))
       )
     val postResponse =
       PostBalanceRequestFunctionalErrorResponse(balanceRequestFunctionalError)
@@ -169,7 +169,7 @@ class ResponseFormatsSpec extends AnyFlatSpec with Matchers {
 
     val balanceRequestFunctionalError =
       BalanceRequestFunctionalError(
-        NonEmptyList.one(FunctionalError(ErrorType(14), "Foo.Bar(1).Baz", None))
+        NonEmptyList.one(FunctionalError(ErrorType(14), ErrorPointer("Foo.Bar(1).Baz"), None))
       )
 
     val pendingBalanceRequest = PendingBalanceRequest(

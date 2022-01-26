@@ -1,0 +1,28 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$id": "#/post-balance-request-rate-limited-response-schema.json",
+    "description": "A response indicating that the request was rate limited",
+    "type": "object",
+    "required": [
+        "code",
+        "message",
+        "reason"
+    ],
+    "properties": {
+        "code": {
+            "enum": [
+                "TOO_MANY_REQUESTS"
+            ]
+        },
+        "message": {
+            "description": "The description of the error",
+            "type": "string"
+        },
+        "reason": {
+            "enum": [
+                "API_RATE_LIMIT",
+                "GMS_QUERY_LIMIT"
+            ]
+        }
+    }
+}

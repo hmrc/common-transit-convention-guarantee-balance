@@ -14,20 +14,10 @@
  * limitations under the License.
  */
 
-package models.backend.errors
+package models.errors
 
-import models.values.ErrorPointer
-import models.values.ErrorType
-import play.api.libs.json.Json
-import play.api.libs.json.OFormat
-
-case class FunctionalError(
-  errorType: ErrorType,
-  errorPointer: ErrorPointer,
-  errorReason: Option[String]
-)
-
-object FunctionalError {
-  implicit lazy val functionalErrorFormat: OFormat[FunctionalError] =
-    Json.format[FunctionalError]
+object RateLimitReason {
+  val FieldName     = "reason"
+  val ApiRateLimit  = "API_RATE_LIMIT"
+  val GmsQueryLimit = "GMS_QUERY_LIMIT"
 }

@@ -97,6 +97,17 @@ traits:
                   }]
                 }
               }
+      429:
+        body:
+          application/json:
+            type: !include schemas/post-balance-request-rate-limited-response-schema.json
+            description: The request was rate limited, either due to API rate limiting or the guarantee management system query limit
+            example: |
+              {
+                "code": "TOO_MANY_REQUESTS",
+                "reason": "GMS_QUERY_LIMIT",
+                "message": "Too many requests"
+              }
 
   /{balanceId}:
     uriParameters:
