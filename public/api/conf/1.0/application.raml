@@ -36,6 +36,7 @@ traits:
 /customs/guarantees/balances:
   post:
     displayName: Send a Balance Request
+    description: "Used to initiate the balance request. You may receive a response immediately with a 200 OK or 400 Bad Request response, or a 202 Accepted response with a balance request ID."
     is:
       - headers.acceptHeader
       - headers.contentHeader
@@ -108,6 +109,7 @@ traits:
 
     get:
       displayName: Check the status of a Balance Request
+      description: "Used to check the status of a balance request for which a response could not be provided immediately. You can use the balance request ID returned by the 202 Accepted response to call this endpoint."
       is:
         - headers.acceptHeader
         - acceptHeaderInvalid
