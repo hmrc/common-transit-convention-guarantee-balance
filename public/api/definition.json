@@ -7,7 +7,7 @@
     }
   ],
   "api": {
-    "name": "Common Transit Convention Guarantee Balance",
+    "name": "CTC Guarantee Balance",
     "description": "The public API to allow traders to submit and receive responses to Common Transit Convention guarantee balance enquiries",
     "context": "customs/guarantees",
     "categories": ["CUSTOMS"],
