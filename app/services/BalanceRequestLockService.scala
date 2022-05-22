@@ -22,34 +22,40 @@ import config.AppConfig
 import models.values.GuaranteeReference
 import models.values.InternalId
 import runtime.IOFutures
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
 
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import javax.inject.Inject
+import scala.concurrent.ExecutionContext
 
 @ImplementedBy(classOf[BalanceRequestLockServiceImpl])
 trait BalanceRequestLockService {
-  def isLockedOut(grn: GuaranteeReference, internalId: InternalId): IO[Boolean]
+  def isLockedOut(grn: GuaranteeReference, internalId: InternalId)(implicit
+    hc: HeaderCarrier
+  ): IO[Boolean]
 }
 
-class BalanceRequestLockServiceImpl @Inject() (lockRepo: MongoLockRepository, appConfig: AppConfig)
-  extends BalanceRequestLockService
+class BalanceRequestLockServiceImpl @Inject() (lockRepo: MongoLockRepository, appConfig: AppConfig)(
+  implicit ec: ExecutionContext
+) extends BalanceRequestLockService
   with IOFutures {
 
-  def isLockedOut(grn: GuaranteeReference, internalId: InternalId): IO[Boolean] = IO.runFuture {
-    implicit ec =>
-      val hash          = MessageDigest.getInstance("SHA-256")
-      val lockKey       = internalId.value + grn.value
-      val lockHashBytes = hash.digest(lockKey.getBytes(StandardCharsets.UTF_8))
-      val lockHashHex   = for (hashByte <- lockHashBytes) yield f"$hashByte%02x"
+  def isLockedOut(grn: GuaranteeReference, internalId: InternalId)(implicit
+    hc: HeaderCarrier
+  ): IO[Boolean] = IO.runFuture {
+    val hash          = MessageDigest.getInstance("SHA-256")
+    val lockKey       = internalId.value + grn.value
+    val lockHashBytes = hash.digest(lockKey.getBytes(StandardCharsets.UTF_8))
+    val lockHashHex   = for (hashByte <- lockHashBytes) yield f"$hashByte%02x"
 
-      lockRepo
-        .takeLock(
-          lockId = lockHashHex.mkString,
-          owner = internalId.value,
-          ttl = appConfig.balanceRequestLockoutTtl
-        )
-        .map(lockTaken => !lockTaken)
+    lockRepo
+      .takeLock(
+        lockId = lockHashHex.mkString,
+        owner = internalId.value,
+        ttl = appConfig.balanceRequestLockoutTtl
+      )
+      .map(lockTaken => !lockTaken)
   }
 }

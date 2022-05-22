@@ -36,7 +36,9 @@ import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.RequestId
 import uk.gov.hmrc.http.UpstreamErrorResponse._
+import uk.gov.hmrc.http.{HeaderNames => HmrcHeaderNames}
 
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -55,7 +57,9 @@ class BalanceRequestConnectorSpec
     "microservice.services.transit-movements-guarantee-balance.port"
   )
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc = HeaderCarrier(
+    requestId = Some(RequestId("6790293d-a688-4d85-9cd4-c8e24e163179"))
+  )
 
   val requestJson = Json.obj(
     "taxIdentifier"      -> "GB12345678900",
@@ -75,6 +79,7 @@ class BalanceRequestConnectorSpec
       post(urlEqualTo("/transit-movements-guarantee-balance/balances"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withHeader(HmrcHeaderNames.xRequestId, equalTo("6790293d-a688-4d85-9cd4-c8e24e163179"))
         .withHeader("Channel", equalTo("api"))
         .withRequestBody(equalToJson(Json.stringify(requestJson)))
         .willReturn(
@@ -111,6 +116,7 @@ class BalanceRequestConnectorSpec
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
         .withHeader("Channel", equalTo("api"))
+        .withHeader(HmrcHeaderNames.xRequestId, equalTo("6790293d-a688-4d85-9cd4-c8e24e163179"))
         .withRequestBody(equalToJson(Json.stringify(requestJson)))
         .willReturn(
           aResponse()
@@ -177,6 +183,7 @@ class BalanceRequestConnectorSpec
       get(urlEqualTo(s"/transit-movements-guarantee-balance/balances/${balanceId.value}"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withHeader(HmrcHeaderNames.xRequestId, equalTo("6790293d-a688-4d85-9cd4-c8e24e163179"))
         .withHeader("Channel", equalTo("api"))
         .willReturn(
           aResponse()
@@ -229,6 +236,7 @@ class BalanceRequestConnectorSpec
       get(urlEqualTo(s"/transit-movements-guarantee-balance/balances/${balanceId.value}"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withHeader(HmrcHeaderNames.xRequestId, equalTo("6790293d-a688-4d85-9cd4-c8e24e163179"))
         .withHeader("Channel", equalTo("api"))
         .willReturn(aResponse().withStatus(NOT_FOUND))
     )
@@ -250,6 +258,7 @@ class BalanceRequestConnectorSpec
       get(urlEqualTo(s"/transit-movements-guarantee-balance/balances/${balanceId.value}"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withHeader(HmrcHeaderNames.xRequestId, equalTo("6790293d-a688-4d85-9cd4-c8e24e163179"))
         .withHeader("Channel", equalTo("api"))
         .willReturn(aResponse().withStatus(METHOD_NOT_ALLOWED))
     )
@@ -273,6 +282,7 @@ class BalanceRequestConnectorSpec
       get(urlEqualTo(s"/transit-movements-guarantee-balance/balances/${balanceId.value}"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withHeader(HmrcHeaderNames.xRequestId, equalTo("6790293d-a688-4d85-9cd4-c8e24e163179"))
         .withHeader("Channel", equalTo("api"))
         .willReturn(aResponse().withStatus(GATEWAY_TIMEOUT))
     )

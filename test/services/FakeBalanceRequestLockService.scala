@@ -19,9 +19,12 @@ package services
 import cats.effect.IO
 import models.values.GuaranteeReference
 import models.values.InternalId
+import uk.gov.hmrc.http.HeaderCarrier
 
 case class FakeBalanceRequestLockService(isLockedOutResponse: IO[Boolean])
   extends BalanceRequestLockService {
-  override def isLockedOut(grn: GuaranteeReference, internalId: InternalId): IO[Boolean] =
+  override def isLockedOut(grn: GuaranteeReference, internalId: InternalId)(implicit
+    hc: HeaderCarrier
+  ): IO[Boolean] =
     isLockedOutResponse
 }
