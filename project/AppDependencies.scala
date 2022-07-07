@@ -7,7 +7,7 @@ object AppDependencies {
   val catsVersion       = "2.6.1"
   val catsEffectVersion = "3.2.9"
   val log4catsVersion   = "2.1.1"
-  val bootstrapVersion  = "5.19.0"
+  val bootstrapVersion  = "5.24.0"
   val hmrcMongoVersion  = "0.59.0"
 
   val compile = Seq(
