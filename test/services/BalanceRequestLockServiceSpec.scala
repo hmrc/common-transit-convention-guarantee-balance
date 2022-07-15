@@ -34,11 +34,7 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-class BalanceRequestLockServiceSpec
-  extends AnyFlatSpec
-  with Matchers
-  with ScalaFutures
-  with DefaultPlayMongoRepositorySupport[Lock] {
+class BalanceRequestLockServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with DefaultPlayMongoRepositorySupport[Lock] {
 
   implicit val ec = ExecutionContext.global
 

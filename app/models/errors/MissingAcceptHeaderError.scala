@@ -21,11 +21,13 @@ import play.api.libs.json._
 case class MissingAcceptHeaderError(message: String = "The accept header is missing or invalid")
 
 object MissingAcceptHeaderError {
+
   implicit lazy val missingAcceptHeaderErrorWrites: OWrites[MissingAcceptHeaderError] =
-    OWrites { error =>
-      Json.obj(
-        ErrorCode.FieldName -> ErrorCode.AcceptHeaderInvalid,
-        "message"           -> error.message
-      )
+    OWrites {
+      error =>
+        Json.obj(
+          ErrorCode.FieldName -> ErrorCode.AcceptHeaderInvalid,
+          "message"           -> error.message
+        )
     }
 }

@@ -34,6 +34,7 @@ case class PendingBalanceRequest(
 )
 
 object PendingBalanceRequest {
+
   implicit val pendingBalanceRequestFormat: OFormat[PendingBalanceRequest] =
     Json.format[PendingBalanceRequest]
 }

@@ -22,6 +22,7 @@ import play.api.libs.json.Json
 case class CurrencyCode(value: String) extends AnyVal
 
 object CurrencyCode {
+
   implicit val currencyCodeFormat: Format[CurrencyCode] =
     Json.valueFormat[CurrencyCode]
 }

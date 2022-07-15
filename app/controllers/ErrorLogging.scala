@@ -21,7 +21,8 @@ import logging.Logging
 import models.errors._
 
 trait ErrorLogging { self: Logging =>
-  def logServiceError[A](action: String, result: Either[BalanceRequestError, A]): IO[Unit] = {
+
+  def logServiceError[A](action: String, result: Either[BalanceRequestError, A]): IO[Unit] =
     result.fold(
       {
         case UpstreamServiceError(_, cause) =>
@@ -29,7 +30,7 @@ trait ErrorLogging { self: Logging =>
         case InternalServiceError(_, Some(cause)) =>
           logger.error(cause)(s"Error when $action")
         case InternalServiceError(message, None) =>
-          logger.error(s"Error when $action: ${message}")
+          logger.error(s"Error when $action: $message")
         case UpstreamTimeoutError(message) =>
           logger.error(s"Timed out awaiting upstream response while $action: $message")
         case NotFoundError(_) =>
@@ -37,5 +38,4 @@ trait ErrorLogging { self: Logging =>
       },
       _ => IO.unit
     )
-  }
 }

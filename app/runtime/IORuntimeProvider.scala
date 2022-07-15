@@ -39,8 +39,9 @@ class IORuntimeProvider @Inject() (lifecycle: ApplicationLifecycle, system: Acto
     val (scheduler, shutdownScheduler) =
       IORuntime.createDefaultScheduler()
 
-    lifecycle.addStopHook { () =>
-      Future(runtime.shutdown())
+    lifecycle.addStopHook {
+      () =>
+        Future(runtime.shutdown())
     }
 
     val config = IORuntimeConfig()

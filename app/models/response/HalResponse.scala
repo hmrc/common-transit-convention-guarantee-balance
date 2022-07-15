@@ -37,6 +37,7 @@ case class PostBalanceRequestPendingResponse(
 ) extends HalResponse
 
 object PostBalanceRequestPendingResponse {
+
   def apply(id: BalanceId): PostBalanceRequestPendingResponse = {
     val selfRoute = BalanceRequestController.getBalanceRequest(id)
     PostBalanceRequestPendingResponse(
@@ -53,12 +54,12 @@ case class PostBalanceRequestSuccessResponse(
 ) extends HalResponse
 
 object PostBalanceRequestSuccessResponse {
-  def apply(response: BalanceRequestSuccess): PostBalanceRequestSuccessResponse = {
+
+  def apply(response: BalanceRequestSuccess): PostBalanceRequestSuccessResponse =
     PostBalanceRequestSuccessResponse(
       _links = None,
       response = response
     )
-  }
 }
 
 case class PostBalanceRequestFunctionalErrorResponse(
@@ -70,14 +71,14 @@ case class PostBalanceRequestFunctionalErrorResponse(
 ) extends HalResponse
 
 object PostBalanceRequestFunctionalErrorResponse {
-  def apply(response: BalanceRequestFunctionalError): PostBalanceRequestFunctionalErrorResponse = {
+
+  def apply(response: BalanceRequestFunctionalError): PostBalanceRequestFunctionalErrorResponse =
     PostBalanceRequestFunctionalErrorResponse(
       _links = None,
       code = ErrorCode.FunctionalError,
       message = "The request was rejected by the guarantee management system",
       response = response
     )
-  }
 }
 
 case class GetBalanceRequestResponse(
@@ -87,6 +88,7 @@ case class GetBalanceRequestResponse(
 ) extends HalResponse
 
 object GetBalanceRequestResponse {
+
   def apply(balanceId: BalanceId, request: PendingBalanceRequest): GetBalanceRequestResponse = {
     val selfRoute = BalanceRequestController.getBalanceRequest(balanceId)
     GetBalanceRequestResponse(
@@ -97,16 +99,14 @@ object GetBalanceRequestResponse {
 }
 
 object HalResponse {
-  implicit lazy val balanceRequestPendingResponseWrites
-    : OWrites[PostBalanceRequestPendingResponse] =
+
+  implicit lazy val balanceRequestPendingResponseWrites: OWrites[PostBalanceRequestPendingResponse] =
     Json.writes[PostBalanceRequestPendingResponse]
 
-  implicit lazy val balanceRequestSuccessResponseWrites
-    : OWrites[PostBalanceRequestSuccessResponse] =
+  implicit lazy val balanceRequestSuccessResponseWrites: OWrites[PostBalanceRequestSuccessResponse] =
     Json.writes[PostBalanceRequestSuccessResponse]
 
-  implicit lazy val balanceRequestFunctionalErrorResponseWrites
-    : OWrites[PostBalanceRequestFunctionalErrorResponse] =
+  implicit lazy val balanceRequestFunctionalErrorResponseWrites: OWrites[PostBalanceRequestFunctionalErrorResponse] =
     Json.writes[PostBalanceRequestFunctionalErrorResponse]
 
   implicit lazy val getBalanceRequestResponseWrites: OWrites[GetBalanceRequestResponse] =

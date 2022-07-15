@@ -27,6 +27,7 @@ case class BalanceRequest(
 )
 
 object BalanceRequest {
+
   implicit val balanceRequestFormat: OFormat[BalanceRequest] = (
     (__ \ "taxIdentifier").format[TaxIdentifier] and
       (__ \ "guaranteeReference").format[GuaranteeReference] and

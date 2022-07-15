@@ -27,13 +27,12 @@ sealed abstract class BadRequestError {
   def message: String
 }
 
-case class MultipleErrors(message: String = "Bad request", errors: NonEmptyList[BadRequestError])
-  extends BadRequestError
+case class MultipleErrors(message: String = "Bad request", errors: NonEmptyList[BadRequestError]) extends BadRequestError
 
-case class InvalidTaxIdentifier(message: String = "Invalid tax identifier value", reason: String)
-  extends BadRequestError
+case class InvalidTaxIdentifier(message: String = "Invalid tax identifier value", reason: String) extends BadRequestError
 
 object InvalidTaxIdentifier {
+
   val nonEmpty =
     InvalidTaxIdentifier(reason = "Tax identifier must not be empty")
 
@@ -50,15 +49,14 @@ case class InvalidGuaranteeReference(
 ) extends BadRequestError
 
 object InvalidGuaranteeReference {
+
   val nonEmpty =
     InvalidGuaranteeReference(reason = "Guarantee reference must not be empty")
 
   val alphanumeric =
     InvalidGuaranteeReference(reason = "Guarantee reference must be alphanumeric")
 
-  def maxLength(length: Int) = InvalidGuaranteeReference(reason =
-    s"Guarantee reference has a maximum length of $length characters"
-  )
+  def maxLength(length: Int) = InvalidGuaranteeReference(reason = s"Guarantee reference has a maximum length of $length characters")
 }
 
 case class InvalidAccessCode(
@@ -67,6 +65,7 @@ case class InvalidAccessCode(
 ) extends BadRequestError
 
 object InvalidAccessCode {
+
   val alphanumeric =
     InvalidAccessCode(reason = "Access code must be alphanumeric")
 
@@ -75,6 +74,7 @@ object InvalidAccessCode {
 }
 
 object BadRequestError extends CommonFormats {
+
   implicit lazy val multipleErrorsFormat: OFormat[MultipleErrors] =
     Json.format[MultipleErrors]
 

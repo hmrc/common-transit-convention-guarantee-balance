@@ -40,32 +40,36 @@ import java.util.concurrent.CancellationException
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class IOMetricsSpec
-  extends AnyFlatSpec
-  with Matchers
-  with BeforeAndAfterEach
-  with IdiomaticMockito
-  with ArgumentMatchersSugar {
+class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach with IdiomaticMockito with ArgumentMatchersSugar {
 
   class IOMetricsConnector(val metrics: Metrics) extends IOFutures with IOMetrics {
+
     def okHttpCall =
       withMetricsTimerResponse("connector-ok") {
-        IO.runFuture { _ => Future.successful(Right(1)) }
+        IO.runFuture {
+          _ => Future.successful(Right(1))
+        }
       }
 
     def clientErrorHttpCall =
       withMetricsTimerResponse("connector-client-error") {
-        IO.runFuture { _ => Future.successful(Left(UpstreamErrorResponse("Arghhh!!!", 400))) }
+        IO.runFuture {
+          _ => Future.successful(Left(UpstreamErrorResponse("Arghhh!!!", 400)))
+        }
       }
 
     def serverErrorHttpCall =
       withMetricsTimerResponse("connector-server-error") {
-        IO.runFuture { _ => Future.successful(Left(UpstreamErrorResponse("Kaboom!!!", 502))) }
+        IO.runFuture {
+          _ => Future.successful(Left(UpstreamErrorResponse("Kaboom!!!", 502)))
+        }
       }
 
     def unhandledExceptionHttpCall =
       withMetricsTimerResponse("connector-unhandled-exception") {
-        IO.runFuture { _ => Future.failed(new RuntimeException) }
+        IO.runFuture {
+          _ => Future.failed(new RuntimeException)
+        }
       }
 
     def cancelledHttpCall =
@@ -74,13 +78,19 @@ class IOMetricsSpec
       }
 
     def autoCompleteWithSuccessCall =
-      withMetricsTimer("connector-auto-success")(_ => IO.unit)
+      withMetricsTimer("connector-auto-success")(
+        _ => IO.unit
+      )
 
     def autoCompleteWithFailureErrorCall =
-      withMetricsTimer("connector-auto-success")(_ => IO.raiseError[Int](new RuntimeException))
+      withMetricsTimer("connector-auto-success")(
+        _ => IO.raiseError[Int](new RuntimeException)
+      )
 
     def autoCompleteWithFailureCancelledCall =
-      withMetricsTimer("connector-auto-success")(_ => IO.canceled)
+      withMetricsTimer("connector-auto-success")(
+        _ => IO.canceled
+      )
 
     def manualCompleteSuccessCall =
       withMetricsTimer("connector-manual-success")(_.completeWithSuccess())
@@ -90,9 +100,9 @@ class IOMetricsSpec
   }
 
   class IOMetricsController(val metrics: Metrics, val runtime: IORuntime)
-    extends BackendController(Helpers.stubControllerComponents())
-    with IOActions
-    with IOMetrics {
+      extends BackendController(Helpers.stubControllerComponents())
+      with IOActions
+      with IOMetrics {
 
     def okEndpoint = Action.io {
       withMetricsTimerResult("controller-ok") {

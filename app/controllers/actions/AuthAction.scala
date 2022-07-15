@@ -38,8 +38,8 @@ import scala.concurrent.Future
 class AuthAction @Inject() (val authConnector: AuthConnector)(implicit
   ec: ExecutionContext
 ) extends ActionRefiner[Request, AuthenticatedRequest]
-  with AuthorisedFunctions
-  with Logging {
+    with AuthorisedFunctions
+    with Logging {
 
   override protected def executionContext: ExecutionContext = ec
 
@@ -55,9 +55,10 @@ class AuthAction @Inject() (val authConnector: AuthConnector)(implicit
         case None =>
           Future.successful(Left(Forbidden))
       }
-      .recover { case e: AuthorisationException =>
-        logger.warn(s"Failed to authorise", e)
-        Left(Unauthorized)
+      .recover {
+        case e: AuthorisationException =>
+          logger.warn(s"Failed to authorise", e)
+          Left(Unauthorized)
       }
   }
 }

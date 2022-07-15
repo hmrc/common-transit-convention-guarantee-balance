@@ -23,6 +23,7 @@ import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.HeaderCarrier
 
 class FakeAuditService extends AuditService {
+
   override def auditRateLimitedRequest(
     request: AuthenticatedRequest[JsValue],
     balanceRequest: BalanceRequest

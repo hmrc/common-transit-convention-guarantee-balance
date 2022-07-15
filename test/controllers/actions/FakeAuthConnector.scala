@@ -25,6 +25,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 case class FakeAuthConnector[A](result: Future[A]) extends AuthConnector {
+
   override def authorise[B](predicate: Predicate, retrieval: Retrieval[B])(implicit
     hc: HeaderCarrier,
     ec: ExecutionContext

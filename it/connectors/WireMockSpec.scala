@@ -28,10 +28,7 @@ import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.inject.guice.GuiceableModule
 
-trait WireMockSpec
-  extends BeforeAndAfterEach
-  with BeforeAndAfterAll
-  with GuiceFakeApplicationFactory { suite: Suite =>
+trait WireMockSpec extends BeforeAndAfterEach with BeforeAndAfterAll with GuiceFakeApplicationFactory { suite: Suite =>
 
   protected val wireMockConfig =
     WireMockConfiguration.wireMockConfig().notifier(new ConsoleNotifier(false))
@@ -45,8 +42,9 @@ trait WireMockSpec
         "metrics.jvm" -> false
       )
       .configure(
-        portConfigKeys.map { key =>
-          key -> wireMockServer.port.toString()
+        portConfigKeys.map {
+          key =>
+            key -> wireMockServer.port.toString()
         }: _*
       )
       .overrides(bindings: _*)

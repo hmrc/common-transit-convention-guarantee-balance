@@ -29,10 +29,13 @@ trait IOActions { self: BaseController =>
   def runtime: IORuntime
 
   implicit class IOActionBuilderOps[+R[_], A](builder: ActionBuilder[R, A]) {
+
     def io(block: IO[Result]): Action[AnyContent] =
       builder.async(block.unsafeToFuture()(runtime))
+
     def io(block: R[A] => IO[Result]): Action[A] =
       builder.async(block(_).unsafeToFuture()(runtime))
+
     def io[B](parser: BodyParser[B])(block: R[B] => IO[Result]): Action[B] =
       builder.async(parser)(block(_).unsafeToFuture()(runtime))
   }

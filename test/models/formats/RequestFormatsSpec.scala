@@ -25,11 +25,13 @@ import org.scalatest.matchers.should.Matchers
 import play.api.libs.json._
 
 class RequestFormatsSpec extends AnyFlatSpec with Matchers {
+
   val validJson = Json.obj(
     "taxIdentifier"      -> "GB12345678900",
     "guaranteeReference" -> "05DE3300BE0001067A001017",
     "accessCode"         -> "1234"
   )
+
   val validResult = BalanceRequest(
     TaxIdentifier("GB12345678900"),
     GuaranteeReference("05DE3300BE0001067A001017"),

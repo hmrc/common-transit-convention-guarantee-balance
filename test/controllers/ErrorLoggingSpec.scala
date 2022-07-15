@@ -35,12 +35,7 @@ import uk.gov.hmrc.http.UpstreamErrorResponse
 
 import java.util.UUID
 
-class ErrorLoggingSpec
-  extends AnyFlatSpec
-  with Matchers
-  with ScalaCheckPropertyChecks
-  with Logging
-  with ErrorLogging {
+class ErrorLoggingSpec extends AnyFlatSpec with Matchers with ScalaCheckPropertyChecks with Logging with ErrorLogging {
 
   def withLogAppender[A](test: ListAppender[ILoggingEvent] => A) = {
     val slf4jLogger   = LoggerFactory.getLogger(getClass())
@@ -53,21 +48,24 @@ class ErrorLoggingSpec
     finally logbackLogger.detachAndStopAllAppenders()
   }
 
-  "ErrorLogging.logServiceError" should "do nothing when there is no error" in forAll { i: Int =>
-    withLogAppender { appender =>
-      logServiceError("running tests", Right(i)).unsafeRunSync()
-      assert(appender.list.isEmpty, appender.list)
-    }
+  "ErrorLogging.logServiceError" should "do nothing when there is no error" in forAll {
+    i: Int =>
+      withLogAppender {
+        appender =>
+          logServiceError("running tests", Right(i)).unsafeRunSync()
+          assert(appender.list.isEmpty, appender.list)
+      }
   }
 
-  it should "log an error when there is an UpstreamServiceError" in withLogAppender { appender =>
-    val error = UpstreamErrorResponse("Argh!!!", 400)
-    logServiceError("running tests", Left(UpstreamServiceError.causedBy(error))).unsafeRunSync()
-    assert(!appender.list.isEmpty, appender.list)
-    val event = appender.list.get(0)
-    event.getLevel shouldBe Level.ERROR
-    event.getMessage shouldBe "Error when calling upstream service"
-    event.getThrowableProxy.getMessage shouldBe "Argh!!!"
+  it should "log an error when there is an UpstreamServiceError" in withLogAppender {
+    appender =>
+      val error = UpstreamErrorResponse("Argh!!!", 400)
+      logServiceError("running tests", Left(UpstreamServiceError.causedBy(error))).unsafeRunSync()
+      assert(!appender.list.isEmpty, appender.list)
+      val event = appender.list.get(0)
+      event.getLevel shouldBe Level.ERROR
+      event.getMessage shouldBe "Error when calling upstream service"
+      event.getThrowableProxy.getMessage shouldBe "Argh!!!"
   }
 
   it should "log an error when there is an InternalServiceError with root cause exception" in withLogAppender {
@@ -93,14 +91,15 @@ class ErrorLoggingSpec
       event.getThrowableProxy shouldBe null
   }
 
-  it should "log an error when there is an UpstreamTimeoutError" in withLogAppender { appender =>
-    val error = UpstreamTimeoutError()
-    logServiceError("running tests", Left(error)).unsafeRunSync()
-    assert(!appender.list.isEmpty, appender.list)
-    val event = appender.list.get(0)
-    event.getLevel shouldBe Level.ERROR
-    event.getMessage shouldBe "Timed out awaiting upstream response while running tests: Request timed out"
-    event.getThrowableProxy shouldBe null
+  it should "log an error when there is an UpstreamTimeoutError" in withLogAppender {
+    appender =>
+      val error = UpstreamTimeoutError()
+      logServiceError("running tests", Left(error)).unsafeRunSync()
+      assert(!appender.list.isEmpty, appender.list)
+      val event = appender.list.get(0)
+      event.getLevel shouldBe Level.ERROR
+      event.getMessage shouldBe "Timed out awaiting upstream response while running tests: Request timed out"
+      event.getThrowableProxy shouldBe null
   }
 
   it should "not log anything when there is a NotFoundError for a given BalanceId" in withLogAppender {

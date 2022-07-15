@@ -36,6 +36,7 @@ case class RateLimitedRequestEvent(
 ) extends AuditEvent
 
 object RateLimitedRequestEvent {
+
   implicit val rateLimitedRequestEvertWrites: OWrites[RateLimitedRequestEvent] =
     Json.writes[RateLimitedRequestEvent]
 

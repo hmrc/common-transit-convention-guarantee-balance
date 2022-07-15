@@ -41,6 +41,7 @@ case class BalanceRequestXmlError(
 ) extends BalanceRequestResponse
 
 object BalanceRequestResponse extends CommonFormats {
+
   implicit lazy val balanceRequestSuccessFormat: OFormat[BalanceRequestSuccess] =
     Json.format[BalanceRequestSuccess]
 

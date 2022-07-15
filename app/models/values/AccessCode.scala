@@ -20,11 +20,13 @@ import play.api.libs.json.Format
 import play.api.libs.json.Json
 
 case class AccessCode(value: String) extends AnyVal {
+
   override def toString: String =
     s"$productPrefix(***)"
 }
 
 object AccessCode {
+
   implicit val accessCodeFormat: Format[AccessCode] =
     Json.valueFormat[AccessCode]
 }
