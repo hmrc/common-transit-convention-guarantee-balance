@@ -20,7 +20,9 @@ import config.Constants
 import play.api.mvc.Call
 
 trait LocationWithContext {
+
   implicit class CallContextOps(call: Call) {
+
     def pathWithContext(): String =
       Constants.Context + call.path()
   }

@@ -30,6 +30,7 @@ case class CircuitBreakerConfig(
 )
 
 object CircuitBreakerConfig {
+
   def fromServicesConfig(serviceName: String, config: Configuration) =
     CircuitBreakerConfig(
       config.get[Int](

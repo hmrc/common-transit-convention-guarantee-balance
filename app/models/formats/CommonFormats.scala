@@ -23,6 +23,7 @@ import play.api.libs.json.Format
 object CommonFormats extends CommonFormats
 
 trait CommonFormats {
+
   implicit def nonEmptyListFormat[A: Format]: Format[NonEmptyList[A]] =
     Format
       .of[List[A]]

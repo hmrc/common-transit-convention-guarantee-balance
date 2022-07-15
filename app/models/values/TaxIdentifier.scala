@@ -22,6 +22,7 @@ import play.api.libs.json.Json
 case class TaxIdentifier(value: String) extends AnyVal
 
 object TaxIdentifier {
+
   implicit val taxIdentifierFormat: Format[TaxIdentifier] =
     Json.valueFormat[TaxIdentifier]
 }

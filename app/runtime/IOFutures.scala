@@ -22,8 +22,10 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 trait IOFutures {
+
   implicit class IOCompanionFutureOps(io: IO.type) {
+
     def runFuture[A](f: ExecutionContext => Future[A]): IO[A] =
-      IO.fromFuture { IO.executionContext.map(f) }
+      IO.fromFuture(IO.executionContext.map(f))
   }
 }

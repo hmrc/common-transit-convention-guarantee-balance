@@ -33,9 +33,7 @@ trait BalanceRequestLockService {
   def isLockedOut(grn: GuaranteeReference, internalId: InternalId): IO[Boolean]
 }
 
-class BalanceRequestLockServiceImpl @Inject() (lockRepo: MongoLockRepository, appConfig: AppConfig)
-  extends BalanceRequestLockService
-  with IOFutures {
+class BalanceRequestLockServiceImpl @Inject() (lockRepo: MongoLockRepository, appConfig: AppConfig) extends BalanceRequestLockService with IOFutures {
 
   def isLockedOut(grn: GuaranteeReference, internalId: InternalId): IO[Boolean] = IO.runFuture {
     implicit ec =>
@@ -50,6 +48,8 @@ class BalanceRequestLockServiceImpl @Inject() (lockRepo: MongoLockRepository, ap
           owner = internalId.value,
           ttl = appConfig.balanceRequestLockoutTtl
         )
-        .map(lockTaken => !lockTaken)
+        .map(
+          lockTaken => !lockTaken
+        )
   }
 }

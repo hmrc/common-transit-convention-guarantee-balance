@@ -27,6 +27,7 @@ import play.api.mvc.Call
 case class Link(href: RelativeUrl)
 
 object Link {
+
   def apply(call: Call): Link =
     Link(RelativeUrl.parse(Constants.Context + call.path()))
 

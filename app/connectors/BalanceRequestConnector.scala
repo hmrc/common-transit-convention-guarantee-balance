@@ -49,6 +49,7 @@ import scala.util.Try
 
 @ImplementedBy(classOf[BalanceRequestConnectorImpl])
 trait BalanceRequestConnector {
+
   def sendRequest(request: BalanceRequest)(implicit
     hc: HeaderCarrier
   ): IO[Either[UpstreamErrorResponse, Either[BalanceId, BalanceRequestResponse]]]
@@ -64,26 +65,26 @@ class BalanceRequestConnectorImpl @Inject() (
   http: HttpClient,
   val metrics: Metrics
 )(implicit val materializer: Materializer)
-  extends BalanceRequestConnector
-  with IOFutures
-  with IOMetrics
-  with CircuitBreakers
-  with Logging {
+    extends BalanceRequestConnector
+    with IOFutures
+    with IOMetrics
+    with CircuitBreakers
+    with Logging {
 
   import MetricsKeys.Connectors._
 
   override lazy val circuitBreakerConfig =
     appConfig.backendCircuitBreakerConfig
 
-  implicit val eitherBalanceIdOrResponseReads
-    : HttpReads[Either[BalanceId, BalanceRequestResponse]] =
-    HttpReads[HttpResponse].map { response =>
-      response.status match {
-        case Status.ACCEPTED =>
-          Left(response.json.as[BalanceId])
-        case Status.OK =>
-          Right(response.json.as[BalanceRequestResponse])
-      }
+  implicit val eitherBalanceIdOrResponseReads: HttpReads[Either[BalanceId, BalanceRequestResponse]] =
+    HttpReads[HttpResponse].map {
+      response =>
+        response.status match {
+          case Status.ACCEPTED =>
+            Left(response.json.as[BalanceId])
+          case Status.OK =>
+            Right(response.json.as[BalanceRequestResponse])
+        }
     }
 
   type SendRequestResponse =
@@ -93,30 +94,31 @@ class BalanceRequestConnectorImpl @Inject() (
     hc: HeaderCarrier
   ): IO[SendRequestResponse] =
     withMetricsTimerResponse(SendRequest) {
-      IO.runFuture { implicit ec =>
-        circuitBreaker.withCircuitBreaker(
-          {
-            val url = appConfig.backendUrl.addPathPart("balances")
+      IO.runFuture {
+        implicit ec =>
+          circuitBreaker.withCircuitBreaker(
+            {
+              val url = appConfig.backendUrl.addPathPart("balances")
 
-            val headers = Seq(
-              HeaderNames.ACCEPT       -> ContentTypes.JSON,
-              HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
-              Constants.ChannelHeader  -> Channel.Api.name
-            )
+              val headers = Seq(
+                HeaderNames.ACCEPT       -> ContentTypes.JSON,
+                HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
+                Constants.ChannelHeader  -> Channel.Api.name
+              )
 
-            http.POST[BalanceRequest, SendRequestResponse](
-              url.toString,
-              request,
-              headers
-            )
-          },
-          defineFailureFn = (result: Try[SendRequestResponse]) =>
-            result match {
-              case Success(Left(_)) => true
-              case Failure(_)       => true
-              case _                => false
-            }
-        )
+              http.POST[BalanceRequest, SendRequestResponse](
+                url.toString,
+                request,
+                headers
+              )
+            },
+            defineFailureFn = (result: Try[SendRequestResponse]) =>
+              result match {
+                case Success(Left(_)) => true
+                case Failure(_)       => true
+                case _                => false
+              }
+          )
       }
     }
 
@@ -126,43 +128,45 @@ class BalanceRequestConnectorImpl @Inject() (
   def getRequest(balanceId: BalanceId)(implicit
     hc: HeaderCarrier
   ): IO[GetRequestResponse] =
-    withMetricsTimer(GetRequest) { timer =>
-      val runGet = IO.runFuture { implicit ec =>
-        circuitBreaker.withCircuitBreaker(
-          {
-            val url = appConfig.backendUrl.addPathPart("balances").addPathPart(balanceId.value)
+    withMetricsTimer(GetRequest) {
+      timer =>
+        val runGet = IO.runFuture {
+          implicit ec =>
+            circuitBreaker.withCircuitBreaker(
+              {
+                val url = appConfig.backendUrl.addPathPart("balances").addPathPart(balanceId.value)
 
-            val headers = Seq(
-              HeaderNames.ACCEPT       -> ContentTypes.JSON,
-              HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
-              Constants.ChannelHeader  -> Channel.Api.name
+                val headers = Seq(
+                  HeaderNames.ACCEPT       -> ContentTypes.JSON,
+                  HeaderNames.CONTENT_TYPE -> ContentTypes.JSON,
+                  Constants.ChannelHeader  -> Channel.Api.name
+                )
+
+                http.GET[GetRequestResponse](
+                  url.toString,
+                  queryParams = Seq.empty,
+                  headers = headers
+                )
+              },
+              defineFailureFn = (result: Try[GetRequestResponse]) =>
+                result match {
+                  case Success(Some(Left(_))) => true
+                  case Failure(_)             => true
+                  case _                      => false
+                }
             )
-
-            http.GET[GetRequestResponse](
-              url.toString,
-              queryParams = Seq.empty,
-              headers = headers
-            )
-          },
-          defineFailureFn = (result: Try[GetRequestResponse]) =>
-            result match {
-              case Success(Some(Left(_))) => true
-              case Failure(_)             => true
-              case _                      => false
-            }
-        )
-      }
-
-      for {
-        result <- runGet
-
-        _ <- {
-          if (result.exists(_.isLeft))
-            timer.completeWithFailure()
-          else
-            timer.completeWithSuccess()
         }
 
-      } yield result
+        for {
+          result <- runGet
+
+          _ <- {
+            if (result.exists(_.isLeft))
+              timer.completeWithFailure()
+            else
+              timer.completeWithSuccess()
+          }
+
+        } yield result
     }
 }

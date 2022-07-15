@@ -27,6 +27,7 @@ case class XmlError(
 )
 
 object XmlError {
+
   implicit lazy val xmlErrorFormat: OFormat[XmlError] =
     Json.format[XmlError]
 }

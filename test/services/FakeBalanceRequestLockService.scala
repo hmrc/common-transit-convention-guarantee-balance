@@ -20,8 +20,8 @@ import cats.effect.IO
 import models.values.GuaranteeReference
 import models.values.InternalId
 
-case class FakeBalanceRequestLockService(isLockedOutResponse: IO[Boolean])
-  extends BalanceRequestLockService {
+case class FakeBalanceRequestLockService(isLockedOutResponse: IO[Boolean]) extends BalanceRequestLockService {
+
   override def isLockedOut(grn: GuaranteeReference, internalId: InternalId): IO[Boolean] =
     isLockedOutResponse
 }

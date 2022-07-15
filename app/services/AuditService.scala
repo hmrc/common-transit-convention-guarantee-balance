@@ -32,6 +32,7 @@ import javax.inject.Singleton
 
 @ImplementedBy(classOf[AuditServiceImpl])
 trait AuditService {
+
   def auditRateLimitedRequest(
     request: AuthenticatedRequest[JsValue],
     balanceRequest: BalanceRequest
@@ -51,13 +52,14 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
   ): IO[Unit] = {
     val rateLimitedRequestEvent = RateLimitedRequestEvent.fromRequest(request, balanceRequest)
 
-    IO.executionContext.flatMap { implicit ec =>
-      IO {
-        connector.sendExplicitAudit[RateLimitedRequestEvent](
-          AuditEventType.RateLimitedRequest.name,
-          rateLimitedRequestEvent
-        )
-      }
+    IO.executionContext.flatMap {
+      implicit ec =>
+        IO {
+          connector.sendExplicitAudit[RateLimitedRequestEvent](
+            AuditEventType.RateLimitedRequest.name,
+            rateLimitedRequestEvent
+          )
+        }
     }
   }
 }

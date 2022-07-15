@@ -20,4 +20,7 @@ import cats.effect.unsafe.IORuntime
 import play.api.inject.SimpleModule
 import play.api.inject.bind
 
-class IOModule extends SimpleModule((_, _) => Seq(bind[IORuntime].toProvider[IORuntimeProvider]))
+class IOModule
+    extends SimpleModule(
+      (_, _) => Seq(bind[IORuntime].toProvider[IORuntimeProvider])
+    )

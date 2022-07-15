@@ -22,11 +22,13 @@ import play.api.libs.json.OWrites
 case class TooManyRequestsError(message: String = "Too many requests")
 
 object TooManyRequestsError {
+
   implicit lazy val tooManyRequestsErrorWrites: OWrites[TooManyRequestsError] =
-    OWrites { error =>
-      Json.obj(
-        ErrorCode.FieldName -> ErrorCode.TooManyRequests,
-        "message"           -> error.message
-      )
+    OWrites {
+      error =>
+        Json.obj(
+          ErrorCode.FieldName -> ErrorCode.TooManyRequests,
+          "message"           -> error.message
+        )
     }
 }

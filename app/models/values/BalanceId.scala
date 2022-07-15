@@ -24,6 +24,7 @@ import java.util.UUID
 case class BalanceId(value: UUID) extends AnyVal
 
 object BalanceId {
+
   implicit val balanceIdFormat: Format[BalanceId] =
     Json.valueFormat[BalanceId]
 }

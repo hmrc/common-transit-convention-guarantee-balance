@@ -22,6 +22,7 @@ import play.api.libs.json.Json
 case class ErrorType(value: Int) extends AnyVal
 
 object ErrorType {
+
   implicit val errorTypeFormat: Format[ErrorType] =
     Json.valueFormat[ErrorType]
 }

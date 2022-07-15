@@ -28,19 +28,25 @@ case class JsonParsingError(
 )
 
 object JsonParsingError {
+
   private def toJsonPath(path: JsPath) =
-    path.path.foldLeft("$")((root, next) => root + next.toJsonString)
+    path.path.foldLeft("$")(
+      (root, next) => root + next.toJsonString
+    )
 
   implicit def jsonParsingErrorWrites(implicit messages: Messages): OWrites[JsonParsingError] =
-    OWrites { error =>
-      Json.obj(
-        ErrorCode.FieldName -> ErrorCode.InvalidRequestJson,
-        "message"           -> error.message,
-        "errors" -> error.errors.foldLeft(Json.obj()) { case (obj, (path, errors)) =>
-          obj ++ Json.obj(toJsonPath(path) -> errors.map { error =>
-            messages(error.message, error.args: _*)
-          })
-        }
-      )
+    OWrites {
+      error =>
+        Json.obj(
+          ErrorCode.FieldName -> ErrorCode.InvalidRequestJson,
+          "message"           -> error.message,
+          "errors" -> error.errors.foldLeft(Json.obj()) {
+            case (obj, (path, errors)) =>
+              obj ++ Json.obj(toJsonPath(path) -> errors.map {
+                error =>
+                  messages(error.message, error.args: _*)
+              })
+          }
+        )
     }
 }

@@ -17,6 +17,7 @@
 package models.response
 
 object Embedded {
+
   def apply(docs: (String, HalResponse)*): Option[Map[String, HalResponse]] =
     Some(Map(docs: _*))
 }

@@ -31,6 +31,7 @@ lazy val microservice = Project(appName, file("."))
   )
 
 lazy val buildSettings = Def.settings(
+  scalafmtOnCompile := true,
   scalafixDependencies ++= Seq(
     "com.github.liancheng" %% "organize-imports" % "0.5.0"
   )

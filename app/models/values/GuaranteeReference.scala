@@ -22,6 +22,7 @@ import play.api.libs.json.Json
 case class GuaranteeReference(value: String) extends AnyVal
 
 object GuaranteeReference {
+
   implicit val guaranteeReferenceFormat: Format[GuaranteeReference] =
     Json.valueFormat[GuaranteeReference]
 }

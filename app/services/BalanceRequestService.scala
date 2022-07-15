@@ -32,6 +32,7 @@ import javax.inject.Singleton
 
 @Singleton
 class BalanceRequestService @Inject() (connector: BalanceRequestConnector) {
+
   def submitBalanceRequest(request: BalanceRequest)(implicit
     hc: HeaderCarrier
   ): IO[Either[BalanceRequestError, Either[BalanceId, BalanceRequestResponse]]] =

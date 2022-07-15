@@ -27,20 +27,16 @@ import play.api.test.FutureAwaits
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-class IOFuturesSpec
-  extends AnyFlatSpec
-  with Matchers
-  with ScalaCheckPropertyChecks
-  with FutureAwaits
-  with DefaultAwaitTimeout
-  with IOFutures {
+class IOFuturesSpec extends AnyFlatSpec with Matchers with ScalaCheckPropertyChecks with FutureAwaits with DefaultAwaitTimeout with IOFutures {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   "IO.runFuture" should "run successful Futures to identical result" in forAll {
     (fn: (String => Int), str: String) =>
       val viaIO =
-        IO.runFuture { implicit ec => Future(str)(ec).map(fn)(ec) }.unsafeToFuture()
+        IO.runFuture {
+          implicit ec => Future(str)(ec).map(fn)(ec)
+        }.unsafeToFuture()
 
       val viaFuture =
         Future(str).map(fn)
@@ -53,21 +49,29 @@ class IOFuturesSpec
       }
   }
 
-  it should "run failed Futures to identical result" in forAll { num: Int =>
-    val exc = new RuntimeException
+  it should "run failed Futures to identical result" in forAll {
+    num: Int =>
+      val exc = new RuntimeException
 
-    val viaIO =
-      IO.runFuture { _ => Future(num).map[Int](_ => throw exc) }.unsafeToFuture()
+      val viaIO =
+        IO.runFuture {
+          _ =>
+            Future(num).map[Int](
+              _ => throw exc
+            )
+        }.unsafeToFuture()
 
-    val viaFuture =
-      Future(num).map[Int](_ => throw exc)
+      val viaFuture =
+        Future(num).map[Int](
+          _ => throw exc
+        )
 
-    assertThrows[RuntimeException] {
-      await(viaIO)
-    }
+      assertThrows[RuntimeException] {
+        await(viaIO)
+      }
 
-    assertThrows[RuntimeException] {
-      await(viaFuture)
-    }
+      assertThrows[RuntimeException] {
+        await(viaFuture)
+      }
   }
 }

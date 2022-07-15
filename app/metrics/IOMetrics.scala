@@ -68,29 +68,33 @@ trait IOMetrics {
   def withMetricsTimerResponse[A](
     metricKey: String
   )(block: IO[Either[UpstreamErrorResponse, A]]): IO[Either[UpstreamErrorResponse, A]] =
-    timerResource(metricKey).use { timer =>
-      block.flatMap { result =>
-        val completeTimer =
-          if (result.isLeft)
-            timer.completeWithFailure()
-          else
-            timer.completeWithSuccess()
+    timerResource(metricKey).use {
+      timer =>
+        block.flatMap {
+          result =>
+            val completeTimer =
+              if (result.isLeft)
+                timer.completeWithFailure()
+              else
+                timer.completeWithSuccess()
 
-        completeTimer.as(result)
-      }
+            completeTimer.as(result)
+        }
     }
 
   def withMetricsTimerResult[A](metricKey: String)(block: IO[Result]): IO[Result] =
-    timerResource(metricKey).use { timer =>
-      block.flatMap { result =>
-        val completeTimer =
-          if (isFailureStatus(result.header.status))
-            timer.completeWithFailure()
-          else
-            timer.completeWithSuccess()
+    timerResource(metricKey).use {
+      timer =>
+        block.flatMap {
+          result =>
+            val completeTimer =
+              if (isFailureStatus(result.header.status))
+                timer.completeWithFailure()
+              else
+                timer.completeWithSuccess()
 
-        completeTimer.as(result)
-      }
+            completeTimer.as(result)
+        }
     }
 
   private def timerResource(metricKey: String): Resource[IO, MetricsTimer] = {

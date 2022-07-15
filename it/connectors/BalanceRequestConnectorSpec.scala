@@ -43,13 +43,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class BalanceRequestConnectorSpec
-  extends AsyncFlatSpec
-  with Matchers
-  with EitherValues
-  with OptionValues
-  with Inside
-  with WireMockSpec {
+class BalanceRequestConnectorSpec extends AsyncFlatSpec with Matchers with EitherValues with OptionValues with Inside with WireMockSpec {
 
   override def portConfigKeys = Seq(
     "microservice.services.transit-movements-guarantee-balance.port"
@@ -62,6 +56,7 @@ class BalanceRequestConnectorSpec
     "guaranteeReference" -> "05DE3300BE0001067A001017",
     "accessCode"         -> "1234"
   )
+
   val request = BalanceRequest(
     TaxIdentifier("GB12345678900"),
     GuaranteeReference("05DE3300BE0001067A001017"),
@@ -94,11 +89,12 @@ class BalanceRequestConnectorSpec
 
     connector
       .sendRequest(request)
-      .map { response =>
-        response shouldBe a[Right[_, _]]
-        response.value shouldBe Right(
-          BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
-        )
+      .map {
+        response =>
+          response shouldBe a[Right[_, _]]
+          response.value shouldBe Right(
+            BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
+          )
       }
       .unsafeToFuture()
   }
@@ -121,11 +117,12 @@ class BalanceRequestConnectorSpec
 
     connector
       .sendRequest(request)
-      .map { response =>
-        response shouldBe a[Right[_, _]]
-        response.value shouldBe Left(
-          BalanceId(UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4"))
-        )
+      .map {
+        response =>
+          response shouldBe a[Right[_, _]]
+          response.value shouldBe Left(
+            BalanceId(UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4"))
+          )
       }
       .unsafeToFuture()
   }
@@ -140,11 +137,13 @@ class BalanceRequestConnectorSpec
 
     connector
       .sendRequest(request)
-      .map { response =>
-        response shouldBe a[Left[_, _]]
-        inside(response.left.value) { case Upstream4xxResponse(response) =>
-          response.statusCode shouldBe FORBIDDEN
-        }
+      .map {
+        response =>
+          response shouldBe a[Left[_, _]]
+          inside(response.left.value) {
+            case Upstream4xxResponse(response) =>
+              response.statusCode shouldBe FORBIDDEN
+          }
       }
       .unsafeToFuture()
   }
@@ -159,11 +158,13 @@ class BalanceRequestConnectorSpec
 
     connector
       .sendRequest(request)
-      .map { response =>
-        response shouldBe a[Left[_, _]]
-        inside(response.left.value) { case Upstream5xxResponse(response) =>
-          response.statusCode shouldBe BAD_GATEWAY
-        }
+      .map {
+        response =>
+          response shouldBe a[Left[_, _]]
+          inside(response.left.value) {
+            case Upstream5xxResponse(response) =>
+              response.statusCode shouldBe BAD_GATEWAY
+          }
       }
       .unsafeToFuture()
   }
@@ -202,20 +203,21 @@ class BalanceRequestConnectorSpec
 
     connector
       .getRequest(balanceId)
-      .map { response =>
-        response shouldBe a[Some[_]]
-        response.value shouldBe Right(
-          PendingBalanceRequest(
-            balanceId,
-            TaxIdentifier("GB12345678900"),
-            GuaranteeReference("05DE3300BE0001067A001017"),
-            OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 52, 15), ZoneOffset.UTC).toInstant,
-            completedAt = Some(
-              OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 53, 5), ZoneOffset.UTC).toInstant
-            ),
-            response = Some(BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP")))
+      .map {
+        response =>
+          response shouldBe a[Some[_]]
+          response.value shouldBe Right(
+            PendingBalanceRequest(
+              balanceId,
+              TaxIdentifier("GB12345678900"),
+              GuaranteeReference("05DE3300BE0001067A001017"),
+              OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 52, 15), ZoneOffset.UTC).toInstant,
+              completedAt = Some(
+                OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 53, 5), ZoneOffset.UTC).toInstant
+              ),
+              response = Some(BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP")))
+            )
           )
-        )
       }
       .unsafeToFuture()
   }
@@ -235,8 +237,9 @@ class BalanceRequestConnectorSpec
 
     connector
       .getRequest(balanceId)
-      .map { response =>
-        response shouldBe None
+      .map {
+        response =>
+          response shouldBe None
       }
       .unsafeToFuture()
   }
@@ -256,10 +259,11 @@ class BalanceRequestConnectorSpec
 
     connector
       .getRequest(balanceId)
-      .map { response =>
-        response shouldBe a[Some[_]]
-        response.value shouldBe a[Left[_, _]]
-        response.value.left.value.statusCode shouldBe METHOD_NOT_ALLOWED
+      .map {
+        response =>
+          response shouldBe a[Some[_]]
+          response.value shouldBe a[Left[_, _]]
+          response.value.left.value.statusCode shouldBe METHOD_NOT_ALLOWED
       }
       .unsafeToFuture()
   }
@@ -279,10 +283,11 @@ class BalanceRequestConnectorSpec
 
     connector
       .getRequest(balanceId)
-      .map { response =>
-        response shouldBe a[Some[_]]
-        response.value shouldBe a[Left[_, _]]
-        response.value.left.value.statusCode shouldBe GATEWAY_TIMEOUT
+      .map {
+        response =>
+          response shouldBe a[Some[_]]
+          response.value shouldBe a[Left[_, _]]
+          response.value.left.value.statusCode shouldBe GATEWAY_TIMEOUT
       }
       .unsafeToFuture()
   }

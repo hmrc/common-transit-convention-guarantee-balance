@@ -30,10 +30,12 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   private lazy val backendBaseUrl: AbsoluteUrl =
     AbsoluteUrl.parse(servicesConfig.baseUrl("transit-movements-guarantee-balance"))
+
   private lazy val backendPath: UrlPath =
     UrlPath.parse(
       config.get[String]("microservice.services.transit-movements-guarantee-balance.path")
     )
+
   lazy val backendUrl: AbsoluteUrl =
     backendBaseUrl.withPath(backendPath)
 

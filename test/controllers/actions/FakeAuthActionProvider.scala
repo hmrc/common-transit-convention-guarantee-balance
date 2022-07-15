@@ -29,21 +29,20 @@ class FakeAuthActionProvider(
   authenticate: ActionRefiner[Request, AuthenticatedRequest],
   cc: ControllerComponents
 ) extends AuthActionProvider {
+
   override def apply(): ActionBuilder[AuthenticatedRequest, AnyContent] =
     cc.actionBuilder andThen authenticate
 }
 
-object FakeAuthActionProvider
-  extends FakeAuthActionProvider(FakeAuthAction, Helpers.stubControllerComponents())
+object FakeAuthActionProvider extends FakeAuthActionProvider(FakeAuthAction, Helpers.stubControllerComponents())
 
 object FakeAuthAction
-  extends FakeAuthAction(new FunctionK[Request, AuthenticatedRequest] {
-    def apply[A](request: Request[A]): AuthenticatedRequest[A] =
-      AuthenticatedRequest(request, InternalId("internalId"))
-  })
+    extends FakeAuthAction(new FunctionK[Request, AuthenticatedRequest] {
+      def apply[A](request: Request[A]): AuthenticatedRequest[A] =
+        AuthenticatedRequest(request, InternalId("internalId"))
+    })
 
-class FakeAuthAction(result: FunctionK[Request, AuthenticatedRequest])
-  extends ActionTransformer[Request, AuthenticatedRequest] {
+class FakeAuthAction(result: FunctionK[Request, AuthenticatedRequest]) extends ActionTransformer[Request, AuthenticatedRequest] {
 
   override protected def executionContext: ExecutionContext = ExecutionContext.global
 

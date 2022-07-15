@@ -22,6 +22,7 @@ import play.api.libs.json.Json
 case class InternalId(value: String) extends AnyVal
 
 object InternalId {
+
   implicit val internalIdFormat: Format[InternalId] =
     Json.valueFormat[InternalId]
 }

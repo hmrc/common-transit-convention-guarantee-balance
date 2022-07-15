@@ -34,19 +34,20 @@ import java.io.IOException
 import java.util.concurrent.CancellationException
 
 class IOActionsSpec extends AsyncFlatSpec with Matchers {
+
   class TestController(
     runIOResult: IO[Result] = IO.stub,
     runIOWithRequestResult: Request[AnyContent] => IO[Result] = _ => IO.stub,
     runIOWithJsonParserResult: Request[JsValue] => IO[Result] = _ => IO.stub
   ) extends BackendController(Helpers.stubControllerComponents())
-    with IOActions {
+      with IOActions {
     val runtime = IORuntime.global
 
-    def runIO = Action.io { runIOResult }
+    def runIO = Action.io(runIOResult)
 
-    def runIOWithRequest = Action.io { runIOWithRequestResult(_) }
+    def runIOWithRequest = Action.io(runIOWithRequestResult(_))
 
-    def runIOWithJsonParser = Action.io(parse.json) { runIOWithJsonParserResult(_) }
+    def runIOWithJsonParser = Action.io(parse.json)(runIOWithJsonParserResult(_))
   }
 
   "IOAction.io" should "succeed when IO succeeds" in {
@@ -63,7 +64,11 @@ class IOActionsSpec extends AsyncFlatSpec with Matchers {
   }
 
   it should "fail when IO is cancelled" in {
-    val controller = new TestController(runIOResult = IO.canceled.map(_ => Ok))
+    val controller = new TestController(
+      runIOResult = IO.canceled.map(
+        _ => Ok
+      )
+    )
     recoverToSucceededIf[CancellationException] {
       controller.runIO(FakeRequest())
     }
@@ -84,7 +89,12 @@ class IOActionsSpec extends AsyncFlatSpec with Matchers {
   }
 
   it should "fail when IO is cancelled" in {
-    val controller = new TestController(runIOWithRequestResult = _ => IO.canceled.map(_ => Ok))
+    val controller = new TestController(
+      runIOWithRequestResult = _ =>
+        IO.canceled.map(
+          _ => Ok
+        )
+    )
     recoverToSucceededIf[CancellationException] {
       controller.runIOWithRequest(FakeRequest())
     }
@@ -105,7 +115,12 @@ class IOActionsSpec extends AsyncFlatSpec with Matchers {
   }
 
   it should "fail when IO is cancelled" in {
-    val controller = new TestController(runIOWithJsonParserResult = _ => IO.canceled.map(_ => Ok))
+    val controller = new TestController(
+      runIOWithJsonParserResult = _ =>
+        IO.canceled.map(
+          _ => Ok
+        )
+    )
     recoverToSucceededIf[CancellationException] {
       controller.runIOWithJsonParser(FakeRequest().withBody(Json.obj("foo" -> 1)))
     }

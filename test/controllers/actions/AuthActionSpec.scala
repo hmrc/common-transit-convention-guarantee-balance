@@ -45,7 +45,9 @@ class AuthActionSpec extends AsyncFlatSpec with Matchers {
     val retrieval     = Some(internalId)
     val authConnector = FakeAuthConnector(Future.successful(retrieval))
     val authAction    = mkAuthActionBuilder(authConnector)
-    val result        = authAction(_ => Results.Ok)(FakeRequest())
+    val result = authAction(
+      _ => Results.Ok
+    )(FakeRequest())
 
     result.map(_ shouldBe Results.Ok)
   }
@@ -54,7 +56,9 @@ class AuthActionSpec extends AsyncFlatSpec with Matchers {
     val retrieval     = None
     val authConnector = FakeAuthConnector(Future.successful(retrieval))
     val authAction    = mkAuthActionBuilder(authConnector)
-    val result        = authAction(_ => Results.Ok)(FakeRequest())
+    val result = authAction(
+      _ => Results.Ok
+    )(FakeRequest())
 
     result.map(_ shouldBe Results.Forbidden)
   }
@@ -62,7 +66,9 @@ class AuthActionSpec extends AsyncFlatSpec with Matchers {
   it should "return Unauthorized when there is any other kind of authorization failure" in {
     val authConnector = FakeAuthConnector(Future.failed(MissingBearerToken()))
     val authAction    = mkAuthActionBuilder(authConnector)
-    val result        = authAction(_ => Results.Ok)(FakeRequest())
+    val result = authAction(
+      _ => Results.Ok
+    )(FakeRequest())
 
     result.map(_ shouldBe Results.Unauthorized)
   }
@@ -71,7 +77,9 @@ class AuthActionSpec extends AsyncFlatSpec with Matchers {
     val authConnector = FakeAuthConnector(Future.failed(new IOException))
     val authAction    = mkAuthActionBuilder(authConnector)
     recoverToSucceededIf[IOException] {
-      authAction(_ => Results.Ok)(FakeRequest())
+      authAction(
+        _ => Results.Ok
+      )(FakeRequest())
     }
   }
 }

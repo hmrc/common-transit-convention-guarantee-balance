@@ -35,11 +35,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 import scala.concurrent.ExecutionContext
 
-class AuditServiceSpec
-  extends AsyncFlatSpec
-  with Matchers
-  with AsyncIdiomaticMockito
-  with BeforeAndAfterEach {
+class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMockito with BeforeAndAfterEach {
 
   val auditConnector = mock[AuditConnector]
   val auditService   = new AuditServiceImpl(auditConnector)
@@ -71,15 +67,16 @@ class AuditServiceSpec
 
     auditService
       .auditRateLimitedRequest(authenticatedRequest, balanceRequest)
-      .map { _ =>
-        auditConnector.sendExplicitAudit[RateLimitedRequestEvent](
-          "RateLimitedRequest",
-          expectedEvent
-        )(
-          any[HeaderCarrier],
-          any[ExecutionContext],
-          any[Writes[RateLimitedRequestEvent]]
-        ) wasCalled once
+      .map {
+        _ =>
+          auditConnector.sendExplicitAudit[RateLimitedRequestEvent](
+            "RateLimitedRequest",
+            expectedEvent
+          )(
+            any[HeaderCarrier],
+            any[ExecutionContext],
+            any[Writes[RateLimitedRequestEvent]]
+          ) wasCalled once
       }
       .unsafeToFuture()
   }

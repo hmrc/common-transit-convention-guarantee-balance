@@ -17,6 +17,7 @@
 package models.response
 
 object Links {
+
   def apply(links: (String, Link)*): Option[Map[String, Link]] =
     Some(Map(links: _*))
 }
