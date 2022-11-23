@@ -1,0 +1,319 @@
+---
+openapi: 3.0.0
+info:
+  title: CTC Guarantee Balance API
+  # description: >-
+  #  Use the CTC Guarantee Balance API to submit Common Transit Convention
+  #  guarantee balance enquiries and get responses.
+  license:
+    name: Apache 2.0
+    url: 'https://github.com/hmrc/common-transit-convention-guarantee-balance/blob/main/LICENSE'
+  version: '1.0'
+
+servers:
+- url: https://test-api.service.hmrc.gov.uk
+  description: Sandbox
+- url: https://api.service.hmrc.gov.uk
+  description: Production
+
+paths:
+  /customs/guarantees/balances:
+    post:
+      operationId: postBalanceRequest
+      summary: Send a balance request
+      description: >-
+        Initiate a balance request. You may receive a response immediately
+        with a 200 OK or 400 Bad Request response, or a 202 Accepted response
+        with a balance request ID.
+      security:
+        - userRestricted: []
+      parameters:
+      - $ref: '#/components/parameters/acceptHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - taxIdentifier
+                - guaranteeReference
+                - accessCode
+              properties:
+                  taxIdentifier:
+                    type: string
+                    minLength: 1
+                    maxLength: 17
+                    description: >-
+                      The trader identification number (TIN) of the principal
+                      on the guarantee.
+                  guaranteeReference:
+                    type: string
+                    minLength: 1
+                    maxLength: 24
+                    description: >-
+                      The guarantee reference number (GRN) of the guarantee.
+                  accessCode:
+                    type: string
+                    minLength: 4
+                    maxLength: 4
+                    description: >-
+                      The access code granting access to make use of the
+                      guarantee.
+            example:
+              taxIdentifier: GB123456789012
+              guaranteeReference: 20GB0000010000GX1
+              accessCode: ABC1
+      # x-annotation-annotations.scope: common-transit-convention-guarantee-balance
+      responses:
+        '200':
+          description: >-
+            A successful balance request response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - response
+                properties:
+                  _links:
+                    type: object
+                    description: >-
+                      An object containing links to other resources.
+                  _embedded:
+                    type: object
+                    description: >-
+                      An object containing embedded resources.
+                  response:
+                    type: object
+                    description: >-
+                      A successful response from the guarantee management system
+                    properties:
+                      balance:
+                        type: number
+                        description: >-
+                          The remaining guarantee balance.
+                      currency:
+                        type: string
+                        pattern: '^[A-Z]{3}$'
+                        description: >-
+                          The alphanumeric 3-character ISO currency code of the
+                          currency in which the balance is held.
+              example:
+                response:
+                  balance: 12345678.9
+                  currency: GBP
+        '202':
+          description: >-
+            A pending balance request response
+          headers:
+            Location:
+              required: true
+              description: >-
+                The path of the newly created balance request
+              schema:
+                type: string
+              example: /customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - _links
+                - balanceId
+                properties:
+                  _links:
+                    type: object
+                    description: >-
+                      An object containing links to other resources.
+                  _embedded:
+                    type: object
+                    description: >-
+                      An object containing embedded resources.
+                  balanceId:
+                    type: string
+                    description: >-
+                      The ID of the balance request.
+              example:
+                _links:
+                  self:
+                    href: "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+                balanceId: 22b9899e-24ee-48e6-a189-97d1f45391c4
+        '400':
+          description: >-
+            The request was rejected by the guarantee management system
+          content:
+            application/json:
+              example:
+                code: FUNCTIONAL_ERROR
+                message: The request was rejected by the guarantee management system
+                response:
+                  errors:
+                    errorType: 12
+                    errorPointer: GRR(1).Guarantee reference number (GRN)
+              schema:
+                $ref: '#/components/schemas/Error'
+        '406':
+          description: >-
+            The `Accept` header is missing or invalid
+          $ref: '#/components/responses/notAcceptable'
+
+  /customs/guarantees/balances/{balanceId}:
+    get:
+      operationId: getBalanceRequest
+      summary: Check the status of a balance request
+      description: >-
+        Check the status of a balance request for which a response
+        could not be provided immediately. You can use the balance request ID
+        returned by the 202 Accepted response to call this endpoint.
+      security:
+        - userRestricted: []
+      parameters:
+      - $ref: '#/components/parameters/acceptHeader'
+      - name: balanceId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: >-
+            HTTP status 200 (OK) responses can be in the states of "Pending
+            request", "Successful request", and "Failed request" as described
+            below.
+          content:
+            application/json:
+              example:
+                pending-request:
+                  _links:
+                    self:
+                      href: "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+                  request:
+                    balanceId: 22b9899e-24ee-48e6-a189-97d1f45391c4
+                    taxIdentifier: GB123456789012
+                    guaranteeReference: 20GB0000010000GX1
+                    requestedAt: '2021-09-14T09:52:15Z'
+                successful-request:
+                  _links:
+                    self:
+                      href: "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+                  request:
+                    balanceId: 22b9899e-24ee-48e6-a189-97d1f45391c4
+                    taxIdentifier: GB123456789012
+                    guaranteeReference: 20GB0000010000GX1
+                    requestedAt: '2021-09-14T09:52:15Z'
+                    completedAt: '2021-09-14T09:53:05Z'
+                    response:
+                      status: SUCCESS
+                      balance: 12345678.9
+                      currency: EUR
+                failed-request:
+                  _links:
+                    self:
+                      href: "/customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4"
+                  request:
+                    balanceId: 22b9899e-24ee-48e6-a189-97d1f45391c4
+                    taxIdentifier: GB123456789012
+                    guaranteeReference: 20GB0000010000GX1
+                    requestedAt: '2021-09-14T09:52:15Z'
+                    completedAt: '2021-09-14T09:53:05Z'
+                    response:
+                      status: FUNCTIONAL_ERROR
+                      errors:
+                      - errorType: 12
+                        errorPointer: GRR(1).Guarantee reference number (GRN)
+              # schema:
+              #  $ref: '#/components/schemas/getBalanceRequestResponse'
+        '404':
+          description: >-
+            The balance request was not found
+          content:
+            application/json:
+              # schema:
+              #  $ref: '#/components/schemas/Error'
+              example:
+                badRequest:
+                  code: NOT_FOUND
+        '406':
+          description: >-
+            The `Accept` header is missing or invalid
+          $ref: '#/components/responses/notAcceptable'
+      # x-annotation-annotations.scope: common-transit-convention-guarantee-balance
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+          example: FUNCTIONAL_ERROR
+        message:
+          type: string
+          description: Error message
+          example: This is an error message
+        response:
+          type: object
+          properties:
+            errorType:
+              type: string
+              description: Error type
+              example: 12
+            errorPointer:
+              type: string
+              description: Error pointer
+              example: GRR(1).Guarantee reference number (GRN)
+  responses:
+    notAcceptable:
+      description: >-
+        The requested resource is capable of generating only content not
+        acceptable according to the `Accept` headers sent in the request.
+      content:
+        application/json:
+          example:
+            badRequest:
+              code: ACCEPT_HEADER_INVALID
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  parameters:
+    acceptHeader:
+      name: Accept
+      in: header
+      required: true
+      description: >-
+        Specifies the response format and the
+        [version](/api-documentation/docs/reference-guide#versioning) of the
+        API to be used.
+      schema:
+        type: string
+        example: application/vnd.hmrc.1.0+json
+
+  examples: {}
+
+  requestBodies: {}
+
+  headers: {}
+
+  securitySchemes:
+    userRestricted:
+      type: oauth2
+      description: >-
+        HMRC supports OAuth 2.0 for authenticating user-restricted API requests
+        using an [OAuth 2.0 Bearer Token](/api-documentation/docs/authorisation/user-restricted-endpoints)
+        in the `Authorization` header.
+        <br />**Example:** `Bearer bb7fed3fe10dd235a2ccda3d50fb`
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.service.hmrc.gov.uk/oauth/authorize
+          tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
+          scopes:
+            read:common-transit-convention-guarantee-balance: Grants read access
+            write:common-transit-convention-guarantee-balance: Grants write access
+            # admin: Grants access to admin operations
+  links: {}
+
+  callbacks: {}
