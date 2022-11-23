@@ -1,0 +1,461 @@
+openapi: 3.0.0
+info:
+  title: CTC Guarantee Balance
+  contact: {}
+  version: '1.0'
+servers:
+  - url: https://api.service.hmrc.gov.uk/
+    variables: {}
+paths:
+  /customs/guarantees/balances:
+    post:
+      tags:
+        - customs
+      summary: Send a Balance Request
+      description: Used to initiate the balance request. You may receive a response immediately with a 200 OK or 400 Bad Request response, or a 202 Accepted response with a balance request ID.
+      operationId: SendaBalanceRequest
+      parameters: []
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/CustomsGuaranteesBalancesrequest'
+                - example:
+                    taxIdentifier: GB123456789012
+                    guaranteeReference: 20GB0000010000GX1
+                    accessCode: ABC1
+            example:
+              taxIdentifier: GB123456789012
+              guaranteeReference: 20GB0000010000GX1
+              accessCode: ABC1
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CustomsGuaranteesBalancesresponse'
+                  - example:
+                      response:
+                        balance: 12345678.9
+                        currency: GBP
+              example:
+                response:
+                  balance: 12345678.9
+                  currency: GBP
+        '202':
+          description: ''
+          headers:
+            Location:
+              description: The path of the newly created balance request
+              content:
+                text/plain:
+                  schema:
+                    type: string
+                    description: The path of the newly created balance request
+                    example: /customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4
+                  example: /customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CustomsGuaranteesBalancesresponse202'
+                  - example:
+                      _links:
+                        self:
+                          href: /customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4
+                      balanceId: 22b9899e-24ee-48e6-a189-97d1f45391c4
+              example:
+                _links:
+                  self:
+                    href: /customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4
+                balanceId: 22b9899e-24ee-48e6-a189-97d1f45391c4
+        '400':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CustomsGuaranteesBalancesresponse400'
+                  - description: The request was rejected by the guarantee management system
+                    example:
+                      code: FUNCTIONAL_ERROR
+                      message: The request was rejected by the guarantee management system
+                      response:
+                        errors:
+                          - errorType: 12
+                            errorPointer: GRR(1).Guarantee reference number (GRN)
+              example:
+                code: FUNCTIONAL_ERROR
+                message: The request was rejected by the guarantee management system
+                response:
+                  errors:
+                    - errorType: 12
+                      errorPointer: GRR(1).Guarantee reference number (GRN)
+        '406':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: ACCEPT_HEADER_INVALID
+              examples:
+                badRequest:
+                  description: The accept header is missing or invalid
+                  value:
+                    code: ACCEPT_HEADER_INVALID
+      deprecated: false
+  /customs/guarantees/balances/{balanceId}:
+    get:
+      tags:
+        - customs
+      summary: Check the status of a Balance Request
+      description: Used to check the status of a balance request for which a response could not be provided immediately. You can use the balance request ID returned by the 202 Accepted response to call this endpoint.
+      operationId: CheckthestatusofaBalanceRequest
+      parameters:
+        - name: balanceId
+          in: path
+          description: The ID of the balance request to check.
+          required: true
+          style: simple
+          schema:
+            type: string
+            example: 22b9899e-24ee-48e6-a189-97d1f45391c4
+      responses:
+        '200':
+          description: HTTP status 200 (OK) responses can be in the states of "Pending request", "Successful request", and "Failed request" as described below.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/CustomsGuaranteesBalancesresponse1'
+                  - example:
+                      _links:
+                        self:
+                          href: /customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4
+                      request:
+                        balanceId: 22b9899e-24ee-48e6-a189-97d1f45391c4
+                        taxIdentifier: GB123456789012
+                        guaranteeReference: 20GB0000010000GX1
+                        requestedAt: 2021-09-14T09:52:15Z
+              examples:
+                pending-request:
+                  description: HTTP status 200 (OK) responses can be in the states of "Pending request", "Successful request", and "Failed request" as described below.
+                  value:
+                    _links:
+                      self:
+                        href: /customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4
+                    request:
+                      balanceId: 22b9899e-24ee-48e6-a189-97d1f45391c4
+                      taxIdentifier: GB123456789012
+                      guaranteeReference: 20GB0000010000GX1
+                      requestedAt: 2021-09-14T09:52:15Z
+                successful-request:
+                  description: 'Successful request:'
+                  value:
+                    _links:
+                      self:
+                        href: /customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4
+                    request:
+                      balanceId: 22b9899e-24ee-48e6-a189-97d1f45391c4
+                      taxIdentifier: GB123456789012
+                      guaranteeReference: 20GB0000010000GX1
+                      requestedAt: 2021-09-14T09:52:15Z
+                      completedAt: 2021-09-14T09:53:05Z
+                      response:
+                        status: SUCCESS
+                        balance: 12345678.9
+                        currency: EUR
+                failed-request:
+                  description: 'Failed request:'
+                  value:
+                    _links:
+                      self:
+                        href: /customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4
+                    request:
+                      balanceId: 22b9899e-24ee-48e6-a189-97d1f45391c4
+                      taxIdentifier: GB123456789012
+                      guaranteeReference: 20GB0000010000GX1
+                      requestedAt: 2021-09-14T09:52:15Z
+                      completedAt: 2021-09-14T09:53:05Z
+                      response:
+                        status: FUNCTIONAL_ERROR
+                        errors:
+                          - errorType: 12
+                            errorPointer: GRR(1).Guarantee reference number (GRN)
+        '404':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: NOT_FOUND
+              examples:
+                badRequest:
+                  description: The balance request was not found
+                  value:
+                    code: NOT_FOUND
+        '406':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/errorResponse'
+                  - example:
+                      code: ACCEPT_HEADER_INVALID
+              examples:
+                badRequest:
+                  description: The accept header is missing or invalid
+                  value:
+                    code: ACCEPT_HEADER_INVALID
+      deprecated: false
+components:
+  schemas:
+    errorResponse:
+      title: errorResponse
+      required:
+        - code
+      type: object
+      properties:
+        code:
+          type: string
+    balance-request-functional-error-schema.json:
+      title: balance-request-functional-error-schema.json
+      required:
+        - errors
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/functionalError'
+          description: The functional errors returned when attempting to make the balance request.
+      description: A functional error response from the guarantee management system
+    balance-request-success-schema.json:
+      title: balance-request-success-schema.json
+      required:
+        - balance
+        - currency
+      type: object
+      properties:
+        balance:
+          type: number
+          description: The remaining guarantee balance.
+        currency:
+          pattern: ^[A-Z]{3}$
+          type: string
+          description: The alphanumeric 3-character ISO currency code of the currency in which the balance is held.
+      description: A successful response from the guarantee management system
+    hal-document-schema.json:
+      title: hal-document-schema.json
+      type: object
+      properties:
+        _links:
+          allOf:
+            - $ref: '#/components/schemas/Links'
+            - description: An object containing links to other resources
+        _embedded:
+          type: object
+          additionalProperties: {}
+          description: An object containing embedded resources
+      description: A HAL document
+    pending-balance-request-schema.json:
+      title: pending-balance-request-schema.json
+      required:
+        - balanceId
+        - taxIdentifier
+        - guaranteeReference
+        - requestedAt
+      type: object
+      properties:
+        balanceId:
+          type: string
+          description: The ID of the balance request.
+        taxIdentifier:
+          type: string
+          description: The tax identifier of the holder of the guarantee.
+        guaranteeReference:
+          type: string
+          description: The guarantee reference number (GRN) of the guarantee.
+        requestedAt:
+          type: string
+          description: The timestamp when the balance request was created.
+        completedAt:
+          type: string
+          description: The timestamp when the balance response was received.
+        response:
+          type: object
+          description: The response from the guarantee management system.
+      description: A request to the guarantee management system.
+    CustomsGuaranteesBalancesrequest:
+      title: CustomsGuaranteesBalancesrequest
+      required:
+        - taxIdentifier
+        - guaranteeReference
+        - accessCode
+      type: object
+      properties:
+        taxIdentifier:
+          maxLength: 17
+          minLength: 1
+          type: string
+          description: The trader identification number (TIN) of the principal on the guarantee.
+        guaranteeReference:
+          maxLength: 24
+          minLength: 1
+          type: string
+          description: The guarantee reference number (GRN) of the guarantee.
+        accessCode:
+          maxLength: 4
+          minLength: 4
+          type: string
+          description: The access code granting access to make use of the guarantee.
+      description: A balance request for the CTC Guarantee Balance API
+    CustomsGuaranteesBalancesresponse:
+      title: CustomsGuaranteesBalancesresponse
+      required:
+        - response
+      type: object
+      properties:
+        _links:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/halLink'
+          description: An object containing links to other resources.
+        _embedded:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/hal-document-schema.json'
+          description: An object containing embedded resources.
+        response:
+          allOf:
+            - $ref: '#/components/schemas/balance-request-success-schema.json'
+            - description: A successful response from the guarantee management system
+      description: A successful balance request response.
+    CustomsGuaranteesBalancesresponse1:
+      title: CustomsGuaranteesBalancesresponse1
+      required:
+        - _links
+        - request
+      type: object
+      properties:
+        _links:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/halLink'
+          description: An object containing links to other resources.
+        _embedded:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/hal-document-schema.json'
+          description: An object containing embedded resources.
+        request:
+          allOf:
+            - $ref: '#/components/schemas/pending-balance-request-schema.json'
+            - description: A request to the guarantee management system.
+      description: A balance request response
+    CustomsGuaranteesBalancesresponse202:
+      title: CustomsGuaranteesBalancesresponse202
+      required:
+        - _links
+        - balanceId
+      type: object
+      properties:
+        _links:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/halLink'
+          description: An object containing links to other resources.
+        _embedded:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/hal-document-schema.json'
+          description: An object containing embedded resources.
+        balanceId:
+          type: string
+          description: The ID of the balance request.
+      description: A pending balance request response
+    CustomsGuaranteesBalancesresponse400:
+      title: CustomsGuaranteesBalancesresponse400
+      required:
+        - code
+        - message
+        - response
+      type: object
+      properties:
+        _links:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/halLink'
+          description: An object containing links to other resources.
+        _embedded:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/hal-document-schema.json'
+          description: An object containing embedded resources.
+        code:
+          enum:
+            - FUNCTIONAL_ERROR
+          type: string
+        message:
+          type: string
+          description: The description of the error.
+        response:
+          allOf:
+            - $ref: '#/components/schemas/balance-request-functional-error-schema.json'
+            - description: A functional error response from the guarantee management system
+      description: A functional error response from the guarantee management system
+    functionalError:
+      title: functionalError
+      required:
+        - errorType
+        - errorPointer
+      type: object
+      properties:
+        errorType:
+          type: number
+          description: The numeric error code of the functional error.
+        errorPointer:
+          type: string
+          description: The pointer string indicating the data item that was in error.
+        errorReason:
+          type: string
+          description: The reason message indicating additional information about the cause of the error.
+      description: A functional error.
+    halLink:
+      title: halLink
+      required:
+        - href
+      type: object
+      properties:
+        href:
+          type: string
+          description: A link to another resource
+      description: A HAL link object
+    Links:
+      title: Links
+      type: object
+      properties:
+        self:
+          allOf:
+            - $ref: '#/components/schemas/halLink'
+            - description: A HAL link object
+      description: An object containing links to other resources
+tags:
+  - name: customs
+    description: ''

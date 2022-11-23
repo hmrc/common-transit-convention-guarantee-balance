@@ -43,8 +43,8 @@ class DocumentationRoutesSpec extends AnyFlatSpec with Matchers with GuiceOneApp
     apiContext shouldBe "customs/guarantees"
   }
 
-  it should "return 200 and plain text response for the RAML definition file" in {
-    val request = FakeRequest(Call("GET", "/api/conf/1.0/application.raml"))
+  it should "return 200 and plain text response for the OAS YAML definition file" in {
+    val request = FakeRequest(Call("GET", "/api/conf/1.0/applicationDerek.yaml"))
     val result  = route(app, request).get
     status(result) shouldBe OK
     contentType(result) should contain(BINARY)
