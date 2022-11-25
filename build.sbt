@@ -41,8 +41,9 @@ lazy val scalacSettings = Def.settings(
   // Disable warnings arising from generated routing code
   scalacOptions += "-Wconf:src=routes/.*:silent",
   // Disable fatal warnings and warnings from discarding values
-  scalacOptions ~= { opts =>
-    opts.filterNot(Set("-Xfatal-warnings", "-Ywarn-value-discard"))
+  scalacOptions ~= {
+    opts =>
+      opts.filterNot(Set("-Xfatal-warnings", "-Ywarn-value-discard"))
   }
 )
 
