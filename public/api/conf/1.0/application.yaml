@@ -19,7 +19,8 @@ paths:
         a 200 OK or 400 Bad Request response, or a 202 Accepted response with a
         balance request ID.
       security:
-        - userRestricted: []
+        - userRestricted:
+          - write:common-transit-convention-guarantee-balance
       parameters:
         - $ref: '#/components/parameters/acceptHeader'
         - $ref: '#/components/parameters/contentTypeHeader'
@@ -173,7 +174,8 @@ paths:
         provided immediately. You can use the balance request ID returned by the
         202 Accepted response to call this resource.
       security:
-        - userRestricted: []
+        - userRestricted:
+          - read:common-transit-convention-guarantee-balance
       parameters:
         - $ref: '#/components/parameters/acceptHeader'
         - name: balanceId
@@ -499,6 +501,8 @@ components:
           authorizationUrl: 'https://api.service.hmrc.gov.uk/oauth/authorize'
           tokenUrl: 'https://api.service.hmrc.gov.uk/oauth/token'
           refreshUrl: 'https://api.service.hmrc.gov.uk/oauth/refresh'
-          scopes: {}
+          scopes:
+            read:common-transit-convention-guarantee-balance: Grants read access
+            write:common-transit-convention-guarantee-balance: Grants write access
   links: {}
   callbacks: {}
