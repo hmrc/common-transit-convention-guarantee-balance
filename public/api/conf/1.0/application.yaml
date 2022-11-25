@@ -19,8 +19,7 @@ paths:
         a 200 OK or 400 Bad Request response, or a 202 Accepted response with a
         balance request ID.
       security:
-        - userRestricted:
-            - all
+        - userRestricted: []
       parameters:
         - $ref: '#/components/parameters/acceptHeader'
         - $ref: '#/components/parameters/contentTypeHeader'
@@ -174,8 +173,7 @@ paths:
         provided immediately. You can use the balance request ID returned by the
         202 Accepted response to call this resource.
       security:
-        - userRestricted:
-            - all
+        - userRestricted: []
       parameters:
         - $ref: '#/components/parameters/acceptHeader'
         - name: balanceId
