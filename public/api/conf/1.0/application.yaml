@@ -502,6 +502,6 @@ components:
           tokenUrl: 'https://api.service.hmrc.gov.uk/oauth/token'
           refreshUrl: 'https://api.service.hmrc.gov.uk/oauth/refresh'
           scopes:
-            'common-transit-convention-guarantee-balance': Grants reads/writes access
+            all:common-transit-convention-guarantee-balance: Access all aspect of guarantee balance
   links: {}
   callbacks: {}
