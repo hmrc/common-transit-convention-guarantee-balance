@@ -20,7 +20,7 @@ paths:
         balance request ID.
       security:
         - userRestricted:
-            - write
+            - all
       parameters:
         - $ref: '#/components/parameters/acceptHeader'
         - $ref: '#/components/parameters/contentTypeHeader'
@@ -175,7 +175,7 @@ paths:
         202 Accepted response to call this resource.
       security:
         - userRestricted:
-            - read
+            - all
       parameters:
         - $ref: '#/components/parameters/acceptHeader'
         - name: balanceId
@@ -501,7 +501,6 @@ components:
           authorizationUrl: 'https://api.service.hmrc.gov.uk/oauth/authorize'
           tokenUrl: 'https://api.service.hmrc.gov.uk/oauth/token'
           refreshUrl: 'https://api.service.hmrc.gov.uk/oauth/refresh'
-          scopes:
-            all:common-transit-convention-guarantee-balance: Access all aspects of guarantee balance
+          scopes: {}
   links: {}
   callbacks: {}
