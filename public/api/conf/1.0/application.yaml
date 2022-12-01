@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: CTC Guarantee Balance
   contact: {}
-  version: '1.0'
+  version: '1.0.9'
 servers:
   - url: https://api.service.hmrc.gov.uk/
     description: Sandbox
@@ -38,13 +38,12 @@ paths:
         required: true
       responses:
         '200':
-          description: ''
-          headers: {}
+          description: 'A successful balance request response'
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/CustomsGuaranteesBalancesresponse'
+                  - $ref: '#/components/schemas/BalanceRequestOk'
                   - example:
                       response:
                         balance: 12345678.9
@@ -54,7 +53,7 @@ paths:
                   balance: 12345678.9
                   currency: GBP
         '202':
-          description: ''
+          description: 'An accepted balance request'
           headers:
             Location:
               description: The path of the newly created balance request
@@ -69,7 +68,7 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/CustomsGuaranteesBalancesresponse202'
+                  - $ref: '#/components/schemas/PendingBalanceAccepted'
                   - example:
                       _links:
                         self:
@@ -81,13 +80,12 @@ paths:
                     href: /customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4
                 balanceId: 22b9899e-24ee-48e6-a189-97d1f45391c4
         '400':
-          description: ''
-          headers: {}
+          description: 'Bad Request'
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/CustomsGuaranteesBalancesresponse400'
+                  - $ref: '#/components/schemas/BadRequest'
                   - description: The request was rejected by the guarantee management system
                     example:
                       code: FUNCTIONAL_ERROR
@@ -104,8 +102,7 @@ paths:
                     - errorType: 12
                       errorPointer: GRR(1).Guarantee reference number (GRN)
         '406':
-          description: ''
-          headers: {}
+          description: 'Not Acceptable'
           content:
             application/json:
               schema:
@@ -141,12 +138,11 @@ paths:
       responses:
         '200':
           description: HTTP status 200 (OK) responses can be in the states of "Pending request", "Successful request", and "Failed request" as described below.
-          headers: {}
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/CustomsGuaranteesBalancesresponse1'
+                  - $ref: '#/components/schemas/BalanceRequestAccepted'
                   - example:
                       _links:
                         self:
@@ -202,8 +198,7 @@ paths:
                           - errorType: 12
                             errorPointer: GRR(1).Guarantee reference number (GRN)
         '404':
-          description: ''
-          headers: {}
+          description: 'Not Found'
           content:
             application/json:
               schema:
@@ -217,8 +212,7 @@ paths:
                   value:
                     code: NOT_FOUND
         '406':
-          description: ''
-          headers: {}
+          description: 'Not Acceptable'
           content:
             application/json:
               schema:
@@ -337,8 +331,8 @@ components:
           type: string
           description: The access code granting access to make use of the guarantee.
       description: A balance request for the CTC Guarantee Balance API
-    CustomsGuaranteesBalancesresponse:
-      title: CustomsGuaranteesBalancesresponse
+    BalanceRequestOk:
+      title: BalanceRequestOk
       required:
         - response
       type: object
@@ -358,8 +352,8 @@ components:
             - $ref: '#/components/schemas/balance-request-success-schema.json'
             - description: A successful response from the guarantee management system
       description: A successful balance request response.
-    CustomsGuaranteesBalancesresponse1:
-      title: CustomsGuaranteesBalancesresponse1
+    BalanceRequestAccepted:
+      title: BalanceRequestAccepted
       required:
         - _links
         - request
@@ -380,8 +374,8 @@ components:
             - $ref: '#/components/schemas/pending-balance-request-schema.json'
             - description: A request to the guarantee management system.
       description: A balance request response
-    CustomsGuaranteesBalancesresponse202:
-      title: CustomsGuaranteesBalancesresponse202
+    PendingBalanceAccepted:
+      title: PendingBalanceAccepted
       required:
         - _links
         - balanceId
@@ -401,8 +395,8 @@ components:
           type: string
           description: The ID of the balance request.
       description: A pending balance request response
-    CustomsGuaranteesBalancesresponse400:
-      title: CustomsGuaranteesBalancesresponse400
+    BadRequest:
+      title: BadRequest
       required:
         - code
         - message
