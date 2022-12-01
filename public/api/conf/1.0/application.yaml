@@ -2,9 +2,12 @@ openapi: 3.0.0
 info:
   title: CTC Guarantee Balance
   contact: {}
-  version: '1.0.6'
+  version: '1.0'
 servers:
   - url: https://api.service.hmrc.gov.uk/
+    description: Sandbox
+  - url: https://api.service.hmrc.gov.uk/
+    description: Production
     variables: {}
 paths:
   /customs/guarantees/balances:
@@ -14,7 +17,9 @@ paths:
       summary: Send a Balance Request
       description: Used to initiate the balance request. You may receive a response immediately with a 200 OK or 400 Bad Request response, or a 202 Accepted response with a balance request ID.
       operationId: SendaBalanceRequest
-      parameters: []
+      parameters:
+        - $ref: '#/components/parameters/acceptHeader'
+        - $ref: '#/components/parameters/contentTypeHeader'
       requestBody:
         description: ''
         content:
@@ -462,6 +467,29 @@ components:
             - $ref: '#/components/schemas/halLink'
             - description: A HAL link object
       description: An object containing links to other resources
+  parameters:
+    acceptHeader:
+      name: Accept
+      in: header
+      description: >-
+        Specifies the response format and the
+        [version](/api-documentation/docs/reference-guide#versioning) of the API
+        to be used.
+      required: true
+      schema:
+        type: string
+        enum: [
+          "application/vnd.hmrc.1.0+json"
+        ]
+    contentTypeHeader:
+      name: Content-Type
+      in: header
+      description: The media type of the request body.
+      schema:
+        type: string
+        enum:
+          - application/json
+      required: true
   securitySchemes:
     userRestricted:
       type: oauth2
