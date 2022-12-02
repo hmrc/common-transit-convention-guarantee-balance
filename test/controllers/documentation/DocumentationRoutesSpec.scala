@@ -51,7 +51,7 @@ class DocumentationRoutesSpec extends AnyFlatSpec with Matchers with GuiceOneApp
   }
 
   it should "return 200 and plain text response for the overview Markdown file" in {
-    val request = FakeRequest(Call("GET", "/api/conf/1.0/docs/overview.md"))
+    val request = FakeRequest(Call("GET", "/api/conf/common/overview.md"))
     val result  = route(app, request).get
     status(result) shouldBe OK
     contentType(result) should contain(BINARY)
