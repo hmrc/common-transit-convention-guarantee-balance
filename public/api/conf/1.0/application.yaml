@@ -2,9 +2,9 @@ openapi: 3.0.0
 info:
   title: CTC Guarantee Balance
   contact: {}
-  version: '1.01'
+  version: '1.0'
 servers:
-  - url: https://api.service.hmrc.gov.uk/customs/guarantees
+  - url: https://test-api.service.hmrc.gov.uk/customs/guarantees
     description: Sandbox
   - url: https://api.service.hmrc.gov.uk/customs/guarantees
     description: Production
