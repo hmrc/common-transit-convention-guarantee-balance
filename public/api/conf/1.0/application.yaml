@@ -1,27 +1,42 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   title: CTC Guarantee Balance
-  contact: {}
   version: '1.0'
+  description: |
+    # Overview
+    Use the CTC Guarantee Balance API to provide traders with up-to-date
+    information about how much of their guarantee funds they have left to
+    use when organising trasnsit movements.
+  contact: {}
+
 servers:
   - url: https://test-api.service.hmrc.gov.uk/customs/guarantees
     description: Sandbox
   - url: https://api.service.hmrc.gov.uk/customs/guarantees
     description: Production
     variables: {}
+
+tags:
+- name: ctc-guarantee-balance-api
+  description: >-
+    Initiate a guarantee balance request and check its status if the response is
+    not immediate.
+
 paths:
   /customs/guarantees/balances:
     post:
       tags:
-        - customs
-      summary: Send a Balance Request
-      description: Used to initiate the balance request. You may receive a response immediately with a 200 OK or 400 Bad Request response, or a 202 Accepted response with a balance request ID.
+      - ctc-guarantee-balance-api
+      summary: Send a balance request
+      description: >-
+        Initiate a guarantee balance request. You may receive a response
+        immediately with a `200` (OK) or `400` (Bad Request) response, or a
+        `202` (Accepted) response with a `balanceId`.
       operationId: SendaBalanceRequest
       parameters:
         - $ref: '#/components/parameters/acceptHeader'
         - $ref: '#/components/parameters/contentTypeHeader'
       requestBody:
-        description: ''
         content:
           application/json:
             schema:
@@ -38,7 +53,7 @@ paths:
         required: true
       responses:
         '200':
-          description: 'A successful balance request response'
+          description: A successful balance request response
           content:
             application/json:
               schema:
@@ -53,7 +68,7 @@ paths:
                   balance: 12345678.9
                   currency: GBP
         '202':
-          description: 'An accepted balance request'
+          description: An accepted balance request
           headers:
             Location:
               description: The path of the newly created balance request
@@ -80,7 +95,7 @@ paths:
                     href: /customs/guarantees/balances/22b9899e-24ee-48e6-a189-97d1f45391c4
                 balanceId: 22b9899e-24ee-48e6-a189-97d1f45391c4
         '400':
-          description: 'Bad Request'
+          description: Bad Request
           content:
             application/json:
               schema:
@@ -102,7 +117,7 @@ paths:
                     - errorType: 12
                       errorPointer: GRR(1).Guarantee reference number (GRN)
         '406':
-          description: 'Not Acceptable'
+          description: Not Acceptable
           content:
             application/json:
               schema:
@@ -112,7 +127,7 @@ paths:
                       code: ACCEPT_HEADER_INVALID
               examples:
                 badRequest:
-                  description: The accept header is missing or invalid
+                  description: The `Accept` header is missing or invalid
                   value:
                     code: ACCEPT_HEADER_INVALID
       deprecated: false
@@ -122,9 +137,12 @@ paths:
   /customs/guarantees/balances/{balanceId}:
     get:
       tags:
-        - customs
-      summary: Check the status of a Balance Request
-      description: Used to check the status of a balance request for which a response could not be provided immediately. You can use the balance request ID returned by the 202 Accepted response to call this endpoint.
+      - ctc-guarantee-balance-api
+      summary: Check the status of a balance request
+      description: >-
+        Check the status of a balance request for which a response could not be
+        provided immediately. You can use the `balanceId` returned by the
+        `202` (Accepted) response to call this resource.
       operationId: CheckthestatusofaBalanceRequest
       parameters:
         - name: balanceId
@@ -137,7 +155,7 @@ paths:
             example: 22b9899e-24ee-48e6-a189-97d1f45391c4
       responses:
         '200':
-          description: HTTP status 200 (OK) responses can be in the states of "Pending request", "Successful request", and "Failed request" as described below.
+          description: Pending request or Successful request or Failed request
           content:
             application/json:
               schema:
@@ -154,7 +172,7 @@ paths:
                         requestedAt: 2021-09-14T09:52:15Z
               examples:
                 pending-request:
-                  description: HTTP status 200 (OK) responses can be in the states of "Pending request", "Successful request", and "Failed request" as described below.
+                  description: Pending request
                   value:
                     _links:
                       self:
@@ -165,7 +183,7 @@ paths:
                       guaranteeReference: 20GB0000010000GX1
                       requestedAt: 2021-09-14T09:52:15Z
                 successful-request:
-                  description: 'Successful request:'
+                  description: Successful request
                   value:
                     _links:
                       self:
@@ -181,7 +199,7 @@ paths:
                         balance: 12345678.9
                         currency: EUR
                 failed-request:
-                  description: 'Failed request:'
+                  description: Failed request
                   value:
                     _links:
                       self:
@@ -198,7 +216,7 @@ paths:
                           - errorType: 12
                             errorPointer: GRR(1).Guarantee reference number (GRN)
         '404':
-          description: 'Not Found'
+          description: Not Found
           content:
             application/json:
               schema:
@@ -212,7 +230,7 @@ paths:
                   value:
                     code: NOT_FOUND
         '406':
-          description: 'Not Acceptable'
+          description: Not Acceptable
           content:
             application/json:
               schema:
@@ -229,6 +247,7 @@ paths:
       security:
         - userRestricted:
             - common-transit-convention-guarantee-balance
+
 components:
   schemas:
     errorResponse:
@@ -264,7 +283,9 @@ components:
         currency:
           pattern: ^[A-Z]{3}$
           type: string
-          description: The alphanumeric 3-character ISO currency code of the currency in which the balance is held.
+          description: >-
+            The alphanumeric 3-character ISO currency code of the currency in
+            which the balance is held.
       description: A successful response from the guarantee management system
     hal-document-schema.json:
       title: hal-document-schema.json
@@ -487,8 +508,9 @@ components:
   securitySchemes:
     userRestricted:
       type: oauth2
-      description:
-        HMRC supports OAuth 2.0 for authenticating user restricted API requests using an OAuth 2.0 Bearer Token in the AUTHORIZATION header.
+      description: >-
+        HMRC supports OAuth 2.0 for authenticating user restricted API requests
+        using an OAuth 2.0 Bearer Token in the AUTHORIZATION header.
         See https://developer.service.hmrc.gov.uk/api-documentation/docs/authorisation/user-restricted-endpoints for details.
       flows:
         authorizationCode:
@@ -496,7 +518,4 @@ components:
           tokenUrl: 'https://api.service.hmrc.gov.uk/oauth/token'
           refreshUrl: 'https://api.service.hmrc.gov.uk/oauth/refresh'
           scopes:
-            common-transit-convention-guarantee-balance: Access all aspects of guarantee balance
-tags:
-  - name: customs
-    description: ''
+            common-transit-convention-guarantee-balance: Access all aspects of Guarantee Balance
