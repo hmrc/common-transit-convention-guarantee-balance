@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-package metrics
+package v2.models.errors
 
-object MetricsKeys {
+sealed trait RequestLockingError
 
-  object Connectors {
-    val SendRequest = "backend-send-request"
-    val GetRequest  = "backend-get-request"
+object RequestLockingError {
 
-    val RouterRequest = "router-send-request"
-  }
+  case object AlreadyLocked                            extends RequestLockingError
+  case class Unexpected(thr: Option[Throwable] = None) extends RequestLockingError
 
-  object Controllers {
-    val SubmitBalanceRequest = "submit-balance-request"
-    val GetBalanceRequest    = "get-balance-request"
-  }
 }

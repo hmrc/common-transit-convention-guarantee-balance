@@ -48,4 +48,18 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val balanceRequestLockoutTtl =
     config.get[Duration]("balance-request.lockout-ttl")
+
+  private lazy val routerBaseUrl: AbsoluteUrl =
+    AbsoluteUrl.parse(servicesConfig.baseUrl("ctc-guarantee-balance-router"))
+
+  private lazy val routerPath: UrlPath =
+    UrlPath.parse(
+      config.get[String]("microservice.services.ctc-guarantee-balance-router.path")
+    )
+
+  lazy val routerUrl: AbsoluteUrl =
+    routerBaseUrl.withPath(routerPath)
+
+  lazy val routerCircuitBreakerConfig: CircuitBreakerConfig =
+    CircuitBreakerConfig.fromServicesConfig("ctc-guarantee-balance-router", config)
 }

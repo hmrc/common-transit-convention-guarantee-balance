@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
-package metrics
+package v2.models
 
-object MetricsKeys {
+import cats.effect.IO
+import controllers.LocationWithContext
+import play.api.libs.json.JsObject
+import play.api.libs.json.Json
 
-  object Connectors {
-    val SendRequest = "backend-send-request"
-    val GetRequest  = "backend-get-request"
+object HateoasResponse extends LocationWithContext {
 
-    val RouterRequest = "router-send-request"
+  def apply(grn: GuaranteeReferenceNumber, response: InternalBalanceResponse): IO[JsObject] = IO {
+    Json.obj(
+      "_links" -> Json.obj(
+        "self" -> Json.obj(
+          "href" -> v2.controllers.routes.GuaranteeBalanceController.postRequest(grn).pathWithContext()
+        )
+      ),
+      "balance" -> response.balance.value
+    )
   }
 
-  object Controllers {
-    val SubmitBalanceRequest = "submit-balance-request"
-    val GetBalanceRequest    = "get-balance-request"
-  }
 }

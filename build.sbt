@@ -26,7 +26,9 @@ lazy val microservice = Project(appName, file("."))
     resolvers += Resolver.jcenterRepo,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     RoutesKeys.routesImport ++= Seq(
-      "models.values._"
+      "models.values._",
+      "v2.models.Binders._",
+      "v2.models.GuaranteeReferenceNumber"
     )
   )
 

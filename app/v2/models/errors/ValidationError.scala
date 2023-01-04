@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-package metrics
+package v2.models.errors
 
-object MetricsKeys {
+import v2.models.AccessCode
 
-  object Connectors {
-    val SendRequest = "backend-send-request"
-    val GetRequest  = "backend-get-request"
+sealed trait ValidationError
 
-    val RouterRequest = "router-send-request"
-  }
-
-  object Controllers {
-    val SubmitBalanceRequest = "submit-balance-request"
-    val GetBalanceRequest    = "get-balance-request"
-  }
+object ValidationError {
+  case class InvalidAccessCodeLength(accessCode: AccessCode)     extends ValidationError
+  case class InvalidAccessCodeCharacters(accessCode: AccessCode) extends ValidationError
 }
