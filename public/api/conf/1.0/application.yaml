@@ -6,7 +6,7 @@ info:
     # Overview
     Use the CTC Guarantee Balance API to provide traders with up-to-date
     information about how much of their guarantee funds they have left to
-    use when organising trasnsit movements.
+    use when organising transit movements.
   contact: {}
 
 servers:
