@@ -30,15 +30,6 @@ object PresentationError extends CommonFormats {
   val MessageFieldName = "message"
   val CodeFieldName    = "code"
 
-  def forbiddenError(message: String): PresentationError =
-    StandardError(message, ErrorCode.Forbidden)
-
-  def entityTooLargeError(message: String): PresentationError =
-    StandardError(message, ErrorCode.EntityTooLarge)
-
-  def unsupportedMediaTypeError(message: String): PresentationError =
-    StandardError(message, ErrorCode.UnsupportedMediaType)
-
   def notAcceptableError(message: String): PresentationError =
     StandardError(message, ErrorCode.NotAcceptable)
 
@@ -47,9 +38,6 @@ object PresentationError extends CommonFormats {
 
   def notFoundError(message: String): PresentationError =
     StandardError(message, ErrorCode.NotFound)
-
-  def unauthorized(message: String): PresentationError =
-    StandardError(message, ErrorCode.Unauthorized)
 
   def rateLimited(message: String): PresentationError =
     StandardError(message, ErrorCode.TooManyRequests)
@@ -70,7 +58,7 @@ object PresentationError extends CommonFormats {
 
   def unapply(error: PresentationError): Option[(String, ErrorCode)] = Some((error.message, error.code))
 
-  private val baseErrorWrites0: OWrites[PresentationError] =
+  implicit val baseErrorWrites: OWrites[PresentationError] =
     (
       (__ \ MessageFieldName).write[String] and
         (__ \ CodeFieldName).write[ErrorCode]
@@ -82,13 +70,6 @@ object PresentationError extends CommonFormats {
         (__ \ CodeFieldName).read[ErrorCode]
     )(StandardError.apply _)
 
-  implicit val invalidOfficeErrorReads: Reads[InvalidOfficeError] = Json.reads[InvalidOfficeError]
-
-  implicit val baseErrorWrites: OWrites[PresentationError] = OWrites {
-    case bindingError: BindingError => Json.writes[BindingError].writes(bindingError)
-    case baseError                  => baseErrorWrites0.writes(baseError)
-  }
-
 }
 
 sealed abstract class PresentationError extends Product with Serializable {
@@ -98,21 +79,11 @@ sealed abstract class PresentationError extends Product with Serializable {
 
 case class StandardError(message: String, code: ErrorCode) extends PresentationError
 
-case class InvalidOfficeError(message: String, office: String, field: String, code: ErrorCode) extends PresentationError
-
-case class BindingError(message: String, statusCode: Int, code: ErrorCode) extends PresentationError
-
 case class UpstreamServiceError(
   message: String = "Internal server error",
   code: ErrorCode = ErrorCode.InternalServerError,
   cause: UpstreamErrorResponse
 ) extends PresentationError
-
-object UpstreamServiceError {
-
-  def causedBy(cause: UpstreamErrorResponse): PresentationError =
-    PresentationError.upstreamServiceError(cause = cause)
-}
 
 case class InternalServiceError(
   message: String = "Internal server error",
@@ -120,8 +91,3 @@ case class InternalServiceError(
   cause: Option[Throwable] = None
 ) extends PresentationError
 
-object InternalServiceError {
-
-  def causedBy(cause: Throwable): PresentationError =
-    PresentationError.internalServiceError(cause = Some(cause))
-}
