@@ -31,7 +31,7 @@ import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.http.Status.NOT_FOUND
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.UpstreamErrorResponse
-import v2.connectors.RouterConnectorSpec
+import v2.connectors.RouterConnector
 import v2.generators.Generators
 import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
@@ -48,7 +48,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
     arbitrary[InternalBalanceResponse]
   ) {
     (balanceRequest, grn, response) =>
-      val mockConnector = mock[RouterConnectorSpec]
+      val mockConnector = mock[RouterConnector]
       when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(any()))
         .thenReturn(IO.pure(Right(response)))
 
@@ -63,7 +63,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
     arbitrary[GuaranteeReferenceNumber]
   ) {
     (balanceRequest, grn) =>
-      val mockConnector = mock[RouterConnectorSpec]
+      val mockConnector = mock[RouterConnector]
       when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(any()))
         .thenReturn(IO.pure(Left(UpstreamErrorResponse("nope", FORBIDDEN))))
 
@@ -78,7 +78,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
     arbitrary[GuaranteeReferenceNumber]
   ) {
     (balanceRequest, grn) =>
-      val mockConnector = mock[RouterConnectorSpec]
+      val mockConnector = mock[RouterConnector]
       when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(any()))
         .thenReturn(IO.pure(Left(UpstreamErrorResponse("nope", NOT_FOUND))))
 
@@ -94,7 +94,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
   ) {
     (balanceRequest, grn) =>
       val exception     = UpstreamErrorResponse("nope", INTERNAL_SERVER_ERROR)
-      val mockConnector = mock[RouterConnectorSpec]
+      val mockConnector = mock[RouterConnector]
       when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(any()))
         .thenReturn(IO.pure(Left(exception)))
 

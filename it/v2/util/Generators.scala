@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package v2.connectors
+package v2.util
 
 import models.values.InternalId
 import org.scalacheck.Arbitrary

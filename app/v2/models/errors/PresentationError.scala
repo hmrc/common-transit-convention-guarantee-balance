@@ -18,7 +18,6 @@ package v2.models.errors
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.functional.syntax.unlift
-import play.api.libs.json.Json
 import play.api.libs.json.OWrites
 import play.api.libs.json.Reads
 import play.api.libs.json.__
@@ -90,4 +89,3 @@ case class InternalServiceError(
   code: ErrorCode = ErrorCode.InternalServerError,
   cause: Option[Throwable] = None
 ) extends PresentationError
-

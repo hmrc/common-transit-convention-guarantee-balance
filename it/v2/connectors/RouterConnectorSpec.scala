@@ -42,6 +42,7 @@ import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
 import v2.models.errors.ErrorCode
+import v2.util.Generators
 
 class RouterConnectorSpec
     extends AsyncFlatSpec
