@@ -10,12 +10,11 @@ resolvers += Resolver.url(
 
 resolvers += Resolver.typesafeRepo("releases")
 
-addSbtPlugin("uk.gov.hmrc"               % "sbt-auto-build"       % "3.6.0")
+addSbtPlugin("uk.gov.hmrc"               % "sbt-auto-build"       % "3.8.0")
 addSbtPlugin("uk.gov.hmrc"               % "sbt-distributables"   % "2.1.0")
-addSbtPlugin("com.typesafe.play"         % "sbt-plugin"           % "2.8.15")
-addSbtPlugin("org.scoverage"             % "sbt-scoverage"        % "1.9.0")
-addSbtPlugin("org.scalameta"             % "sbt-scalafmt"         % "2.4.3")
-addSbtPlugin("ch.epfl.scala"             % "sbt-scalafix"         % "0.9.31")
+addSbtPlugin("com.typesafe.play"         % "sbt-plugin"           % "2.8.18")
+addSbtPlugin("org.scoverage"             % "sbt-scoverage"        % "1.9.3")
+addSbtPlugin("org.scalameta"             % "sbt-scalafmt"         % "2.5.0")
+addSbtPlugin("ch.epfl.scala"             % "sbt-scalafix"         % "0.10.4")
 addSbtPlugin("com.timushev.sbt"          % "sbt-updates"          % "0.6.0")
-addSbtPlugin("net.virtual-void"          % "sbt-dependency-graph" % "0.10.0-RC1")
-addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat"         % "0.1.20")
+addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat"         % "0.4.1")

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,7 +106,13 @@ class BalanceRequestController @Inject() (
   )(implicit request: Request[JsValue]): IO[Result] =
     IO(request.body.validate[BalanceRequest]).flatMap {
       case JsError(errors) =>
-        val error     = JsonParsingError(errors = errors)
+        val error = JsonParsingError(errors =
+          errors
+            .map(
+              tuple => (tuple._1, tuple._2.toSeq)
+            )
+            .toSeq
+        )
         val errorJson = Json.toJson(error)
         IO.pure(BadRequest(errorJson))
       case JsSuccess(balanceRequest, _) =>
@@ -158,7 +164,7 @@ class BalanceRequestController @Inject() (
                               .withHeaders(
                                 HeaderNames.LOCATION -> routes.BalanceRequestController
                                   .getBalanceRequest(balanceId)
-                                  .pathWithContext
+                                  .pathWithContext()
                               )
                           }
 

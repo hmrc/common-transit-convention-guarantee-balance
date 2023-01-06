@@ -4,16 +4,16 @@ import sbt.Keys.libraryDependencies
 import sbt._
 
 object AppDependencies {
-  val catsVersion       = "2.6.1"
-  val catsEffectVersion = "3.2.9"
-  val log4catsVersion   = "2.1.1"
-  val bootstrapVersion  = "5.24.0"
-  val hmrcMongoVersion  = "0.68.0"
+  val catsVersion       = "2.9.0"
+  val catsEffectVersion = "3.4.4"
+  val log4catsVersion   = "2.5.0"
+  val bootstrapVersion  = "7.12.0"
+  val hmrcMongoVersion  = "0.74.0"
 
   val compile = Seq(
     "uk.gov.hmrc"       %% "bootstrap-backend-play-28" % bootstrapVersion,
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28"        % hmrcMongoVersion,
-    "uk.gov.hmrc"       %% "play-json-union-formatter" % "1.15.0-play-28",
+    "uk.gov.hmrc"       %% "play-json-union-formatter" % "1.17.0-play-28",
     "io.lemonlabs"      %% "scala-uri"                 % "3.6.0",
     "org.typelevel"     %% "cats-core"                 % catsVersion,
     "org.typelevel"     %% "cats-effect"               % catsEffectVersion,

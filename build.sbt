@@ -19,7 +19,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(scoverageSettings)
   .settings(
     majorVersion := 0,
-    scalaVersion := "2.12.14",
+    scalaVersion := "2.13.8",
     PlayKeys.playDefaultPort := 10207,
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
@@ -33,7 +33,7 @@ lazy val microservice = Project(appName, file("."))
 lazy val buildSettings = Def.settings(
   scalafmtOnCompile := true,
   scalafixDependencies ++= Seq(
-    "com.github.liancheng" %% "organize-imports" % "0.5.0"
+    "com.github.liancheng" %% "organize-imports" % "0.6.0"
   )
 )
 
