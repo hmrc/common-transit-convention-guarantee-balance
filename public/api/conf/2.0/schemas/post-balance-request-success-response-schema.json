@@ -1,0 +1,29 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$id": "#/post-balance-request-success-response-schema.json",
+    "description": "A success response detailing a guarantee's balance.",
+    "type": "object",
+    "required": [
+        "balance"
+    ],
+    "properties": {
+        "_links": {
+            "description": "An object containing links to other resources.",
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "hal-document-schema.json#/definitions/halLink"
+            }
+        },
+        "_embedded": {
+            "description": "An object containing embedded resources.",
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "hal-document-schema.json#"
+            }
+        },
+        "balance": {
+            "type": "number",
+            "description": "The remaining guarantee balance."
+        }
+    }
+}
