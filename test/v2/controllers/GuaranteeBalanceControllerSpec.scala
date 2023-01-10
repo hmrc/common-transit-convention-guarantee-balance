@@ -122,6 +122,53 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       }
   }
 
+  it should "return OK with a result if everything is okay but we have additional junk in the JSON payload" in forAll(
+    arbitrary[GuaranteeReferenceNumber],
+    arbitrary[InternalId]
+  ) {
+    (grn, internalId) =>
+      val request = FakeRequest(
+        "POST",
+        "/",
+        FakeHeaders(
+          Seq(
+            HeaderNames.ACCEPT -> "application/vnd.hmrc.2.0+json"
+          )
+        ),
+        Json.obj(
+          "accessCode"   -> "1",
+          "this-is-junk" -> "bleh"
+        )
+      )
+
+      val mockLockService = mock[RequestLockingService]
+      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value))))
+        .thenReturn(EitherT.rightT[IO, RequestLockingError](()))
+
+      val mockValidationService = mock[ValidationService]
+      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
+
+      val mockRouterService = mock[RouterService]
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
+        .thenReturn(EitherT.rightT[IO, RoutingError](InternalBalanceResponse(Balance(3.14))))
+
+      val sut = new GuaranteeBalanceController(
+        fakeAuthActionProvider(internalId),
+        mockLockService,
+        mockValidationService,
+        mockRouterService,
+        stubControllerComponents(),
+        IORuntime.global,
+        new FakeMetrics
+      )
+
+      val result = sut.postRequest(grn)(request = request)
+      status(result) shouldBe OK
+      whenReady(HateoasResponse(grn, InternalBalanceResponse(Balance(3.14))).unsafeToFuture()) {
+        r => contentAsJson(result) shouldBe r
+      }
+  }
+
   it should "return not acceptable if the accept header is wrong" in forAll(
     arbitrary[GuaranteeReferenceNumber],
     arbitrary[InternalId]
@@ -168,7 +215,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       status(result) shouldBe NOT_ACCEPTABLE
       contentAsJson(result) shouldBe Json.obj(
         "code"    -> "NOT_ACCEPTABLE",
-        "message" -> "The accept header must be set to application/vnd.hmrc.2.0+json to use this resource"
+        "message" -> "The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."
       )
   }
 
@@ -215,7 +262,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       status(result) shouldBe TOO_MANY_REQUESTS
       contentAsJson(result) shouldBe Json.obj(
         "code"    -> "TOO_MANY_REQUESTS",
-        "message" -> "Too many requests"
+        "message" -> "Too many requests."
       )
   }
 
@@ -262,7 +309,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       status(result) shouldBe BAD_REQUEST
       contentAsJson(result) shouldBe Json.obj(
         "code"    -> "BAD_REQUEST",
-        "message" -> "The provided Json was malformed (it should only contain one field named accessCode)"
+        "message" -> "The access code was not supplied."
       )
   }
 
@@ -310,7 +357,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       status(result) shouldBe BAD_REQUEST
       contentAsJson(result) shouldBe Json.obj(
         "code"    -> "BAD_REQUEST",
-        "message" -> "Access code 1 must be four alphanumeric characters"
+        "message" -> "Access code 1 must be four alphanumeric characters."
       )
   }
 
@@ -361,7 +408,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       status(result) shouldBe NOT_FOUND
       contentAsJson(result) shouldBe Json.obj(
         "code"    -> "NOT_FOUND",
-        "message" -> "Guarantee balance not found"
+        "message" -> "Guarantee balance not found."
       )
   }
 

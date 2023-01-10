@@ -86,9 +86,9 @@ class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpCli
             },
             defineFailureFn = (result: Try[Either[Throwable, InternalBalanceResponse]]) =>
               result match {
-                case Success(Right(_))                       => true
-                case Success(Left(_: UpstreamErrorResponse)) => true // we can communicate with the backend, so that should handle if EIS/ERMIS is being iffy
-                case _                                       => false
+                // we can communicate with the backend, so that should handle if EIS/ERMIS is being iffy
+                case Success(Right(_) | Left(_: UpstreamErrorResponse)) => true
+                case _                                                  => false
               }
           )
       }

@@ -78,7 +78,7 @@ class GuaranteeBalanceController @Inject() (
       IO {
         json.validate[BalanceRequest].asEither match {
           case Right(x) => Right(x)
-          case Left(_)  => Left(PresentationError.badRequestError("The provided Json was malformed (it should only contain one field named accessCode)"))
+          case Left(_)  => Left(PresentationError.badRequestError("The access code was not supplied."))
         }
       }
     }
@@ -89,7 +89,7 @@ class GuaranteeBalanceController @Inject() (
         request.headers.get(ACCEPT) match {
           case Some(AcceptHeaderRegex(_)) => Right(())
           case _ =>
-            Left(PresentationError.notAcceptableError("The accept header must be set to application/vnd.hmrc.2.0+json to use this resource"))
+            Left(PresentationError.notAcceptableError("The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."))
         }
       }
     }

@@ -32,9 +32,14 @@ class BindersSpec extends AnyFlatSpec with Matchers with MockitoSugar with Scala
       Binders.grnBinder.bind("a", grn.value) shouldBe Right(grn)
   }
 
-  "grnBinder" should "return a left if the GRN is not valid" in forAll(Gen.stringOfN(10, Gen.alphaChar)) {
+  it should "return a left if the GRN is a valid format, but not a GB/XI GRN" in forAll(guaranteeReferenceNumberGenerator(Gen.const("FR"))) {
     grn =>
-      Binders.grnBinder.bind("a", grn) shouldBe Left("The guarantee reference number is not in the correct format")
+      Binders.grnBinder.bind("a", grn.value) shouldBe Left("The guarantee reference number must be for a GB or XI guarantee.")
+  }
+
+  it should "return a left if the GRN is not a valid format" in forAll(Gen.stringOfN(10, Gen.alphaChar)) {
+    grn =>
+      Binders.grnBinder.bind("a", grn) shouldBe Left("The guarantee reference number is not in the correct format.")
   }
 
 }

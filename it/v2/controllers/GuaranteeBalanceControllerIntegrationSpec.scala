@@ -180,7 +180,7 @@ class GuaranteeBalanceControllerIntegrationSpec
 
     val expected = Json.obj(
       "code"    -> "NOT_FOUND",
-      "message" -> "Guarantee balance not found"
+      "message" -> "Guarantee balance not found."
     )
 
     val sut = injector.instanceOf[GuaranteeBalanceController]
@@ -239,7 +239,7 @@ class GuaranteeBalanceControllerIntegrationSpec
 
     val expected = Json.obj(
       "code"    -> "NOT_FOUND",
-      "message" -> "Guarantee balance not found"
+      "message" -> "Guarantee balance not found."
     )
 
     val sut = injector.instanceOf[GuaranteeBalanceController]
@@ -279,7 +279,7 @@ class GuaranteeBalanceControllerIntegrationSpec
 
     val expected = Json.obj(
       "code"    -> "NOT_ACCEPTABLE",
-      "message" -> "The accept header must be set to application/vnd.hmrc.2.0+json to use this resource"
+      "message" -> "The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."
     )
 
     val sut = injector.instanceOf[GuaranteeBalanceController]
@@ -319,7 +319,7 @@ class GuaranteeBalanceControllerIntegrationSpec
 
     val expected = Json.obj(
       "code"    -> "BAD_REQUEST",
-      "message" -> "The provided Json was malformed (it should only contain one field named accessCode)"
+      "message" -> "The access code was not supplied."
     )
 
     val sut = injector.instanceOf[GuaranteeBalanceController]
@@ -360,7 +360,7 @@ class GuaranteeBalanceControllerIntegrationSpec
 
         val expected = Json.obj(
           "code"    -> "BAD_REQUEST",
-          "message" -> s"Access code $accessCode must be four alphanumeric characters"
+          "message" -> s"Access code $accessCode must be four alphanumeric characters."
         )
 
         val sut = injector.instanceOf[GuaranteeBalanceController]
@@ -400,7 +400,7 @@ class GuaranteeBalanceControllerIntegrationSpec
 
     val expected = Json.obj(
       "code"    -> "TOO_MANY_REQUESTS",
-      "message" -> "Too many requests"
+      "message" -> "Too many requests."
     )
 
     val sut = injector.instanceOf[GuaranteeBalanceController]

@@ -66,12 +66,12 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
   ) {
     error =>
       validationErrorConverter.convert(error) shouldBe
-        PresentationError.badRequestError(s"Access code ABCD? must be four alphanumeric characters")
+        PresentationError.badRequestError(s"Access code ABCD? must be four alphanumeric characters.")
   }
 
   "RequestLockingError" should "return a rate limited error if we are rate limited" in {
     requestLockingErrorConverter.convert(RequestLockingError.AlreadyLocked) shouldBe
-      PresentationError.rateLimited("Too many requests")
+      PresentationError.rateLimited("Too many requests.")
   }
 
   it should "return an Unexpected if an exception occurs" in {
@@ -82,12 +82,12 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
 
   "RoutingError" should "return a not found if we don't find the GRN" in {
     routingErrorConverter.convert(RoutingError.GuaranteeReferenceNotFound) shouldBe
-      PresentationError.notFoundError("Guarantee balance not found")
+      PresentationError.notFoundError("Guarantee balance not found.")
   }
 
   it should "return a not found if the access code does not match" in {
     routingErrorConverter.convert(RoutingError.InvalidAccessCode) shouldBe
-      PresentationError.notFoundError("Guarantee balance not found")
+      PresentationError.notFoundError("Guarantee balance not found.")
   }
 
   it should "return an Unexpected if an exception occurs" in {

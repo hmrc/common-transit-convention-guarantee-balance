@@ -37,16 +37,16 @@ trait ErrorTranslator {
 
     override def convert(validationError: NonEmptyList[ValidationError]): PresentationError = validationError.head match {
       case ValidationError.InvalidAccessCodeLength(accessCode) =>
-        PresentationError.badRequestError(s"Access code ${accessCode.value} must be four alphanumeric characters")
+        PresentationError.badRequestError(s"Access code ${accessCode.value} must be four alphanumeric characters.")
       case ValidationError.InvalidAccessCodeCharacters(accessCode) =>
-        PresentationError.badRequestError(s"Access code ${accessCode.value} must be four alphanumeric characters")
+        PresentationError.badRequestError(s"Access code ${accessCode.value} must be four alphanumeric characters.")
     }
   }
 
   implicit val requestLockingErrorConverter = new Converter[RequestLockingError] {
 
     override def convert(input: RequestLockingError): PresentationError = input match {
-      case RequestLockingError.AlreadyLocked   => PresentationError.rateLimited("Too many requests")
+      case RequestLockingError.AlreadyLocked   => PresentationError.rateLimited("Too many requests.")
       case RequestLockingError.Unexpected(thr) => PresentationError.internalServiceError(cause = thr)
     }
   }
@@ -54,8 +54,8 @@ trait ErrorTranslator {
   implicit val routingErrorConverter = new Converter[RoutingError] {
 
     override def convert(input: RoutingError): PresentationError = input match {
-      case RoutingError.GuaranteeReferenceNotFound => PresentationError.notFoundError("Guarantee balance not found")
-      case RoutingError.InvalidAccessCode          => PresentationError.notFoundError("Guarantee balance not found")
+      case RoutingError.GuaranteeReferenceNotFound => PresentationError.notFoundError("Guarantee balance not found.")
+      case RoutingError.InvalidAccessCode          => PresentationError.notFoundError("Guarantee balance not found.")
       case RoutingError.Unexpected(thr)            => PresentationError.internalServiceError(cause = thr)
     }
   }

@@ -37,16 +37,19 @@ trait Generators {
   }
 
   // [0-9]{2}[A-Z]{2}[A-Z0-9]{12}[0-9]([A-Z][0-9]{6})?
-  implicit val guaranteeReferenceNumberGenerator: Arbitrary[GuaranteeReferenceNumber] = Arbitrary {
+  implicit val gbXiGuaranteeReferenceNumberGenerator: Arbitrary[GuaranteeReferenceNumber] = Arbitrary {
+    guaranteeReferenceNumberGenerator(Gen.oneOf("GB", "XI"))
+  }
+
+  def guaranteeReferenceNumberGenerator(countryCode: Gen[String]): Gen[GuaranteeReferenceNumber] =
     for {
       year     <- Gen.choose(23, 39).map(_.toString)
-      country  <- Gen.oneOf("GB", "XI")
+      country  <- countryCode
       alphanum <- Gen.stringOfN(12, Gen.alphaNumChar).map(_.toUpperCase)
       num1     <- Gen.numChar.map(_.toString)
       alpha    <- Gen.alphaChar.map(_.toString.toUpperCase)
       num      <- Gen.stringOfN(6, Gen.numChar)
     } yield GuaranteeReferenceNumber(s"$year$country$alphanum$num1$alpha$num")
-  }
 
   implicit val amountGenerator: Arbitrary[Balance] = Arbitrary {
     Gen.chooseNum(0.0, Double.MaxValue).map(Balance(_))
