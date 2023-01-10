@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package metrics
+package v2.models.errors
 
-object MetricsKeys {
+sealed trait RoutingError
 
-  object Connectors {
-    val SendRequest = "backend-send-request"
-    val GetRequest  = "backend-get-request"
+object RoutingError {
 
-    val RouterRequest = "router-send-request"
-  }
+  case object InvalidAccessCode                 extends RoutingError
+  case object GuaranteeReferenceNotFound        extends RoutingError
+  case class Unexpected(thr: Option[Throwable]) extends RoutingError
 
-  object Controllers {
-    val SubmitBalanceRequest = "submit-balance-request"
-    val GetBalanceRequest    = "get-balance-request"
-  }
 }

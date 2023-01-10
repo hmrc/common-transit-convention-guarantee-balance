@@ -23,7 +23,6 @@ import cats.effect.kernel.Resource.ExitCase
 import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
 import play.api.mvc.Result
-import uk.gov.hmrc.http.UpstreamErrorResponse
 
 trait IOMetrics {
   def metrics: Metrics
@@ -65,9 +64,9 @@ trait IOMetrics {
   def withMetricsTimer[A](metricKey: String)(block: MetricsTimer => IO[A]): IO[A] =
     timerResource(metricKey).use(block)
 
-  def withMetricsTimerResponse[A](
+  def withMetricsTimerResponse[L, R](
     metricKey: String
-  )(block: IO[Either[UpstreamErrorResponse, A]]): IO[Either[UpstreamErrorResponse, A]] =
+  )(block: IO[Either[L, R]]): IO[Either[L, R]] =
     timerResource(metricKey).use {
       timer =>
         block.flatMap {

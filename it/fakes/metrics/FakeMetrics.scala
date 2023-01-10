@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package metrics
+package fakes.metrics
 
-object MetricsKeys {
+import com.codahale.metrics.MetricRegistry
+import com.kenshoo.play.metrics.Metrics
 
-  object Connectors {
-    val SendRequest = "backend-send-request"
-    val GetRequest  = "backend-get-request"
-
-    val RouterRequest = "router-send-request"
-  }
-
-  object Controllers {
-    val SubmitBalanceRequest = "submit-balance-request"
-    val GetBalanceRequest    = "get-balance-request"
-  }
+class FakeMetrics extends Metrics {
+  override def defaultRegistry: MetricRegistry = new MetricRegistry
+  override def toJson: String                  = "null"
 }

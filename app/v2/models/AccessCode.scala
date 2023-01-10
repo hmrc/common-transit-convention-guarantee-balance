@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package metrics
+package v2.models
 
-object MetricsKeys {
+import play.api.libs.json.Json
 
-  object Connectors {
-    val SendRequest = "backend-send-request"
-    val GetRequest  = "backend-get-request"
-
-    val RouterRequest = "router-send-request"
-  }
-
-  object Controllers {
-    val SubmitBalanceRequest = "submit-balance-request"
-    val GetBalanceRequest    = "get-balance-request"
-  }
+object AccessCode {
+  implicit val accessCodeFormat = Json.valueFormat[AccessCode]
 }
+
+case class AccessCode(value: String) extends AnyVal

@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package metrics
+package v2.models.formats
 
-object MetricsKeys {
+import cats.data.NonEmptyList
+import play.api.libs.functional.syntax.toInvariantFunctorOps
+import play.api.libs.json.Format
 
-  object Connectors {
-    val SendRequest = "backend-send-request"
-    val GetRequest  = "backend-get-request"
+object CommonFormats extends CommonFormats
 
-    val RouterRequest = "router-send-request"
-  }
+trait CommonFormats {
 
-  object Controllers {
-    val SubmitBalanceRequest = "submit-balance-request"
-    val GetBalanceRequest    = "get-balance-request"
-  }
+  implicit def nonEmptyListFormat[A: Format]: Format[NonEmptyList[A]] =
+    Format
+      .of[List[A]]
+      .inmap(
+        NonEmptyList.fromListUnsafe,
+        _.toList
+      )
 }

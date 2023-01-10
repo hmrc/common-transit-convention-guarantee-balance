@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-package metrics
+package v2.models
 
-object MetricsKeys {
+import play.api.libs.json.Json
+import play.api.libs.json.OFormat
 
-  object Connectors {
-    val SendRequest = "backend-send-request"
-    val GetRequest  = "backend-get-request"
-
-    val RouterRequest = "router-send-request"
-  }
-
-  object Controllers {
-    val SubmitBalanceRequest = "submit-balance-request"
-    val GetBalanceRequest    = "get-balance-request"
-  }
+object InternalBalanceResponse {
+  implicit lazy val internalBalanceResponseFormat: OFormat[InternalBalanceResponse] = Json.format[InternalBalanceResponse]
 }
+
+case class InternalBalanceResponse(balance: Balance)

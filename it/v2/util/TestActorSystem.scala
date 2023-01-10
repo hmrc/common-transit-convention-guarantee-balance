@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package metrics
+package v2.util
 
-object MetricsKeys {
+import akka.actor.ActorSystem
+import akka.stream.Materializer
+import org.scalatest.Suite
 
-  object Connectors {
-    val SendRequest = "backend-send-request"
-    val GetRequest  = "backend-get-request"
+object TestActorSystem {
+  val system: ActorSystem = ActorSystem("test")
+}
 
-    val RouterRequest = "router-send-request"
-  }
-
-  object Controllers {
-    val SubmitBalanceRequest = "submit-balance-request"
-    val GetBalanceRequest    = "get-balance-request"
-  }
+trait TestActorSystem { self: Suite =>
+  implicit val system: ActorSystem        = TestActorSystem.system
+  implicit val materializer: Materializer = Materializer(TestActorSystem.system)
 }

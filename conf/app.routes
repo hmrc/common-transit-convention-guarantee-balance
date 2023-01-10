@@ -1,5 +1,7 @@
 # microservice specific routes
 
+POST    /:grn/balance     v2.controllers.GuaranteeBalanceController.postRequest(grn: GuaranteeReferenceNumber)
+
 POST    /balances         controllers.BalanceRequestController.submitBalanceRequest
 GET     /balances/:id     controllers.BalanceRequestController.getBalanceRequest(id: BalanceId)
 
