@@ -15,7 +15,7 @@ paths:
       tags:
         - customs
       summary: Get a Balance
-      description: Used to get the balance associated with the supplied Guarantee Reference Number (GRN)
+      description: Used to get the balance associated with the supplied Guarantee Reference Number (GRN).
       operationId: GetaBalance
       parameters:
         - $ref: '#/components/parameters/acceptHeader'
@@ -26,7 +26,7 @@ paths:
             type: string
             pattern: '^[0-9]{2}[A-Z]{2}[A-Z0-9]{12}[0-9]([A-Z][0-9]{6})?$'
           required: true
-          description: Guarantee Reference Number of the guarantee to get the balance for
+          description: Guarantee Reference Number of the guarantee to get the balance for.
       requestBody:
         description: ''
         content:
@@ -61,10 +61,13 @@ paths:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/BadRequest'
-                  - description: The GRN or supplied Json payload were invalid
+                  - description: The GRN or supplied Json payload were invalid.
                     example:
                       code: BAD_REQUEST
                       message: The provided Json was malformed (it should only contain one field named accessCode)
+              example:
+                code: BAD_REQUEST
+                message: The provided Json was malformed (it should only contain one field named accessCode)
         '404':
           description: 'Not Found'
           content:
@@ -72,10 +75,13 @@ paths:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/NotFound'
-                  - description: The GRN or access code did not match an existing guarantee
+                  - description: The GRN or access code did not match an existing guarantee.
                     example:
                       code: NOT_FOUND
                       message: Guarantee balance not found
+              example:
+                code: NOT_FOUND
+                message: Guarantee balance not found
         '406':
           description: 'Not Acceptable'
           content:
@@ -85,11 +91,10 @@ paths:
                   - $ref: '#/components/schemas/errorResponse'
                   - example:
                       code: ACCEPT_HEADER_INVALID
-              examples:
-                badRequest:
-                  description: The accept header is missing or invalid
-                  value:
-                    code: ACCEPT_HEADER_INVALID
+                      message: The accept header must be set to application/vnd.hmrc.2.0+json to use this resource
+              example:
+                code: ACCEPT_HEADER_INVALID
+                message: The accept header must be set to application/vnd.hmrc.2.0+json to use this resource
       deprecated: false
       security:
         - userRestricted:
@@ -111,12 +116,12 @@ components:
         _links:
           allOf:
             - $ref: '#/components/schemas/Links'
-            - description: An object containing links to other resources
+            - description: An object containing links to other resources.
         _embedded:
           type: object
           additionalProperties: {}
-          description: An object containing embedded resources
-      description: A HAL document
+          description: An object containing embedded resources.
+      description: A HAL document.
     CustomsGuaranteesBalancesrequest:
       title: CustomsGuaranteesBalancesrequest
       required:
@@ -128,7 +133,7 @@ components:
           minLength: 4
           type: string
           description: The access code granting access to make use of the guarantee.
-      description: A balance request for the CTC Guarantee Balance API
+      description: A balance request for the CTC Guarantee Balance API.
     GetBalanceOk:
       title: Balance request successful
       required:
@@ -146,7 +151,7 @@ components:
             $ref: '#/components/schemas/hal-document-schema.json'
           description: An object containing embedded resources.
         balance:
-          description: The guarantee's balance
+          description: The guarantee's balance.
           type: number
       description: A successful balance response.
     BadRequest:
@@ -163,7 +168,7 @@ components:
         message:
           type: string
           description: The description of the error.
-      description: An error in the supplied payload, or the Guarantee Reference Number did not match the expected format
+      description: An error in the supplied payload, or the Guarantee Reference Number did not match the expected format.
     NotFound:
       title: NotFound
       required:
@@ -178,7 +183,7 @@ components:
         message:
           type: string
           description: The description of the error.
-      description: A guarantee was not found that matched the supplied Guarantee Reference Number and Access Code
+      description: A guarantee was not found that matched the supplied Guarantee Reference Number and Access Code.
     halLink:
       title: halLink
       required:
@@ -187,8 +192,8 @@ components:
       properties:
         href:
           type: string
-          description: A link to another resource
-      description: A HAL link object
+          description: A link to another resource.
+      description: A HAL link object.
     Links:
       title: Links
       type: object
@@ -196,8 +201,8 @@ components:
         self:
           allOf:
             - $ref: '#/components/schemas/halLink'
-            - description: A HAL link object
-      description: An object containing links to other resources
+            - description: A HAL link object.
+      description: An object containing links to other resources.
   parameters:
     acceptHeader:
       name: Accept
@@ -224,16 +229,18 @@ components:
   securitySchemes:
     userRestricted:
       type: oauth2
-      description:
-        HMRC supports OAuth 2.0 for authenticating user restricted API requests using an OAuth 2.0 Bearer Token in the AUTHORIZATION header.
-        See https://developer.service.hmrc.gov.uk/api-documentation/docs/authorisation/user-restricted-endpoints for details.
+      description: >-
+        HMRC supports OAuth 2.0 for authenticating user restricted API requests using
+        an OAuth 2.0 Bearer Token in the AUTHORIZATION header. See
+        https://developer.service.hmrc.gov.uk/api-documentation/docs/authorisation/user-restricted-endpoints
+        for details.
       flows:
         authorizationCode:
           authorizationUrl: 'https://api.service.hmrc.gov.uk/oauth/authorize'
           tokenUrl: 'https://api.service.hmrc.gov.uk/oauth/token'
           refreshUrl: 'https://api.service.hmrc.gov.uk/oauth/refresh'
           scopes:
-            common-transit-convention-guarantee-balance: Access all aspects of guarantee balance
+            common-transit-convention-guarantee-balance: Access all aspects of guarantee balance.
 tags:
   - name: customs
     description: ''
