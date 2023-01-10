@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "$id": "#/post-balance-request-success-response-schema.json",
+    "$id": "#/post-get-guarantee-balance-response-ok-schema.json",
     "description": "A success response detailing a guarantee's balance.",
     "type": "object",
     "required": [
