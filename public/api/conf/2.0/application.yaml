@@ -17,10 +17,8 @@ servers:
 paths:
   /customs/guarantees/:grn/balance:
     post:
-      tags:
-        - ctc-guarantee-balance-api
       summary: Get a balance
-      description: Get tge vakabce assicuated with a guarantee reference number (GRN).
+      description: Get the balance associated with a guarantee reference number (GRN).
       operationId: getGuaranteeBalance
       parameters:
         - $ref: '#/components/parameters/acceptHeader'
@@ -60,46 +58,46 @@ paths:
                     href: /customs/guarantees/23GB0123456789AB2/balance
                 balance: 12345678.90
         '400':
-          description: 'Bad Request'
+          description: Bad Request
           content:
             application/json:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/BadRequest'
-                  - description: The GRN or supplied Json payload were invalid.
+                  - description: The supplied guarantee reference number or JSON payload was invalid.
                     example:
                       code: BAD_REQUEST
-                      message: The provided Json was malformed (it should only contain one field named accessCode)
+                      message: The access code was not supplied.
               example:
                 code: BAD_REQUEST
-                message: The provided Json was malformed (it should only contain one field named accessCode)
+                message: The access code was not supplied.
         '404':
-          description: 'Not Found'
+          description: Not Found
           content:
             application/json:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/NotFound'
-                  - description: The GRN or access code did not match an existing guarantee.
+                  - description: The guarantee reference number or access code did not match an existing guarantee.
                     example:
                       code: NOT_FOUND
-                      message: Guarantee balance not found
+                      message: Guarantee balance not found.
               example:
                 code: NOT_FOUND
-                message: Guarantee balance not found
+                message: Guarantee balance not found.
         '406':
-          description: 'Not Acceptable'
+          description: Not Acceptable
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/errorResponse'
+                  - $ref: '#/components/schemas/AcceptHeaderInvalid'
                   - example:
                       code: ACCEPT_HEADER_INVALID
-                      message: The accept header must be set to application/vnd.hmrc.2.0+json to use this resource
+                      message: The Accept header must be set to application/vnd.hmrc.2.0+json to use this resource.
               example:
                 code: ACCEPT_HEADER_INVALID
-                message: The accept header must be set to application/vnd.hmrc.2.0+json to use this resource
+                message: The Accept header must be set to application/vnd.hmrc.2.0+json to use this resource.
       deprecated: false
       security:
         - userRestricted:
@@ -117,6 +115,7 @@ components:
     hal-document-schema.json:
       title: hal-document-schema.json
       type: object
+      description: Hypertext Application Language (HAL) document.
       properties:
         _links:
           allOf:
@@ -126,9 +125,9 @@ components:
           type: object
           additionalProperties: {}
           description: An object containing embedded resources.
-      description: A HAL document.
     CustomsGuaranteesBalancesrequest:
       title: CustomsGuaranteesBalancesrequest
+      description: A balance request for the CTC Guarantee Balance API.
       required:
         - accessCode
       type: object
@@ -137,10 +136,10 @@ components:
           maxLength: 4
           minLength: 4
           type: string
-          description: The access code granting access to make use of the guarantee.
-      description: A balance request for the CTC Guarantee Balance API.
+          description: The `accessCode` granting access to make use of the guarantee.
     GetBalanceOk:
       title: Balance request successful
+      description: A successful balance response.
       required:
         - balance
       type: object
@@ -158,9 +157,9 @@ components:
         balance:
           description: The guarantee's balance.
           type: number
-      description: A successful balance response.
     BadRequest:
       title: BadRequest
+      description: An error in the supplied payload, or the guarantee reference number did not match the expected format.
       required:
         - code
         - message
@@ -173,9 +172,9 @@ components:
         message:
           type: string
           description: The description of the error.
-      description: An error in the supplied payload, or the Guarantee Reference Number did not match the expected format.
     NotFound:
       title: NotFound
+      description: A guarantee was not found that matched the supplied guarantee reference number and access code.
       required:
         - code
         - message
@@ -188,9 +187,24 @@ components:
         message:
           type: string
           description: The description of the error.
-      description: A guarantee was not found that matched the supplied Guarantee Reference Number and Access Code.
+    AcceptHeaderInvalid:
+      title: AcceptHeaderInvalid
+      description: The `Accept` header was not set to `application/vnd.hmrc.2.0+json`.
+      required:
+        - code
+        - message
+      type: object
+      properties:
+        code:
+          enum:
+            - ACCEPT_HEADER_INVALID
+          type: string
+        message:
+          type: string
+          description: The description of the error.
     halLink:
       title: halLink
+      description: Hypertext Application Language (HAL) link object.
       required:
         - href
       type: object
@@ -198,16 +212,15 @@ components:
         href:
           type: string
           description: A link to another resource.
-      description: A HAL link object.
     Links:
       title: Links
+      description: An object containing links to other resources.
       type: object
       properties:
         self:
           allOf:
             - $ref: '#/components/schemas/halLink'
-            - description: A HAL link object.
-      description: An object containing links to other resources.
+            - description: Hypertext Application Language (HAL) link object.
   parameters:
     acceptHeader:
       name: Accept
@@ -246,6 +259,3 @@ components:
           refreshUrl: 'https://api.service.hmrc.gov.uk/oauth/refresh'
           scopes:
             common-transit-convention-guarantee-balance: Access all aspects of guarantee balance.
-tags:
-  - name: ctc-guarantee-balance-api
-    description: ''
