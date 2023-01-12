@@ -1,0 +1,17 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$id": "#/post-get-guarantee-balance-request-schema.json",
+    "description": "A balance request for the CTC Guarantee Balance API",
+    "type": "object",
+    "required": [
+        "accessCode"
+    ],
+    "properties": {
+        "accessCode": {
+            "type": "string",
+            "description": "The access code granting access to make use of the guarantee.",
+            "minLength": 4,
+            "maxLength": 4
+        }
+    }
+}

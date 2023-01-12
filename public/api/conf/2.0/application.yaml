@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: CTC Guarantee Balance
+  contact: {}
+  version: '2.0'
+  description: |
+    # Overview
+    Use the CTC Guarantee Balance API to provide traders with up-to-date
+    information about how much of their guarantee funds they have left to
+    use when organising transit movements.
+servers:
+  - url: https://test-api.service.hmrc.gov.uk/customs/guarantees
+    description: Sandbox
+  - url: https://api.service.hmrc.gov.uk/customs/guarantees
+    description: Production
+    variables: {}
+paths:
+  /customs/guarantees/:grn/balance:
+    post:
+      summary: Get a balance
+      description: Get the balance associated with a guarantee reference number (GRN).
+      operationId: getGuaranteeBalance
+      parameters:
+        - $ref: '#/components/parameters/acceptHeader'
+        - $ref: '#/components/parameters/contentTypeHeader'
+        - in: path
+          name: grn
+          schema:
+            type: string
+            pattern: '^[0-9]{2}[A-Z]{2}[A-Z0-9]{12}[0-9]([A-Z][0-9]{6})?$'
+          required: true
+          description: The guarantee reference number (GRN) of the guarantee.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/CustomsGuaranteesBalancesrequest'
+                - example:
+                    accessCode: ABC1
+            example:
+              accessCode: ABC1
+        required: true
+      responses:
+        '200':
+          description: A successful balance request response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/GetBalanceOk'
+                  - example:
+                      balance: 12345678.90
+              example:
+                _links:
+                  self:
+                    href: /customs/guarantees/23GB0123456789AB2/balance
+                balance: 12345678.90
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BadRequest'
+                  - description: The supplied guarantee reference number or JSON payload was invalid.
+                    example:
+                      code: BAD_REQUEST
+                      message: The access code was not supplied.
+              example:
+                code: BAD_REQUEST
+                message: The access code was not supplied.
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/NotFound'
+                  - description: The guarantee reference number or access code did not match an existing guarantee.
+                    example:
+                      code: NOT_FOUND
+                      message: Guarantee balance not found.
+              example:
+                code: NOT_FOUND
+                message: Guarantee balance not found.
+        '406':
+          description: Not Acceptable
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/AcceptHeaderInvalid'
+                  - example:
+                      code: ACCEPT_HEADER_INVALID
+                      message: The Accept header must be set to application/vnd.hmrc.2.0+json to use this resource.
+              example:
+                code: ACCEPT_HEADER_INVALID
+                message: The Accept header must be set to application/vnd.hmrc.2.0+json to use this resource.
+      deprecated: false
+      security:
+        - userRestricted:
+            - common-transit-convention-guarantee-balance
+components:
+  schemas:
+    errorResponse:
+      title: errorResponse
+      required:
+        - code
+      type: object
+      properties:
+        code:
+          type: string
+    hal-document-schema.json:
+      title: hal-document-schema.json
+      type: object
+      description: Hypertext Application Language (HAL) document.
+      properties:
+        _links:
+          allOf:
+            - $ref: '#/components/schemas/Links'
+            - description: An object containing links to other resources.
+        _embedded:
+          type: object
+          additionalProperties: {}
+          description: An object containing embedded resources.
+    CustomsGuaranteesBalancesrequest:
+      title: CustomsGuaranteesBalancesrequest
+      description: A balance request for the CTC Guarantee Balance API.
+      required:
+        - accessCode
+      type: object
+      properties:
+        accessCode:
+          maxLength: 4
+          minLength: 4
+          type: string
+          description: The `accessCode` granting access to make use of the guarantee.
+    GetBalanceOk:
+      title: Balance request successful
+      description: A successful balance response.
+      required:
+        - balance
+      type: object
+      properties:
+        _links:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/halLink'
+          description: An object containing links to other resources.
+        _embedded:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/hal-document-schema.json'
+          description: An object containing embedded resources.
+        balance:
+          description: The guarantee's balance.
+          type: number
+    BadRequest:
+      title: BadRequest
+      description: An error in the supplied payload, or the guarantee reference number did not match the expected format.
+      required:
+        - code
+        - message
+      type: object
+      properties:
+        code:
+          enum:
+            - BAD_REQUEST
+          type: string
+        message:
+          type: string
+          description: The description of the error.
+    NotFound:
+      title: NotFound
+      description: A guarantee was not found that matched the supplied guarantee reference number and access code.
+      required:
+        - code
+        - message
+      type: object
+      properties:
+        code:
+          enum:
+            - NOT_FOUND
+          type: string
+        message:
+          type: string
+          description: The description of the error.
+    AcceptHeaderInvalid:
+      title: AcceptHeaderInvalid
+      description: The `Accept` header was not set to `application/vnd.hmrc.2.0+json`.
+      required:
+        - code
+        - message
+      type: object
+      properties:
+        code:
+          enum:
+            - ACCEPT_HEADER_INVALID
+          type: string
+        message:
+          type: string
+          description: The description of the error.
+    halLink:
+      title: halLink
+      description: Hypertext Application Language (HAL) link object.
+      required:
+        - href
+      type: object
+      properties:
+        href:
+          type: string
+          description: A link to another resource.
+    Links:
+      title: Links
+      description: An object containing links to other resources.
+      type: object
+      properties:
+        self:
+          allOf:
+            - $ref: '#/components/schemas/halLink'
+            - description: Hypertext Application Language (HAL) link object.
+  parameters:
+    acceptHeader:
+      name: Accept
+      in: header
+      description: >-
+        Specifies the response format and the
+        [version](/api-documentation/docs/reference-guide#versioning) of the API
+        to be used.
+      required: true
+      schema:
+        type: string
+        enum: [
+          "application/vnd.hmrc.2.0+json"
+        ]
+    contentTypeHeader:
+      name: Content-Type
+      in: header
+      description: The media type of the request body.
+      schema:
+        type: string
+        enum:
+          - application/json
+      required: true
+  securitySchemes:
+    userRestricted:
+      type: oauth2
+      description: >-
+        HMRC supports OAuth 2.0 for authenticating user restricted API requests using
+        an OAuth 2.0 Bearer Token in the AUTHORIZATION header. See
+        https://developer.service.hmrc.gov.uk/api-documentation/docs/authorisation/user-restricted-endpoints
+        for details.
+      flows:
+        authorizationCode:
+          authorizationUrl: 'https://api.service.hmrc.gov.uk/oauth/authorize'
+          tokenUrl: 'https://api.service.hmrc.gov.uk/oauth/token'
+          refreshUrl: 'https://api.service.hmrc.gov.uk/oauth/refresh'
+          scopes:
+            common-transit-convention-guarantee-balance: Access all aspects of guarantee balance.
