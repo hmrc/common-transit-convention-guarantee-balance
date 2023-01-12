@@ -31,7 +31,6 @@ paths:
           required: true
           description: The guarantee reference number (GRN) of the guarantee.
       requestBody:
-        description: ''
         content:
           application/json:
             schema:
