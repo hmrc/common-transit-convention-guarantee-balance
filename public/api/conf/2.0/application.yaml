@@ -15,7 +15,7 @@ servers:
     description: Production
     variables: {}
 paths:
-  /customs/guarantees/:grn/balance:
+  /customs/guarantees/{grn}/balance:
     post:
       summary: Get a balance
       description: Get the balance associated with a guarantee reference number (GRN).
