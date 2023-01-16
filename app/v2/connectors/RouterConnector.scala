@@ -84,14 +84,16 @@ class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpCli
                   case NonFatal(ex) => Left[Throwable, InternalBalanceResponse](ex)
                 }
             },
-            defineFailureFn = (result: Try[Either[Throwable, InternalBalanceResponse]]) =>
-              result match {
-                // we can communicate with the backend, so that should handle if EIS/ERMIS is being iffy
-                case Success(Right(_) | Left(_: UpstreamErrorResponse)) => true
-                case _                                                  => false
-              }
+            defineFailureFn = isFailure
           )
       }
+    }
+
+  def isFailure(result: Try[Either[Throwable, InternalBalanceResponse]]): Boolean =
+    result match {
+      // we can communicate with the backend, so that should handle if EIS/ERMIS is being iffy
+      case Success(Right(_) | Left(_: UpstreamErrorResponse)) => false
+      case _                                                  => true
     }
 
 }

@@ -97,6 +97,20 @@ paths:
               example:
                 code: ACCEPT_HEADER_INVALID
                 message: The Accept header must be set to application/vnd.hmrc.2.0+json to use this resource.
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/TooManyRequests'
+                  - description: The rate limit was exceeded for the current user and guarantee.
+                    example:
+                      code: TOO_MANY_REQUESTS
+                      message: Guarantee balance not found.
+              example:
+                code: TOO_MANY_REQUESTS
+                message: Too many requests.
       deprecated: false
       security:
         - userRestricted:
@@ -182,6 +196,21 @@ components:
         code:
           enum:
             - NOT_FOUND
+          type: string
+        message:
+          type: string
+          description: The description of the error.
+    TooManyRequests:
+      title: TooManyRequests
+      description: The rate limit was exceeded for this user and guarantee.
+      required:
+        - code
+        - message
+      type: object
+      properties:
+        code:
+          enum:
+            - TOO_MANY_REQUESTS
           type: string
         message:
           type: string

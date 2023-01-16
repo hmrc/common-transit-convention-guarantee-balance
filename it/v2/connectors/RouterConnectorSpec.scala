@@ -32,6 +32,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.http.ContentTypes
 import play.api.http.HeaderNames
+import play.api.http.Status.NOT_FOUND
 import play.api.http.Status.OK
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
@@ -43,6 +44,10 @@ import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
 import v2.models.errors.ErrorCode
 import v2.util.Generators
+
+import scala.concurrent.Future
+import scala.util.Success
+import scala.util.Failure
 
 class RouterConnectorSpec
     extends AsyncFlatSpec
@@ -116,6 +121,38 @@ class RouterConnectorSpec
       case x                                                          => fail(s"Expected failure with status code ${errorCode.statusCode}, but got $x instead")
     }
 
+  }
+
+  "RouterConnectorImpl#isFailure" should "return false when there is a successful call" in {
+    val connector = injector.instanceOf[RouterConnectorImpl]
+
+    Future.successful(
+      connector.isFailure(Success(Right(InternalBalanceResponse(Balance(1.0))))) shouldBe false
+    )
+  }
+
+  it should "return false when there is a failed call but with an UpstreamErrorResponse" in {
+    val connector = injector.instanceOf[RouterConnectorImpl]
+
+    Future.successful(
+      connector.isFailure(Success(Left(UpstreamErrorResponse("nope", NOT_FOUND)))) shouldBe false
+    )
+  }
+
+  it should "return true when there is a failed call for any other exception" in {
+    val connector = injector.instanceOf[RouterConnectorImpl]
+
+    Future.successful(
+      connector.isFailure(Success(Left(new IllegalArgumentException()))) shouldBe true
+    )
+  }
+
+  it should "return true when there is a failed Try" in {
+    val connector = injector.instanceOf[RouterConnectorImpl]
+
+    Future.successful(
+      connector.isFailure(Failure(new IllegalArgumentException())) shouldBe true
+    )
   }
 
 }
