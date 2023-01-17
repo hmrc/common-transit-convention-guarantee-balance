@@ -10,9 +10,9 @@ info:
   contact: {}
 
 servers:
-  - url: https://test-api.service.hmrc.gov.uk/customs/guarantees
+  - url: https://test-api.service.hmrc.gov.uk
     description: Sandbox
-  - url: https://api.service.hmrc.gov.uk/customs/guarantees
+  - url: https://api.service.hmrc.gov.uk
     description: Production
     variables: {}
 

@@ -9,9 +9,9 @@ info:
     information about how much of their guarantee funds they have left to
     use when organising transit movements.
 servers:
-  - url: https://test-api.service.hmrc.gov.uk/customs/guarantees
+  - url: https://test-api.service.hmrc.gov.uk
     description: Sandbox
-  - url: https://api.service.hmrc.gov.uk/customs/guarantees
+  - url: https://api.service.hmrc.gov.uk
     description: Production
     variables: {}
 paths:
