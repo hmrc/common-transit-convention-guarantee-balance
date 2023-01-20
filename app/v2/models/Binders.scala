@@ -21,11 +21,10 @@ import play.api.mvc.PathBindable
 object Binders {
 
   implicit val grnBinder: PathBindable[GuaranteeReferenceNumber] = new PathBindable[GuaranteeReferenceNumber] {
-    private val grnPattern = """[0-9]{2}([A-Z]{2})[A-Z0-9]{12}[0-9]([A-Z][0-9]{6})?""".r
+    val grnPattern = """[0-9]{2}(GB|XI)[A-Z0-9]{12}[0-9]([A-Z][0-9]{6})?""".r
 
     override def bind(key: String, value: String): Either[String, GuaranteeReferenceNumber] = value match {
       case grnPattern("GB", _) | grnPattern("XI", _) => Right(GuaranteeReferenceNumber(value))
-      case grnPattern(_, _)                          => Left("The guarantee reference number must be for a GB or XI guarantee.")
       case _                                         => Left("The guarantee reference number is not in the correct format.")
     }
 
