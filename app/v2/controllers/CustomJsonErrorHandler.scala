@@ -43,13 +43,13 @@ class CustomJsonErrorHandler @Inject() (
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
     if (statusCode == BAD_REQUEST) {
       super.onClientError(request, statusCode, message).map {
-        _ =>
+        error =>
           message match {
             case InvalidGRNCode =>
               BadRequest(Json.toJson(PresentationError.badRequestError("The guarantee reference number must be for a GB or XI guarantee.")))
             case InvalidGRNFormat =>
               BadRequest(Json.toJson(PresentationError.badRequestError("The guarantee reference number is not in the correct format.")))
-            case _ => BadRequest(Json.toJson(PresentationError.badRequestError(message)))
+            case _ => error
           }
       }
     } else {

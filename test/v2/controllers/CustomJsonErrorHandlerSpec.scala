@@ -94,7 +94,7 @@ class CustomJsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFut
 
       status(result) shouldEqual BAD_REQUEST
       contentAsJson(result) shouldEqual Json
-        .obj("code" -> "BAD_REQUEST", "message" -> "Unknown bad request error")
+        .obj("statusCode" -> BAD_REQUEST, "message" -> "bad request, cause: REDACTED")
     }
 
   }
