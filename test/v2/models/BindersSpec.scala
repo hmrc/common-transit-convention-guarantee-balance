@@ -34,12 +34,12 @@ class BindersSpec extends AnyFlatSpec with Matchers with MockitoSugar with Scala
 
   it should "return a left if the GRN is a valid format, but not a GB/XI GRN" in forAll(guaranteeReferenceNumberGenerator(Gen.const("FR"))) {
     grn =>
-      Binders.grnBinder.bind("a", grn.value) shouldBe Left("The guarantee reference number is not in the correct format.")
+      Binders.grnBinder.bind("a", grn.value) shouldBe Left("ERROR_INVALID_GRN_COUNTRY_CODE")
   }
 
   it should "return a left if the GRN is not a valid format" in forAll(Gen.stringOfN(10, Gen.alphaChar)) {
     grn =>
-      Binders.grnBinder.bind("a", grn) shouldBe Left("The guarantee reference number is not in the correct format.")
+      Binders.grnBinder.bind("a", grn) shouldBe Left("ERROR_INVALID_GRN_FORMAT")
   }
 
 }

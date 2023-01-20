@@ -70,14 +70,24 @@ class CustomJsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFut
 
   "onClientError" should {
 
-    "return json response for 400" in new Setup {
+    "return 400 wth json response for invalid GRN country code" in new Setup {
 
-      val result = jsonErrorHandler.onClientError(request, BAD_REQUEST, "The guarantee reference number is not in the correct format.")
+      val result = jsonErrorHandler.onClientError(request, BAD_REQUEST, "ERROR_INVALID_GRN_COUNTRY_CODE")
+
+      status(result) shouldEqual BAD_REQUEST
+      contentAsJson(result) shouldEqual Json
+        .obj("code" -> "BAD_REQUEST", "message" -> "The guarantee reference number must be for a GB or XI guarantee.")
+    }
+
+    "return 400 wth json response for invalid GRN format" in new Setup {
+
+      val result = jsonErrorHandler.onClientError(request, BAD_REQUEST, "ERROR_INVALID_GRN_FORMAT")
 
       status(result) shouldEqual BAD_REQUEST
       contentAsJson(result) shouldEqual Json
         .obj("code" -> "BAD_REQUEST", "message" -> "The guarantee reference number is not in the correct format.")
     }
+
   }
 
 }

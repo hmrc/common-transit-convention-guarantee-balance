@@ -39,13 +39,19 @@ class CustomJsonErrorHandler @Inject() (
     extends JsonErrorHandler(auditConnector, httpAuditEvent, configuration)(ec) {
 
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
-    if (statusCode == BAD_REQUEST)
+    if (statusCode == BAD_REQUEST) {
       super.onClientError(request, statusCode, message).map {
         _ =>
-          BadRequest(Json.toJson(PresentationError.badRequestError(message)))
+          message match {
+            case "ERROR_INVALID_GRN_COUNTRY_CODE" =>
+              BadRequest(Json.toJson(PresentationError.badRequestError("The guarantee reference number must be for a GB or XI guarantee.")))
+            case "ERROR_INVALID_GRN_FORMAT" =>
+              BadRequest(Json.toJson(PresentationError.badRequestError("The guarantee reference number is not in the correct format.")))
+          }
       }
-    else
+    } else {
       super.onClientError(request, statusCode, message)
+    }
 
   override def onServerError(request: RequestHeader, ex: Throwable): Future[Result] =
     super.onServerError(request, ex)
