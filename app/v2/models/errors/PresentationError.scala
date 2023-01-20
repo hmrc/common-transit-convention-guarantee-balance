@@ -38,7 +38,7 @@ object PresentationError extends CommonFormats {
   def notFoundError(message: String): PresentationError =
     StandardError(message, ErrorCode.NotFound)
 
-  def rateLimited(message: String): PresentationError =
+  def rateLimited(message: String = "The request for the API is throttled as you have exceeded your quota."): PresentationError =
     StandardError(message, ErrorCode.TooManyRequests)
 
   def upstreamServiceError(

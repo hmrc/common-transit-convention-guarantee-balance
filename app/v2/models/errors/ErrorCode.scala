@@ -35,7 +35,7 @@ object ErrorCode {
   case object UnsupportedMediaType extends ErrorCode("UNSUPPORTED_MEDIA_TYPE", UNSUPPORTED_MEDIA_TYPE)
   case object Unauthorized         extends ErrorCode("UNAUTHORIZED", UNAUTHORIZED)
   case object NotAcceptable        extends ErrorCode("NOT_ACCEPTABLE", NOT_ACCEPTABLE)
-  case object TooManyRequests      extends ErrorCode("TOO_MANY_REQUESTS", TOO_MANY_REQUESTS)
+  case object TooManyRequests      extends ErrorCode("MESSAGE_THROTTLED_OUT", TOO_MANY_REQUESTS) // to match API Platform
 
   lazy val errorCodes: Seq[ErrorCode] = Seq(
     BadRequest,
