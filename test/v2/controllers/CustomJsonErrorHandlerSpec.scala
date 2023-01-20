@@ -88,6 +88,15 @@ class CustomJsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFut
         .obj("code" -> "BAD_REQUEST", "message" -> "The guarantee reference number is not in the correct format.")
     }
 
+    "return 400 wth json response for unknown message" in new Setup {
+
+      val result = jsonErrorHandler.onClientError(request, BAD_REQUEST, "Unknown bad request error")
+
+      status(result) shouldEqual BAD_REQUEST
+      contentAsJson(result) shouldEqual Json
+        .obj("code" -> "BAD_REQUEST", "message" -> "Unknown bad request error")
+    }
+
   }
 
 }

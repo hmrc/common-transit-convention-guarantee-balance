@@ -16,6 +16,8 @@
 
 package v2.controllers
 
+import config.Constants.InvalidGRNCode
+import config.Constants.InvalidGRNFormat
 import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -43,10 +45,11 @@ class CustomJsonErrorHandler @Inject() (
       super.onClientError(request, statusCode, message).map {
         _ =>
           message match {
-            case "ERROR_INVALID_GRN_COUNTRY_CODE" =>
+            case InvalidGRNCode =>
               BadRequest(Json.toJson(PresentationError.badRequestError("The guarantee reference number must be for a GB or XI guarantee.")))
-            case "ERROR_INVALID_GRN_FORMAT" =>
+            case InvalidGRNFormat =>
               BadRequest(Json.toJson(PresentationError.badRequestError("The guarantee reference number is not in the correct format.")))
+            case _ => BadRequest(Json.toJson(PresentationError.badRequestError(message)))
           }
       }
     } else {

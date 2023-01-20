@@ -16,6 +16,8 @@
 
 package v2.models
 
+import config.Constants.InvalidGRNCode
+import config.Constants.InvalidGRNFormat
 import play.api.mvc.PathBindable
 
 object Binders {
@@ -25,8 +27,8 @@ object Binders {
 
     override def bind(key: String, value: String): Either[String, GuaranteeReferenceNumber] = value match {
       case grnPattern("GB", _) | grnPattern("XI", _) => Right(GuaranteeReferenceNumber(value))
-      case grnPattern(_, _)                          => Left("ERROR_INVALID_GRN_COUNTRY_CODE")
-      case _                                         => Left("ERROR_INVALID_GRN_FORMAT")
+      case grnPattern(_, _)                          => Left(InvalidGRNCode)
+      case _                                         => Left(InvalidGRNFormat)
     }
 
     override def unbind(key: String, value: GuaranteeReferenceNumber): String = value.value
