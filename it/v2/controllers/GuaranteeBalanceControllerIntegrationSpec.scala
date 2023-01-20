@@ -399,8 +399,8 @@ class GuaranteeBalanceControllerIntegrationSpec
     )
 
     val expected = Json.obj(
-      "code"    -> "TOO_MANY_REQUESTS",
-      "message" -> "Too many requests."
+      "code"    -> "MESSAGE_THROTTLED_OUT",
+      "message" -> "The request for the API is throttled as you have exceeded your quota."
     )
 
     val sut = injector.instanceOf[GuaranteeBalanceController]

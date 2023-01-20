@@ -46,7 +46,7 @@ trait ErrorTranslator {
   implicit val requestLockingErrorConverter = new Converter[RequestLockingError] {
 
     override def convert(input: RequestLockingError): PresentationError = input match {
-      case RequestLockingError.AlreadyLocked   => PresentationError.rateLimited("Too many requests.")
+      case RequestLockingError.AlreadyLocked   => PresentationError.rateLimited()
       case RequestLockingError.Unexpected(thr) => PresentationError.internalServiceError(cause = thr)
     }
   }

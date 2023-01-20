@@ -261,8 +261,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       val result = sut.postRequest(grn)(request = request)
       status(result) shouldBe TOO_MANY_REQUESTS
       contentAsJson(result) shouldBe Json.obj(
-        "code"    -> "TOO_MANY_REQUESTS",
-        "message" -> "Too many requests."
+        "code"    -> "MESSAGE_THROTTLED_OUT",
+        "message" -> "The request for the API is throttled as you have exceeded your quota."
       )
   }
 
