@@ -16,6 +16,8 @@
 
 package v2.models
 
+import config.Constants.InvalidGRNCode
+import config.Constants.InvalidGRNFormat
 import play.api.mvc.PathBindable
 
 object Binders {
@@ -25,8 +27,10 @@ object Binders {
 
     override def bind(key: String, value: String): Either[String, GuaranteeReferenceNumber] = value match {
       case grnPattern("GB", _) | grnPattern("XI", _) => Right(GuaranteeReferenceNumber(value))
-      case grnPattern(_, _)                          => Left("The guarantee reference number must be for a GB or XI guarantee.")
-      case _                                         => Left("The guarantee reference number is not in the correct format.")
+      case grnPattern(_, _) =>
+        Left(InvalidGRNCode) // String passed to Left(InvalidGRNCode) Interpreted by CustomJsonErrorHandler to filter out specific type of bad request.
+      case _ =>
+        Left(InvalidGRNFormat) // String passed to Left(InvalidGRNFormat) Interpreted by CustomJsonErrorHandler to filter out specific type of bad request.
     }
 
     override def unbind(key: String, value: GuaranteeReferenceNumber): String = value.value
