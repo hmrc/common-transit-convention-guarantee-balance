@@ -27,8 +27,10 @@ object Binders {
 
     override def bind(key: String, value: String): Either[String, GuaranteeReferenceNumber] = value match {
       case grnPattern("GB", _) | grnPattern("XI", _) => Right(GuaranteeReferenceNumber(value))
-      case grnPattern(_, _)                          => Left(InvalidGRNCode)   // String passed to Left(InvalidGRNCode) Interpreted by CustomJsonErrorHandler
-      case _                                         => Left(InvalidGRNFormat) //String passed to Left(InvalidGRNFormat) Interpreted by CustomJsonErrorHandler
+      case grnPattern(_, _) =>
+        Left(InvalidGRNCode) // String passed to Left(InvalidGRNCode) Interpreted by CustomJsonErrorHandler to filter out specific type of bad request.
+      case _ =>
+        Left(InvalidGRNFormat) // String passed to Left(InvalidGRNCode) Interpreted by CustomJsonErrorHandler to filter out specific type of bad request.
     }
 
     override def unbind(key: String, value: GuaranteeReferenceNumber): String = value.value
