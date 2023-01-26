@@ -38,18 +38,18 @@ trait RequestLockingService {
 
 class RequestLockingServiceImpl @Inject() (lockRepo: MongoLockRepository, appConfig: AppConfig) extends RequestLockingService with IOFutures {
 
+  // Note to implementors: THIS IS NOT THREAD SAFE. We have to synchronise on this in our IOs below, hence the blocking.
   val hash = MessageDigest.getInstance("SHA-256")
 
   override def lock(grn: GuaranteeReferenceNumber, internalId: InternalId): EitherT[IO, RequestLockingError, Unit] =
     EitherT {
       for {
-        key <- IO.pure(internalId.value + grn.value)
+        key    <- IO.pure(internalId.value + grn.value)
+        digest <- IO.blocking(hash.synchronized(hash.digest(key.getBytes(StandardCharsets.UTF_8)))) // blocking due to synchronized
         hex <- IO(
-          hash
-            .digest(key.getBytes(StandardCharsets.UTF_8))
-            .map(
-              x => f"$x%02x"
-            )
+          digest.map(
+            x => f"$x%02x"
+          )
         )
         result <- isLockedOut(hex, internalId)
       } yield result
