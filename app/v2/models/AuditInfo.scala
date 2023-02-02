@@ -16,10 +16,6 @@
 
 package v2.models
 
-import play.api.libs.json.Json
+import models.values.InternalId
 
-case class GuaranteeReferenceNumber(value: String) extends AnyVal
-
-object GuaranteeReferenceNumber {
-  implicit val guaranteeReferenceNumberFormat = Json.valueFormat[GuaranteeReferenceNumber]
-}
+case class AuditInfo(balanceRequest: BalanceRequest, guaranteeReferenceNumber: GuaranteeReferenceNumber, internalId: InternalId)
