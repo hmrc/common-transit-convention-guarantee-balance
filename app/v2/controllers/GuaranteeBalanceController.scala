@@ -32,10 +32,12 @@ import play.api.mvc.Action
 import play.api.mvc.ControllerComponents
 import play.api.mvc.Request
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import v2.models.AuditInfo
 import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.HateoasResponse
 import v2.models.errors.PresentationError
+import v2.services.AuditService
 import v2.services.RequestLockingService
 import v2.services.RouterService
 import v2.services.ValidationService
@@ -45,6 +47,7 @@ class GuaranteeBalanceController @Inject() (
   lockService: RequestLockingService,
   validationService: ValidationService,
   routerService: RouterService,
+  auditService: AuditService,
   cc: ControllerComponents,
   val runtime: IORuntime,
   val metrics: Metrics
@@ -61,12 +64,14 @@ class GuaranteeBalanceController @Inject() (
     authenticate().io(parse.json) {
       implicit request =>
         (for {
-          _                <- validateAcceptHeader
-          _                <- lockService.lock(grn, request.internalId).asPresentation
-          parsed           <- parseJson(request.body)
-          _                <- validationService.validate(parsed).asPresentation
-          internalResponse <- routerService.request(grn, parsed).asPresentation
+          _      <- validateAcceptHeader
+          parsed <- parseJson(request.body)
+          auditInfo = AuditInfo(parsed, grn, request.internalId)
+          _                <- lockService.lock(grn, request.internalId).asPresentation(auditService)
+          _                <- validationService.validate(parsed).asPresentation(auditService)
+          internalResponse <- routerService.request(grn, parsed).asPresentation(auditService)
           hateoas          <- EitherT.right[PresentationError](HateoasResponse(grn, internalResponse))
+          _ = auditService.balanceRequestSucceeded(auditInfo)
         } yield hateoas).fold(
           presentationError => Status(presentationError.code.statusCode)(Json.toJson(presentationError)),
           result => Ok(result)

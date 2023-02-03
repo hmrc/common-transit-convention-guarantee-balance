@@ -19,14 +19,19 @@ package v2.controllers
 import cats.data.EitherT
 import cats.data.NonEmptyList
 import cats.effect.IO
+import uk.gov.hmrc.http.HeaderCarrier
 import v2.models.errors._
+import v2.services.AuditService
 
 trait ErrorTranslator {
 
   implicit class ErrorConverter[E, A](value: EitherT[IO, E, A]) {
 
-    def asPresentation(implicit c: Converter[E]): EitherT[IO, PresentationError, A] =
-      value.leftMap(c.convert)
+    def asPresentation(auditService: AuditService)(implicit c: Converter[E], headerCarrier: HeaderCarrier): EitherT[IO, PresentationError, A] =
+      value.leftMap {
+        auditService.balanceRequestFailed[E] _
+        c.convert(_)
+      }
   }
 
   trait Converter[E] {

@@ -20,18 +20,25 @@ import cats.data.EitherT
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
+import models.values.InternalId
+import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.MockitoSugar
 import org.scalacheck.Gen
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import uk.gov.hmrc.http.HeaderCarrier
 import v2.models.AccessCode
+import v2.models.AuditInfo
+import v2.models.BalanceRequest
+import v2.models.GuaranteeReferenceNumber
 import v2.models.errors.InternalServiceError
 import v2.models.errors.PresentationError
 import v2.models.errors.RequestLockingError
 import v2.models.errors.RoutingError
 import v2.models.errors.ValidationError
+import v2.services.AuditService
 
 class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks {
 
@@ -39,9 +46,17 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
 
   import Harness._
 
+  implicit val hc = HeaderCarrier()
+
+  val auditInfo = AuditInfo(BalanceRequest(AccessCode("1")), GuaranteeReferenceNumber("grn1"), InternalId("12345"))
+
+  val mockAuditService = mock[AuditService]
+  when(mockAuditService.balanceRequestSucceeded(auditInfo)).thenReturn(IO(println("XXXX")))
+
   "ErrorConverter#asPresentation" should "for a success return the same right" in {
+
     val input: EitherT[IO, RequestLockingError, Unit] = EitherT.rightT[IO, RequestLockingError](())
-    whenReady(input.asPresentation.value.unsafeToFuture()) {
+    whenReady(input.asPresentation(mockAuditService).value.unsafeToFuture()) {
       _ shouldBe Right(())
     }
   }
@@ -49,7 +64,7 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
   it should "for an error returns a left with the appropriate presentation error" in {
     val error                                         = new IllegalStateException()
     val input: EitherT[IO, RequestLockingError, Unit] = EitherT.leftT[IO, Unit](RequestLockingError.Unexpected(Some(error)))
-    whenReady(input.asPresentation.value.unsafeToFuture()) {
+    whenReady(input.asPresentation(mockAuditService).value.unsafeToFuture()) {
       _ shouldBe Left(InternalServiceError(cause = Some(error)))
     }
   }
