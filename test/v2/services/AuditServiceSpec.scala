@@ -48,7 +48,7 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
   val internalId         = InternalId("ABC123")
   val accessCode         = AccessCode("1234")
   val guaranteeReference = GuaranteeReferenceNumber("05DE3300BE0001067A001017")
-  val auditInfo          = AuditInfo(BalanceRequest(accessCode), guaranteeReference, internalId)
+  implicit val auditInfo = AuditInfo(BalanceRequest(accessCode), guaranteeReference, internalId)
 
   implicit val hc = HeaderCarrier()
 

@@ -21,9 +21,11 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import models.values.InternalId
+import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.MockitoSugar
 import org.scalacheck.Gen
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -40,7 +42,7 @@ import v2.models.errors.RoutingError
 import v2.models.errors.ValidationError
 import v2.services.AuditService
 
-class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks {
+class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks with BeforeAndAfterEach {
 
   object Harness extends ErrorTranslator
 
@@ -51,22 +53,30 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
   val auditInfo = AuditInfo(BalanceRequest(AccessCode("1")), GuaranteeReferenceNumber("grn1"), InternalId("12345"))
 
   val mockAuditService = mock[AuditService]
-  when(mockAuditService.balanceRequestSucceeded(auditInfo)).thenReturn(IO(println("XXXX")))
+  when(
+    mockAuditService.balanceRequestFailed((RequestLockingError.AlreadyLocked))(auditInfo, hc)
+  ).thenReturn(IO(()))
+
+  override protected def beforeEach(): Unit = reset(mockAuditService)
 
   "ErrorConverter#asPresentation" should "for a success return the same right" in {
 
     val input: EitherT[IO, RequestLockingError, Unit] = EitherT.rightT[IO, RequestLockingError](())
-    whenReady(input.asPresentation(mockAuditService).value.unsafeToFuture()) {
+    whenReady(input.asPresentation(auditInfo, mockAuditService).value.unsafeToFuture()) {
       _ shouldBe Right(())
     }
+    verify(mockAuditService, times(0)).balanceRequestFailed(any())(any(), any())
   }
 
   it should "for an error returns a left with the appropriate presentation error" in {
+
     val error                                         = new IllegalStateException()
     val input: EitherT[IO, RequestLockingError, Unit] = EitherT.leftT[IO, Unit](RequestLockingError.Unexpected(Some(error)))
-    whenReady(input.asPresentation(mockAuditService).value.unsafeToFuture()) {
+    whenReady(input.asPresentation(auditInfo, mockAuditService).value.unsafeToFuture()) {
       _ shouldBe Left(InternalServiceError(cause = Some(error)))
+
     }
+    verify(mockAuditService, times(1)).balanceRequestFailed(eqTo(RequestLockingError.Unexpected(Some(error))))(eqTo(auditInfo), eqTo(hc))
   }
 
   "ValidationError" should "return a bad request when any error is provided" in forAll(

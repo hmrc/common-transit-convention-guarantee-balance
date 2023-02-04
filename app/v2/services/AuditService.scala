@@ -37,6 +37,7 @@ trait AuditService {
   ): IO[Unit]
 
   def balanceRequestFailed[E](error: E)(implicit
+    auditInfo: AuditInfo,
     hc: HeaderCarrier
   ): IO[Unit]
 }
@@ -94,7 +95,9 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
       }
   }
 
+  // TODO: HERE
   def balanceRequestFailed[E](originalError: E)(implicit
+    auditInfo: AuditInfo,
     hc: HeaderCarrier
   ): IO[Unit] = originalError match {
     case ev: GRNNotFoundEvent => grnNotFound(ev)
