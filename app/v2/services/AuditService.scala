@@ -16,23 +16,30 @@
 
 package v2.services
 
+import cats.data.NonEmptyList
 import cats.effect.IO
 import com.google.inject.ImplementedBy
 import runtime.IOFutures
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import v2.models.AccessCodeNotValidEvent
 import v2.models.AuditEventType
 import v2.models.AuditInfo
+import v2.models.Balance
 import v2.models.BalanceRequestSucceededEvent
 import v2.models.GRNNotFoundEvent
 import v2.models.RateLimitedEvent
+import v2.models.ServerErrorEvent
+import v2.models.errors.RequestLockingError
+import v2.models.errors.RoutingError
+import v2.models.errors.ValidationError
 
 import javax.inject._
 
 @ImplementedBy(classOf[AuditServiceImpl])
 trait AuditService {
 
-  def balanceRequestSucceeded(auditInfo: AuditInfo)(implicit
+  def balanceRequestSucceeded(auditInfo: AuditInfo, balance: Balance)(implicit
     hc: HeaderCarrier
   ): IO[Unit]
 
@@ -45,7 +52,7 @@ trait AuditService {
 @Singleton
 class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditService with IOFutures {
 
-  def balanceRequestSucceeded(auditInfo: AuditInfo)(implicit
+  def balanceRequestSucceeded(auditInfo: AuditInfo, balance: Balance)(implicit
     hc: HeaderCarrier
   ): IO[Unit] = IO.executionContext.flatMap {
     implicit ec =>
@@ -55,54 +62,75 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
           BalanceRequestSucceededEvent(
             auditInfo.internalId,
             auditInfo.guaranteeReferenceNumber,
-            auditInfo.balanceRequest.accessCode
+            auditInfo.balanceRequest.accessCode,
+            balance
           )
         )
       }
   }
 
-  def grnNotFound(event: GRNNotFoundEvent)(implicit
-    hc: HeaderCarrier
+  def grnNotFound()(implicit
+    hc: HeaderCarrier,
+    auditInfo: AuditInfo
   ): IO[Unit] = IO.executionContext.flatMap {
     implicit ec =>
       IO {
         connector.sendExplicitAudit[GRNNotFoundEvent](
           AuditEventType.GRNNotFound.name,
-          GRNNotFoundEvent(
-            event.userInternalId,
-            event.guaranteeReference,
-            event.accessCode,
-            event.reason
-          )
+          GRNNotFoundEvent.toEvent
         )
       }
   }
 
-  def rateLimitExceeded(event: RateLimitedEvent)(implicit
-    hc: HeaderCarrier
+  def rateLimitExceeded()(implicit
+    hc: HeaderCarrier,
+    auditInfo: AuditInfo
   ): IO[Unit] = IO.executionContext.flatMap {
     implicit ec =>
       IO {
         connector.sendExplicitAudit[RateLimitedEvent](
           AuditEventType.RateLimited.name,
-          RateLimitedEvent(
-            event.userInternalId,
-            event.guaranteeReference,
-            event.accessCode,
-            event.reason
-          )
+          RateLimitedEvent.toEvent
         )
       }
   }
 
-  // TODO: HERE
+  def invalidAccessCode()(implicit
+    hc: HeaderCarrier,
+    auditInfo: AuditInfo
+  ): IO[Unit] = IO.executionContext.flatMap {
+    implicit ec =>
+      IO {
+        connector.sendExplicitAudit[AccessCodeNotValidEvent](
+          AuditEventType.AccessCodeNotValid.name,
+          AccessCodeNotValidEvent.toEvent
+        )
+      }
+  }
+
+  def serverError()(implicit
+    hc: HeaderCarrier,
+    auditInfo: AuditInfo
+  ): IO[Unit] = IO.executionContext.flatMap {
+    implicit ec =>
+      IO {
+        connector.sendExplicitAudit[ServerErrorEvent](
+          AuditEventType.ServerError.name,
+          ServerErrorEvent.toEvent
+        )
+      }
+  }
+
   def balanceRequestFailed[E](originalError: E)(implicit
     auditInfo: AuditInfo,
     hc: HeaderCarrier
   ): IO[Unit] = originalError match {
-    case ev: GRNNotFoundEvent => grnNotFound(ev)
-    case ev: RateLimitedEvent => rateLimitExceeded(ev)
-    case _                    => IO(())
+    case RoutingError.InvalidAccessCode                                 => invalidAccessCode()
+    case RoutingError.GuaranteeReferenceNotFound                        => grnNotFound()
+    case RoutingError.Unexpected(_) | RequestLockingError.Unexpected(_) => serverError();
+    case RequestLockingError.AlreadyLocked                              => rateLimitExceeded()
+    case e: NonEmptyList[ValidationError]                               => invalidAccessCode()
+    case _                                                              => serverError()
   }
 
 }

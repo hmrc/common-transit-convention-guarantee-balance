@@ -71,7 +71,7 @@ class GuaranteeBalanceController @Inject() (
           _                <- validationService.validate(parsed).asPresentation(auditInfo, auditService)
           internalResponse <- routerService.request(grn, parsed).asPresentation(auditInfo, auditService)
           hateoas          <- EitherT.right[PresentationError](HateoasResponse(grn, internalResponse))
-          _ = auditService.balanceRequestSucceeded(auditInfo)
+          _ = auditService.balanceRequestSucceeded(auditInfo, internalResponse.balance)
         } yield hateoas).fold(
           presentationError => Status(presentationError.code.statusCode)(Json.toJson(presentationError)),
           result => Ok(result)

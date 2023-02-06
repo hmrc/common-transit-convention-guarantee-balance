@@ -17,17 +17,16 @@
 package v2.models
 
 import models.values.InternalId
-import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.libs.json.OWrites
-import v2.models.errors.PresentationError
 
 sealed abstract class AuditEvent extends Product with Serializable
 
 case class BalanceRequestSucceededEvent(
   userInternalId: InternalId,
   guaranteeReference: GuaranteeReferenceNumber,
-  accessCode: AccessCode
+  accessCode: AccessCode,
+  balance: Balance
 ) extends AuditEvent
 
 case object BalanceRequestSucceededEvent {
@@ -40,38 +39,75 @@ case object BalanceRequestSucceededEvent {
 case class GRNNotFoundEvent(
   userInternalId: InternalId,
   guaranteeReference: GuaranteeReferenceNumber,
-  accessCode: AccessCode,
-  reason: String
+  accessCode: AccessCode
 ) extends AuditEvent
 
 case object GRNNotFoundEvent {
 
   implicit val guaranteeNumberNotFoundEventWrites: OWrites[GRNNotFoundEvent] =
     Json.writes[GRNNotFoundEvent]
+
+  def toEvent(implicit auditInfo: AuditInfo): GRNNotFoundEvent =
+    GRNNotFoundEvent(
+      auditInfo.internalId,
+      auditInfo.guaranteeReferenceNumber,
+      auditInfo.balanceRequest.accessCode
+    )
 }
 
 case class RateLimitedEvent(
   userInternalId: InternalId,
   guaranteeReference: GuaranteeReferenceNumber,
-  accessCode: AccessCode,
-  reason: String
+  accessCode: AccessCode
 ) extends AuditEvent
 
 case object RateLimitedEvent {
 
   implicit val rateLimitedEventWrites: OWrites[RateLimitedEvent] =
     Json.writes[RateLimitedEvent]
+
+  def toEvent(implicit auditInfo: AuditInfo): RateLimitedEvent =
+    RateLimitedEvent(
+      auditInfo.internalId,
+      auditInfo.guaranteeReferenceNumber,
+      auditInfo.balanceRequest.accessCode
+    )
 }
 
-case class BalanceRequestFailedEvent(
-  internalId: InternalId,
-  body: JsValue,
-  grn: GuaranteeReferenceNumber,
-  reason: PresentationError
+case class AccessCodeNotValidEvent(
+  userInternalId: InternalId,
+  guaranteeReference: GuaranteeReferenceNumber,
+  accessCode: AccessCode
 ) extends AuditEvent
 
-case object BalanceRequestFailedEvent {
+case object AccessCodeNotValidEvent {
 
-  implicit val balanceRequestFailedEventWrites: OWrites[BalanceRequestFailedEvent] =
-    Json.writes[BalanceRequestFailedEvent]
+  implicit val accessCodeNotValidEventWrites: OWrites[AccessCodeNotValidEvent] =
+    Json.writes[AccessCodeNotValidEvent]
+
+  def toEvent(implicit auditInfo: AuditInfo): AccessCodeNotValidEvent =
+    AccessCodeNotValidEvent(
+      auditInfo.internalId,
+      auditInfo.guaranteeReferenceNumber,
+      auditInfo.balanceRequest.accessCode
+    )
+}
+
+case class ServerErrorEvent(
+  userInternalId: InternalId,
+  guaranteeReference: GuaranteeReferenceNumber,
+  accessCode: AccessCode
+) extends AuditEvent
+
+case object ServerErrorEvent {
+
+  implicit val serverErrorEventWrites: OWrites[ServerErrorEvent] =
+    Json.writes[ServerErrorEvent]
+
+  def toEvent(implicit auditInfo: AuditInfo): ServerErrorEvent =
+    ServerErrorEvent(
+      auditInfo.internalId,
+      auditInfo.guaranteeReferenceNumber,
+      auditInfo.balanceRequest.accessCode
+    )
 }

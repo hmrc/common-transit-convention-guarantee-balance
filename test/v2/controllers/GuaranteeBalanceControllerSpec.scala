@@ -112,7 +112,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       val mockAuditService = mock[AuditService]
       when(
         mockAuditService.balanceRequestSucceeded(
-          eqTo(AuditInfo(BalanceRequest(AccessCode(grn.value)), GuaranteeReferenceNumber(grn.value), InternalId(internalId.value)))
+          eqTo(AuditInfo(BalanceRequest(AccessCode(grn.value)), GuaranteeReferenceNumber(grn.value), InternalId(internalId.value))),
+          eqTo(Balance(3.14))
         )(any())
       ).thenReturn(IO(()))
 
@@ -132,7 +133,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       whenReady(HateoasResponse(grn, InternalBalanceResponse(Balance(3.14))).unsafeToFuture()) {
         r => contentAsJson(result) shouldBe r
       }
-      verify(mockAuditService, times(1)).balanceRequestSucceeded(any())(any())
+      verify(mockAuditService, times(1)).balanceRequestSucceeded(any(), any())(any())
   }
 
   it should "return OK with a result if everything is okay but we have additional junk in the JSON payload" in forAll(
@@ -168,7 +169,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       val mockAuditService = mock[AuditService]
       when(
         mockAuditService.balanceRequestSucceeded(
-          eqTo(AuditInfo(BalanceRequest(AccessCode("2")), GuaranteeReferenceNumber(grn.value), InternalId(internalId.value)))
+          eqTo(AuditInfo(BalanceRequest(AccessCode("2")), GuaranteeReferenceNumber(grn.value), InternalId(internalId.value))),
+          (Balance(123.45))
         )(any())
       ).thenReturn(IO(()))
 
@@ -188,7 +190,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       whenReady(HateoasResponse(grn, InternalBalanceResponse(Balance(3.14))).unsafeToFuture()) {
         r => contentAsJson(result) shouldBe r
       }
-      verify(mockAuditService, times(1)).balanceRequestSucceeded(any())(any())
+      verify(mockAuditService, times(1)).balanceRequestSucceeded(any(), any())(any())
   }
 
   it should "return not acceptable if the accept header is wrong" in forAll(
@@ -226,7 +228,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       val mockAuditService = mock[AuditService]
       when(
         mockAuditService.balanceRequestSucceeded(
-          eqTo(AuditInfo(BalanceRequest(AccessCode("2")), GuaranteeReferenceNumber(grn.value), InternalId(internalId.value)))
+          eqTo(AuditInfo(BalanceRequest(AccessCode("2")), GuaranteeReferenceNumber(grn.value), InternalId(internalId.value))),
+          eqTo(Balance(123.45))
         )(any())
       ).thenReturn(IO(()))
 
@@ -247,7 +250,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "code"    -> "NOT_ACCEPTABLE",
         "message" -> "The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."
       )
-      verify(mockAuditService, times(0)).balanceRequestSucceeded(any())(any())
+      verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), any())(any())
   }
 
   it should "return Too Many Requests if rate limiting is in effect" in forAll(
@@ -279,15 +282,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
         .thenReturn(EitherT.rightT[IO, RoutingError](InternalBalanceResponse(Balance(3.14))))
 
-      val auditInfo        = AuditInfo(BalanceRequest(AccessCode("1")), grn, internalId)
       val mockAuditService = mock[AuditService]
       when(
-        mockAuditService.balanceRequestFailed((RequestLockingError.AlreadyLocked))(auditInfo, hc)
-      ).thenReturn(IO(()))
-      when(
-        mockAuditService.balanceRequestSucceeded(
-          eqTo(AuditInfo(BalanceRequest(AccessCode("2")), GuaranteeReferenceNumber(grn.value), InternalId(internalId.value)))
-        )(any())
+        mockAuditService.balanceRequestFailed(eqTo(RequestLockingError.AlreadyLocked))(any(), any())
       ).thenReturn(IO(()))
 
       val sut = new GuaranteeBalanceController(
@@ -341,6 +338,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         .thenReturn(EitherT.rightT[IO, RoutingError](InternalBalanceResponse(Balance(3.14))))
 
       val mockAuditService = mock[AuditService]
+      when(
+        mockAuditService.balanceRequestFailed(eqTo(RequestLockingError.AlreadyLocked))(any(), any())
+      ).thenReturn(IO(()))
 
       val sut = new GuaranteeBalanceController(
         fakeAuthActionProvider(internalId),
@@ -392,6 +392,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         .thenReturn(EitherT.rightT[IO, RoutingError](InternalBalanceResponse(Balance(3.14))))
 
       val mockAuditService = mock[AuditService]
+      when(
+        mockAuditService.balanceRequestFailed(eqTo(NonEmptyList.one(ValidationError.InvalidAccessCodeLength(AccessCode("1")))))(any(), any())
+      ).thenReturn(IO(()))
 
       val sut = new GuaranteeBalanceController(
         fakeAuthActionProvider(internalId),

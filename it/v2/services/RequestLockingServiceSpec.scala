@@ -61,7 +61,7 @@ class RequestLockingServiceSpec
 
   "BalanceRequestLockService" should "take the lock for a GRN when called without any previous activity" in forAll(
     Gen.stringOfN(5, Gen.alphaNumChar).map(InternalId(_)),
-    Gen.stringOfN(18, Gen.alphaNumChar).map(GuaranteeReferenceNumber)
+    Gen.stringOfN(18, Gen.alphaNumChar).map(GuaranteeReferenceNumber(_))
   ) {
     (internalId, grn) =>
       service.lock(grn, internalId).value.unsafeToFuture().futureValue shouldBe Right(())
@@ -69,8 +69,8 @@ class RequestLockingServiceSpec
 
   it should "allow the same user to take the lock for two different GRNs within the timeout period" in forAll(
     Gen.stringOfN(5, Gen.alphaNumChar).map(InternalId(_)),
-    Gen.stringOfN(18, Gen.alphaNumChar).map(GuaranteeReferenceNumber),
-    Gen.stringOfN(18, Gen.alphaNumChar).map(GuaranteeReferenceNumber)
+    Gen.stringOfN(18, Gen.alphaNumChar).map(GuaranteeReferenceNumber(_)),
+    Gen.stringOfN(18, Gen.alphaNumChar).map(GuaranteeReferenceNumber(_))
   ) {
     (internalId, grn1, grn2) =>
       val assertion = for {
@@ -85,7 +85,7 @@ class RequestLockingServiceSpec
   it should "allow two different users to take the lock for the same GRN within the timeout period" in forAll(
     Gen.stringOfN(5, Gen.alphaNumChar).map(InternalId(_)),
     Gen.stringOfN(5, Gen.alphaNumChar).map(InternalId(_)),
-    Gen.stringOfN(18, Gen.alphaNumChar).map(GuaranteeReferenceNumber)
+    Gen.stringOfN(18, Gen.alphaNumChar).map(GuaranteeReferenceNumber(_))
   ) {
     (internalId1, internalId2, grn) =>
       val assertion = for {
@@ -99,7 +99,7 @@ class RequestLockingServiceSpec
 
   it should "deny the second lock acquisition attempt for the same GRN within the timeout period" in forAll(
     Gen.stringOfN(5, Gen.alphaNumChar).map(InternalId(_)),
-    Gen.stringOfN(18, Gen.alphaNumChar).map(GuaranteeReferenceNumber)
+    Gen.stringOfN(18, Gen.alphaNumChar).map(GuaranteeReferenceNumber(_))
   ) {
     (internalId, grn) =>
       val assertion = for {
@@ -113,7 +113,7 @@ class RequestLockingServiceSpec
 
   it should "allow the lock to be acquired again for a given GRN after the timeout period" in forAll(
     Gen.stringOfN(5, Gen.alphaNumChar).map(InternalId(_)),
-    Gen.stringOfN(18, Gen.alphaNumChar).map(GuaranteeReferenceNumber)
+    Gen.stringOfN(18, Gen.alphaNumChar).map(GuaranteeReferenceNumber(_))
   ) {
     (internalId, grn) =>
       val assertion = for {
