@@ -42,6 +42,7 @@ import play.api.http.Status.NOT_ACCEPTABLE
 import play.api.http.Status.NOT_FOUND
 import play.api.http.Status.OK
 import play.api.http.Status.TOO_MANY_REQUESTS
+import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.mvc.Request
 import play.api.test.FakeHeaders
@@ -314,18 +315,22 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
     arbitrary[InternalId]
   ) {
     (grn, internalId) =>
-      val request = FakeRequest(
-        "POST",
-        "/",
-        FakeHeaders(
-          Seq(
-            HeaderNames.ACCEPT -> "application/vnd.hmrc.2.0+json"
-          )
-        ),
-        Json.obj(
-          "incorrect" -> "1"
+      val request: AuthenticatedRequest[JsValue] =
+        AuthenticatedRequest(
+          FakeRequest(
+            "POST",
+            "/",
+            FakeHeaders(
+              Seq(
+                HeaderNames.ACCEPT -> "application/vnd.hmrc.2.0+json"
+              )
+            ),
+            Json.obj(
+              "incorrect" -> "1"
+            )
+          ),
+          internalId
         )
-      )
 
       val mockLockService = mock[RequestLockingService]
       when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value))))
@@ -340,7 +345,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
       val mockAuditService = mock[AuditService]
       when(
-        mockAuditService.balanceRequestFailed(eqTo(RequestLockingError.AlreadyLocked))(any(), any())
+        mockAuditService.balanceRequestFailed(eqTo(request), GuaranteeReferenceNumber(eqTo(grn.value)))(any())
       ).thenReturn(IO(()))
 
       val sut = new GuaranteeBalanceController(
@@ -360,6 +365,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "code"    -> "BAD_REQUEST",
         "message" -> "The access code was not supplied."
       )
+
   }
 
   it should "return BAD_REQUEST if the access code is not valid" in forAll(

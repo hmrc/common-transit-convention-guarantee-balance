@@ -19,6 +19,8 @@ package v2.services
 import cats.data.NonEmptyList
 import cats.effect.IO
 import com.google.inject.ImplementedBy
+import models.request.AuthenticatedRequest
+import play.api.libs.json.JsValue
 import runtime.IOFutures
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -28,6 +30,8 @@ import v2.models.AuditInfo
 import v2.models.Balance
 import v2.models.BalanceRequestSucceededEvent
 import v2.models.GRNNotFoundEvent
+import v2.models.GuaranteeReferenceNumber
+import v2.models.InvalidPayloadEvent
 import v2.models.RateLimitedEvent
 import v2.models.ServerErrorEvent
 import v2.models.errors.RequestLockingError
@@ -47,12 +51,14 @@ trait AuditService {
     auditInfo: AuditInfo,
     hc: HeaderCarrier
   ): IO[Unit]
+
+  def balanceRequestFailed(request: AuthenticatedRequest[JsValue], grn: GuaranteeReferenceNumber)(implicit hc: HeaderCarrier): IO[Unit]
 }
 
 @Singleton
 class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditService with IOFutures {
 
-  def balanceRequestSucceeded(auditInfo: AuditInfo, balance: Balance)(implicit
+  override def balanceRequestSucceeded(auditInfo: AuditInfo, balance: Balance)(implicit
     hc: HeaderCarrier
   ): IO[Unit] = IO.executionContext.flatMap {
     implicit ec =>
@@ -69,7 +75,7 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
       }
   }
 
-  def grnNotFound()(implicit
+  private def grnNotFound()(implicit
     hc: HeaderCarrier,
     auditInfo: AuditInfo
   ): IO[Unit] = IO.executionContext.flatMap {
@@ -82,7 +88,7 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
       }
   }
 
-  def rateLimitExceeded()(implicit
+  private def rateLimitExceeded()(implicit
     hc: HeaderCarrier,
     auditInfo: AuditInfo
   ): IO[Unit] = IO.executionContext.flatMap {
@@ -95,7 +101,7 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
       }
   }
 
-  def invalidAccessCode()(implicit
+  private def invalidAccessCode()(implicit
     hc: HeaderCarrier,
     auditInfo: AuditInfo
   ): IO[Unit] = IO.executionContext.flatMap {
@@ -108,7 +114,7 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
       }
   }
 
-  def serverError()(implicit
+  private def serverError()(implicit
     hc: HeaderCarrier,
     auditInfo: AuditInfo
   ): IO[Unit] = IO.executionContext.flatMap {
@@ -121,7 +127,18 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
       }
   }
 
-  def balanceRequestFailed[E](originalError: E)(implicit
+  override def balanceRequestFailed(request: AuthenticatedRequest[JsValue], grn: GuaranteeReferenceNumber)(implicit hc: HeaderCarrier): IO[Unit] =
+    IO.executionContext.flatMap {
+      implicit ec =>
+        IO {
+          connector.sendExplicitAudit[InvalidPayloadEvent](
+            AuditEventType.InvalidPayload.name,
+            InvalidPayloadEvent(request.internalId, grn, request.body)
+          )
+        }
+    }
+
+  override def balanceRequestFailed[E](originalError: E)(implicit
     auditInfo: AuditInfo,
     hc: HeaderCarrier
   ): IO[Unit] = originalError match {

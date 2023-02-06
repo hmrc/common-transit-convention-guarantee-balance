@@ -17,6 +17,7 @@
 package v2.models
 
 import models.values.InternalId
+import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.libs.json.OWrites
 
@@ -34,6 +35,18 @@ case object BalanceRequestSucceededEvent {
   implicit val balanceRequestSucceededEventWrites: OWrites[BalanceRequestSucceededEvent] =
     Json.writes[BalanceRequestSucceededEvent]
 
+}
+
+case class InvalidPayloadEvent(
+  userInternalId: InternalId,
+  guaranteeReference: GuaranteeReferenceNumber,
+  payload: JsValue
+) extends AuditEvent
+
+case object InvalidPayloadEvent {
+
+  implicit val invalidPayloadEventWrites: OWrites[InvalidPayloadEvent] =
+    Json.writes[InvalidPayloadEvent]
 }
 
 case class GRNNotFoundEvent(

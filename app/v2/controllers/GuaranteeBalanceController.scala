@@ -26,11 +26,14 @@ import controllers.actions.AuthActionProvider
 import controllers.actions.IOActions
 import logging.Logging
 import metrics.IOMetrics
+import models.request.AuthenticatedRequest
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.ControllerComponents
 import play.api.mvc.Request
+import play.api.mvc.Result
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import v2.models.AuditInfo
 import v2.models.BalanceRequest
@@ -73,10 +76,17 @@ class GuaranteeBalanceController @Inject() (
           hateoas          <- EitherT.right[PresentationError](HateoasResponse(grn, internalResponse))
           _ = auditService.balanceRequestSucceeded(auditInfo, internalResponse.balance)
         } yield hateoas).fold(
-          presentationError => Status(presentationError.code.statusCode)(Json.toJson(presentationError)),
+          presentationError => requestFailed(request, grn, presentationError),
           result => Ok(result)
         )
     }
+
+  private def requestFailed(request: AuthenticatedRequest[JsValue], guaranteeReferenceNumber: GuaranteeReferenceNumber, presentationError: PresentationError)(
+    implicit hc: HeaderCarrier
+  ): Result = {
+    auditService.balanceRequestFailed(request, guaranteeReferenceNumber)
+    Status(presentationError.code.statusCode)(Json.toJson(presentationError))
+  }
 
   private def parseJson(json: JsValue): EitherT[IO, PresentationError, BalanceRequest] =
     EitherT {

@@ -20,6 +20,7 @@ sealed abstract class AuditEventType(val name: String) extends Product with Seri
 
 object AuditEventType {
   case object RateLimited             extends AuditEventType("RateLimited")
+  case object InvalidPayload          extends AuditEventType("InvalidPayload")
   case object GRNNotFound             extends AuditEventType("GRNNotFound")
   case object AccessCodeNotValid      extends AuditEventType("AccessCodeNotValid")
   case object ServerError             extends AuditEventType("ServerError")
