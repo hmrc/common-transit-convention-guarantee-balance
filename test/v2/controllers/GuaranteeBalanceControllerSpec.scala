@@ -28,6 +28,7 @@ import metrics.FakeMetrics
 import models.request.AuthenticatedRequest
 import models.values.InternalId
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyDouble
 import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.mockito.MockitoSugar
 import org.scalacheck.Arbitrary.arbitrary
@@ -112,8 +113,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       val mockAuditService = mock[AuditService]
       when(
         mockAuditService.balanceRequestSucceeded(
-          eqTo(AuditInfo(BalanceRequest(AccessCode(grn.value)), GuaranteeReferenceNumber(grn.value), InternalId(internalId.value))),
-          eqTo(Balance(3.14))
+          eqTo(AuditInfo(BalanceRequest(AccessCode("1")), GuaranteeReferenceNumber(grn.value), InternalId(internalId.value))),
+          Balance(eqTo[Double](3.14))
         )(any())
       ).thenReturn(IO(()))
 
@@ -133,7 +134,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       whenReady(HateoasResponse(grn, InternalBalanceResponse(Balance(3.14))).unsafeToFuture()) {
         r => contentAsJson(result) shouldBe r
       }
-      verify(mockAuditService, times(1)).balanceRequestSucceeded(any(), any())(any())
+      verify(mockAuditService, times(1)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any())
   }
 
   it should "return OK with a result if everything is okay but we have additional junk in the JSON payload" in forAll(
@@ -169,8 +170,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       val mockAuditService = mock[AuditService]
       when(
         mockAuditService.balanceRequestSucceeded(
-          eqTo(AuditInfo(BalanceRequest(AccessCode("2")), GuaranteeReferenceNumber(grn.value), InternalId(internalId.value))),
-          (Balance(123.45))
+          eqTo(AuditInfo(BalanceRequest(AccessCode("1")), GuaranteeReferenceNumber(grn.value), InternalId(internalId.value))),
+          Balance(eqTo[Double](3.14))
         )(any())
       ).thenReturn(IO(()))
 
@@ -190,7 +191,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       whenReady(HateoasResponse(grn, InternalBalanceResponse(Balance(3.14))).unsafeToFuture()) {
         r => contentAsJson(result) shouldBe r
       }
-      verify(mockAuditService, times(1)).balanceRequestSucceeded(any(), any())(any())
+      verify(mockAuditService, times(1)).balanceRequestSucceeded(any(), Balance(any()))(any())
   }
 
   it should "return not acceptable if the accept header is wrong" in forAll(
@@ -228,8 +229,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       val mockAuditService = mock[AuditService]
       when(
         mockAuditService.balanceRequestSucceeded(
-          eqTo(AuditInfo(BalanceRequest(AccessCode("2")), GuaranteeReferenceNumber(grn.value), InternalId(internalId.value))),
-          eqTo(Balance(123.45))
+          eqTo(AuditInfo(BalanceRequest(AccessCode("1")), GuaranteeReferenceNumber(grn.value), InternalId(internalId.value))),
+          Balance(eqTo(123.45))
         )(any())
       ).thenReturn(IO(()))
 
@@ -250,7 +251,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "code"    -> "NOT_ACCEPTABLE",
         "message" -> "The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."
       )
-      verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), any())(any())
+      verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any())
   }
 
   it should "return Too Many Requests if rate limiting is in effect" in forAll(
