@@ -345,7 +345,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
       val mockAuditService = mock[AuditService]
       when(
-        mockAuditService.balanceRequestFailed(eqTo(request), GuaranteeReferenceNumber(eqTo(grn.value)))(any())
+        mockAuditService.invalidPayloadBalanceRequest(eqTo(request), GuaranteeReferenceNumber(eqTo(grn.value)))(any())
       ).thenReturn(IO(()))
 
       val sut = new GuaranteeBalanceController(

@@ -52,7 +52,7 @@ trait AuditService {
     hc: HeaderCarrier
   ): IO[Unit]
 
-  def balanceRequestFailed(request: AuthenticatedRequest[JsValue], grn: GuaranteeReferenceNumber)(implicit hc: HeaderCarrier): IO[Unit]
+  def invalidPayloadBalanceRequest(request: AuthenticatedRequest[JsValue], grn: GuaranteeReferenceNumber)(implicit hc: HeaderCarrier): IO[Unit]
 }
 
 @Singleton
@@ -127,7 +127,7 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
       }
   }
 
-  override def balanceRequestFailed(request: AuthenticatedRequest[JsValue], grn: GuaranteeReferenceNumber)(implicit hc: HeaderCarrier): IO[Unit] =
+  override def invalidPayloadBalanceRequest(request: AuthenticatedRequest[JsValue], grn: GuaranteeReferenceNumber)(implicit hc: HeaderCarrier): IO[Unit] =
     IO.executionContext.flatMap {
       implicit ec =>
         IO {

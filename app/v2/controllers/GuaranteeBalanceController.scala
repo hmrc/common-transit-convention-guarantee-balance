@@ -84,7 +84,7 @@ class GuaranteeBalanceController @Inject() (
   private def requestFailed(request: AuthenticatedRequest[JsValue], guaranteeReferenceNumber: GuaranteeReferenceNumber, presentationError: PresentationError)(
     implicit hc: HeaderCarrier
   ): Result = {
-    auditService.balanceRequestFailed(request, guaranteeReferenceNumber)
+    auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber)
     Status(presentationError.code.statusCode)(Json.toJson(presentationError))
   }
 
