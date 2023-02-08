@@ -45,6 +45,8 @@ import v2.services.RequestLockingService
 import v2.services.RouterService
 import v2.services.ValidationService
 
+import scala.concurrent.ExecutionContext
+
 class GuaranteeBalanceController @Inject() (
   authenticate: AuthActionProvider,
   lockService: RequestLockingService,
@@ -54,7 +56,8 @@ class GuaranteeBalanceController @Inject() (
   cc: ControllerComponents,
   val runtime: IORuntime,
   val metrics: Metrics
-) extends BackendController(cc)
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc)
     with IOActions
     with IOMetrics
     with Logging

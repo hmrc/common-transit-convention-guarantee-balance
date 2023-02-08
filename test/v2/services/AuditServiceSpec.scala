@@ -17,7 +17,6 @@
 package v2.services
 
 import cats.data.NonEmptyList
-import cats.effect.unsafe.implicits.global
 import models.values.InternalId
 import org.mockito.scalatest.AsyncIdiomaticMockito
 import org.scalatest.BeforeAndAfterEach
@@ -63,18 +62,16 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
 
     auditService
       .balanceRequestSucceeded(auditInfo, balance)
-      .map {
-        _ =>
-          auditConnector.sendExplicitAudit[BalanceRequestSucceededEvent](
-            "BalanceRequestSucceeded",
-            balanceRequestSucceeded
-          )(
-            any[HeaderCarrier],
-            any[ExecutionContext],
-            any[Writes[BalanceRequestSucceededEvent]]
-          ) wasCalled once
-      }
-      .unsafeToFuture()
+
+    auditConnector.sendExplicitAudit[BalanceRequestSucceededEvent](
+      "BalanceRequestSucceeded",
+      balanceRequestSucceeded
+    )(
+      any[HeaderCarrier],
+      any[ExecutionContext],
+      any[Writes[BalanceRequestSucceededEvent]]
+    ) wasCalled once
+
   }
 
   "AuditService.balanceRequestFailed with guarantee reference number not found " should "audit a failed balance request" in {
@@ -88,18 +85,16 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
 
     auditService
       .balanceRequestFailed(RoutingError.GuaranteeReferenceNotFound)
-      .map {
-        _ =>
-          auditConnector.sendExplicitAudit[GRNNotFoundEvent](
-            "GRNNotFound",
-            balanceRequestFailed
-          )(
-            any[HeaderCarrier],
-            any[ExecutionContext],
-            any[Writes[GRNNotFoundEvent]]
-          ) wasCalled once
-      }
-      .unsafeToFuture()
+
+    auditConnector.sendExplicitAudit[GRNNotFoundEvent](
+      "GRNNotFound",
+      balanceRequestFailed
+    )(
+      any[HeaderCarrier],
+      any[ExecutionContext],
+      any[Writes[GRNNotFoundEvent]]
+    ) wasCalled once
+
   }
 
   "AuditService.balanceRequestFailed with rate limit exceeded " should "audit a failed balance request" in {
@@ -113,18 +108,16 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
 
     auditService
       .balanceRequestFailed(RequestLockingError.AlreadyLocked)
-      .map {
-        _ =>
-          auditConnector.sendExplicitAudit[RateLimitedEvent](
-            "RateLimited",
-            balanceRequestFailed
-          )(
-            any[HeaderCarrier],
-            any[ExecutionContext],
-            any[Writes[RateLimitedEvent]]
-          ) wasCalled once
-      }
-      .unsafeToFuture()
+
+    auditConnector.sendExplicitAudit[RateLimitedEvent](
+      "RateLimited",
+      balanceRequestFailed
+    )(
+      any[HeaderCarrier],
+      any[ExecutionContext],
+      any[Writes[RateLimitedEvent]]
+    ) wasCalled once
+
   }
 
   "AuditService.balanceRequestFailed with routing invalid access code" should "audit a failed balance request" in {
@@ -138,18 +131,16 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
 
     auditService
       .balanceRequestFailed(RoutingError.InvalidAccessCode)
-      .map {
-        _ =>
-          auditConnector.sendExplicitAudit[AccessCodeNotValidEvent](
-            "AccessCodeNotValid",
-            balanceRequestFailed
-          )(
-            any[HeaderCarrier],
-            any[ExecutionContext],
-            any[Writes[AccessCodeNotValidEvent]]
-          ) wasCalled once
-      }
-      .unsafeToFuture()
+
+    auditConnector.sendExplicitAudit[AccessCodeNotValidEvent](
+      "AccessCodeNotValid",
+      balanceRequestFailed
+    )(
+      any[HeaderCarrier],
+      any[ExecutionContext],
+      any[Writes[AccessCodeNotValidEvent]]
+    ) wasCalled once
+
   }
 
   "AuditService.balanceRequestFailed with routing unexpected error" should "audit a failed balance request" in {
@@ -163,18 +154,15 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
 
     auditService
       .balanceRequestFailed(RoutingError.Unexpected(Some(new Exception("unexpected routing error"))))
-      .map {
-        _ =>
-          auditConnector.sendExplicitAudit[ServerErrorEvent](
-            "ServerError",
-            balanceRequestFailed
-          )(
-            any[HeaderCarrier],
-            any[ExecutionContext],
-            any[Writes[ServerErrorEvent]]
-          ) wasCalled once
-      }
-      .unsafeToFuture()
+
+    auditConnector.sendExplicitAudit[ServerErrorEvent](
+      "ServerError",
+      balanceRequestFailed
+    )(
+      any[HeaderCarrier],
+      any[ExecutionContext],
+      any[Writes[ServerErrorEvent]]
+    ) wasCalled once
   }
 
   "AuditService.balanceRequestFailed with ValidationError" should "audit a failed balance request" in {
@@ -188,18 +176,16 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
 
     auditService
       .balanceRequestFailed((NonEmptyList.one(ValidationError.InvalidAccessCodeLength(accessCode))))
-      .map {
-        _ =>
-          auditConnector.sendExplicitAudit[AccessCodeNotValidEvent](
-            "AccessCodeNotValid",
-            balanceRequestFailed
-          )(
-            any[HeaderCarrier],
-            any[ExecutionContext],
-            any[Writes[AccessCodeNotValidEvent]]
-          ) wasCalled once
-      }
-      .unsafeToFuture()
+
+    auditConnector.sendExplicitAudit[AccessCodeNotValidEvent](
+      "AccessCodeNotValid",
+      balanceRequestFailed
+    )(
+      any[HeaderCarrier],
+      any[ExecutionContext],
+      any[Writes[AccessCodeNotValidEvent]]
+    ) wasCalled once
+
   }
 
 }

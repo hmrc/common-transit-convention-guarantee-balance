@@ -42,6 +42,8 @@ import v2.models.errors.RoutingError
 import v2.models.errors.ValidationError
 import v2.services.AuditService
 
+import scala.concurrent.ExecutionContext
+
 class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks with BeforeAndAfterEach {
 
   object Harness extends ErrorTranslator
@@ -49,12 +51,13 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
   import Harness._
 
   implicit val hc = HeaderCarrier()
+  implicit val ec = ExecutionContext.global
 
   val auditInfo = AuditInfo(BalanceRequest(AccessCode("1")), GuaranteeReferenceNumber("grn1"), InternalId("12345"))
 
   val mockAuditService = mock[AuditService]
   when(
-    mockAuditService.balanceRequestFailed((RequestLockingError.AlreadyLocked))(auditInfo, hc)
+    mockAuditService.balanceRequestFailed((RequestLockingError.AlreadyLocked))(auditInfo, hc, ec)
   ).thenReturn(IO(()))
 
   override protected def beforeEach(): Unit = reset(mockAuditService)
@@ -65,7 +68,7 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
     whenReady(input.asPresentation(auditInfo, mockAuditService).value.unsafeToFuture()) {
       _ shouldBe Right(())
     }
-    verify(mockAuditService, times(0)).balanceRequestFailed(any())(any(), any())
+    verify(mockAuditService, times(0)).balanceRequestFailed(any())(any(), any(), any())
   }
 
   it should "for an error returns a left with the appropriate presentation error" in {
@@ -76,7 +79,7 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
       _ shouldBe Left(InternalServiceError(cause = Some(error)))
 
     }
-    verify(mockAuditService, times(1)).balanceRequestFailed(eqTo(RequestLockingError.Unexpected(Some(error))))(eqTo(auditInfo), eqTo(hc))
+    verify(mockAuditService, times(1)).balanceRequestFailed(eqTo(RequestLockingError.Unexpected(Some(error))))(eqTo(auditInfo), eqTo(hc), eqTo(ec))
   }
 
   "ValidationError" should "return a bad request when any error is provided" in forAll(

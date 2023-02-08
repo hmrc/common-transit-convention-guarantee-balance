@@ -17,7 +17,6 @@
 package v2.services
 
 import cats.data.NonEmptyList
-import cats.effect.IO
 import com.google.inject.ImplementedBy
 import models.request.AuthenticatedRequest
 import play.api.libs.json.JsValue
@@ -39,109 +38,99 @@ import v2.models.errors.RoutingError
 import v2.models.errors.ValidationError
 
 import javax.inject._
+import scala.concurrent.ExecutionContext
 
 @ImplementedBy(classOf[AuditServiceImpl])
 trait AuditService {
 
   def balanceRequestSucceeded(auditInfo: AuditInfo, balance: Balance)(implicit
-    hc: HeaderCarrier
-  ): IO[Unit]
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Unit
 
   def balanceRequestFailed[E](error: E)(implicit
     auditInfo: AuditInfo,
-    hc: HeaderCarrier
-  ): IO[Unit]
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Unit
 
-  def invalidPayloadBalanceRequest(request: AuthenticatedRequest[JsValue], grn: GuaranteeReferenceNumber)(implicit hc: HeaderCarrier): IO[Unit]
+  def invalidPayloadBalanceRequest(request: AuthenticatedRequest[JsValue], grn: GuaranteeReferenceNumber)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Unit
 }
 
 @Singleton
 class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditService with IOFutures {
 
   override def balanceRequestSucceeded(auditInfo: AuditInfo, balance: Balance)(implicit
-    hc: HeaderCarrier
-  ): IO[Unit] = IO.executionContext.flatMap {
-    implicit ec =>
-      IO {
-        connector.sendExplicitAudit[BalanceRequestSucceededEvent](
-          AuditEventType.BalanceRequestSucceeded.name,
-          BalanceRequestSucceededEvent(
-            auditInfo.internalId,
-            auditInfo.guaranteeReferenceNumber,
-            auditInfo.balanceRequest.accessCode,
-            balance
-          )
-        )
-      }
-  }
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Unit =
+    connector.sendExplicitAudit[BalanceRequestSucceededEvent](
+      AuditEventType.BalanceRequestSucceeded.name,
+      BalanceRequestSucceededEvent(
+        auditInfo.internalId,
+        auditInfo.guaranteeReferenceNumber,
+        auditInfo.balanceRequest.accessCode,
+        balance
+      )
+    )
 
   private def grnNotFound()(implicit
+    auditInfo: AuditInfo,
     hc: HeaderCarrier,
-    auditInfo: AuditInfo
-  ): IO[Unit] = IO.executionContext.flatMap {
-    implicit ec =>
-      IO {
-        connector.sendExplicitAudit[GRNNotFoundEvent](
-          AuditEventType.GRNNotFound.name,
-          GRNNotFoundEvent.toEvent
-        )
-      }
-  }
+    ec: ExecutionContext
+  ): Unit =
+    connector.sendExplicitAudit[GRNNotFoundEvent](
+      AuditEventType.GRNNotFound.name,
+      GRNNotFoundEvent.toEvent
+    )
 
   private def rateLimitExceeded()(implicit
+    auditInfo: AuditInfo,
     hc: HeaderCarrier,
-    auditInfo: AuditInfo
-  ): IO[Unit] = IO.executionContext.flatMap {
-    implicit ec =>
-      IO {
-        connector.sendExplicitAudit[RateLimitedEvent](
-          AuditEventType.RateLimited.name,
-          RateLimitedEvent.toEvent
-        )
-      }
-  }
+    ec: ExecutionContext
+  ): Unit =
+    connector.sendExplicitAudit[RateLimitedEvent](
+      AuditEventType.RateLimited.name,
+      RateLimitedEvent.toEvent
+    )
 
   private def invalidAccessCode()(implicit
+    auditInfo: AuditInfo,
     hc: HeaderCarrier,
-    auditInfo: AuditInfo
-  ): IO[Unit] = IO.executionContext.flatMap {
-    implicit ec =>
-      IO {
-        connector.sendExplicitAudit[AccessCodeNotValidEvent](
-          AuditEventType.AccessCodeNotValid.name,
-          AccessCodeNotValidEvent.toEvent
-        )
-      }
-  }
+    ec: ExecutionContext
+  ): Unit =
+    connector.sendExplicitAudit[AccessCodeNotValidEvent](
+      AuditEventType.AccessCodeNotValid.name,
+      AccessCodeNotValidEvent.toEvent
+    )
 
   private def serverError()(implicit
+    auditInfo: AuditInfo,
     hc: HeaderCarrier,
-    auditInfo: AuditInfo
-  ): IO[Unit] = IO.executionContext.flatMap {
-    implicit ec =>
-      IO {
-        connector.sendExplicitAudit[ServerErrorEvent](
-          AuditEventType.ServerError.name,
-          ServerErrorEvent.toEvent
-        )
-      }
-  }
+    ec: ExecutionContext
+  ): Unit =
+    connector.sendExplicitAudit[ServerErrorEvent](
+      AuditEventType.ServerError.name,
+      ServerErrorEvent.toEvent
+    )
 
-  override def invalidPayloadBalanceRequest(request: AuthenticatedRequest[JsValue], grn: GuaranteeReferenceNumber)(implicit hc: HeaderCarrier): IO[Unit] =
-    IO.executionContext.flatMap {
-      implicit ec =>
-        IO {
-          connector.sendExplicitAudit[InvalidPayloadEvent](
-            AuditEventType.InvalidPayload.name,
-            InvalidPayloadEvent(request.internalId, grn, request.body)
-          )
-        }
-    }
+  override def invalidPayloadBalanceRequest(request: AuthenticatedRequest[JsValue], grn: GuaranteeReferenceNumber)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Unit =
+    connector.sendExplicitAudit[InvalidPayloadEvent](
+      AuditEventType.InvalidPayload.name,
+      InvalidPayloadEvent(request.internalId, grn, request.body)
+    )
 
   override def balanceRequestFailed[E](originalError: E)(implicit
     auditInfo: AuditInfo,
-    hc: HeaderCarrier
-  ): IO[Unit] = originalError match {
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Unit = originalError match {
     case RoutingError.InvalidAccessCode                                 => invalidAccessCode()
     case RoutingError.GuaranteeReferenceNotFound                        => grnNotFound()
     case RoutingError.Unexpected(_) | RequestLockingError.Unexpected(_) => serverError()

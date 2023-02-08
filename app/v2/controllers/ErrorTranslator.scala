@@ -24,13 +24,16 @@ import v2.models.AuditInfo
 import v2.models.errors._
 import v2.services.AuditService
 
+import scala.concurrent.ExecutionContext
+
 trait ErrorTranslator {
 
   implicit class ErrorConverter[E, A](value: EitherT[IO, E, A]) {
 
     def asPresentation(auditInfo: AuditInfo, auditService: AuditService)(implicit
       c: Converter[E],
-      headerCarrier: HeaderCarrier
+      headerCarrier: HeaderCarrier,
+      ec: ExecutionContext
     ): EitherT[IO, PresentationError, A] = {
       implicit val info = auditInfo
       value.leftMap {
