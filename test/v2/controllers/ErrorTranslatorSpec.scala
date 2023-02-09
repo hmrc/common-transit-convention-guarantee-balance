@@ -56,9 +56,6 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
   val auditInfo = AuditInfo(BalanceRequest(AccessCode("1")), GuaranteeReferenceNumber("grn1"), InternalId("12345"))
 
   val mockAuditService = mock[AuditService]
-  when(
-    mockAuditService.balanceRequestFailed((RequestLockingError.AlreadyLocked))(auditInfo, hc, ec)
-  ).thenReturn(IO(()))
 
   override protected def beforeEach(): Unit = reset(mockAuditService)
 
