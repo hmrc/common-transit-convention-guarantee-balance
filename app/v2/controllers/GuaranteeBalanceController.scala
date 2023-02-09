@@ -84,10 +84,17 @@ class GuaranteeBalanceController @Inject() (
         )
     }
 
+  private lazy val accessCodeErrorMsg   = "The access code was not supplied."
+  private lazy val acceptHeaderErrorMsg = "The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."
+
   private def requestFailed(request: AuthenticatedRequest[JsValue], guaranteeReferenceNumber: GuaranteeReferenceNumber, presentationError: PresentationError)(
     implicit hc: HeaderCarrier
   ): Result = {
-    auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber)
+    presentationError.message match {
+      case `accessCodeErrorMsg` | `acceptHeaderErrorMsg` =>
+        auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber)
+      case _ => // don't send second audit event - already sent during presentation error determination.
+    }
     Status(presentationError.code.statusCode)(Json.toJson(presentationError))
   }
 
@@ -96,7 +103,7 @@ class GuaranteeBalanceController @Inject() (
       IO {
         json.validate[BalanceRequest].asEither match {
           case Right(x) => Right(x)
-          case Left(_)  => Left(PresentationError.badRequestError("The access code was not supplied."))
+          case Left(_)  => Left(PresentationError.badRequestError(accessCodeErrorMsg))
         }
       }
     }
@@ -107,7 +114,7 @@ class GuaranteeBalanceController @Inject() (
         request.headers.get(ACCEPT) match {
           case Some(AcceptHeaderRegex(_)) => Right(())
           case _ =>
-            Left(PresentationError.notAcceptableError("The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."))
+            Left(PresentationError.notAcceptableError(acceptHeaderErrorMsg))
         }
       }
     }
