@@ -31,8 +31,6 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.ControllerComponents
-import play.api.mvc.Request
-import play.api.mvc.Result
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import v2.models.AuditInfo
@@ -70,8 +68,8 @@ class GuaranteeBalanceController @Inject() (
     authenticate().io(parse.json) {
       implicit request =>
         (for {
-          _      <- validateAcceptHeader
-          parsed <- parseJson(request.body)
+          _      <- validateAcceptHeader(grn)
+          parsed <- parseJson(request, grn)
           auditInfo = AuditInfo(parsed, grn, request.internalId)
           _                <- lockService.lock(grn, request.internalId).asPresentation(auditInfo, auditService)
           _                <- validationService.validate(parsed).asPresentation(auditInfo, auditService)
@@ -79,42 +77,36 @@ class GuaranteeBalanceController @Inject() (
           hateoas          <- EitherT.right[PresentationError](HateoasResponse(grn, internalResponse))
           _ = auditService.balanceRequestSucceeded(auditInfo, internalResponse.balance)
         } yield hateoas).fold(
-          presentationError => requestFailed(request, grn, presentationError),
+          presentationError => Status(presentationError.code.statusCode)(Json.toJson(presentationError)),
           result => Ok(result)
         )
     }
 
-  private lazy val accessCodeErrorMsg   = "The access code was not supplied."
-  private lazy val acceptHeaderErrorMsg = "The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."
-
-  private def requestFailed(request: AuthenticatedRequest[JsValue], guaranteeReferenceNumber: GuaranteeReferenceNumber, presentationError: PresentationError)(
-    implicit hc: HeaderCarrier
-  ): Result = {
-    presentationError.message match {
-      case `accessCodeErrorMsg` | `acceptHeaderErrorMsg` =>
-        auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber)
-      case _ => // don't send second audit event - already sent during presentation error determination.
-    }
-    Status(presentationError.code.statusCode)(Json.toJson(presentationError))
-  }
-
-  private def parseJson(json: JsValue): EitherT[IO, PresentationError, BalanceRequest] =
+  private def parseJson(request: AuthenticatedRequest[JsValue], guaranteeReferenceNumber: GuaranteeReferenceNumber)(implicit
+    hc: HeaderCarrier
+  ): EitherT[IO, PresentationError, BalanceRequest] =
     EitherT {
       IO {
-        json.validate[BalanceRequest].asEither match {
+        request.body.validate[BalanceRequest].asEither match {
           case Right(x) => Right(x)
-          case Left(_)  => Left(PresentationError.badRequestError(accessCodeErrorMsg))
+          case Left(_) =>
+            auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber);
+            Left(PresentationError.badRequestError("The access code was not supplied."))
         }
       }
     }
 
-  private def validateAcceptHeader(implicit request: Request[_]): EitherT[IO, PresentationError, Unit] =
+  private def validateAcceptHeader(guaranteeReferenceNumber: GuaranteeReferenceNumber)(implicit
+    request: AuthenticatedRequest[JsValue],
+    hc: HeaderCarrier
+  ): EitherT[IO, PresentationError, Unit] =
     EitherT {
       IO {
         request.headers.get(ACCEPT) match {
           case Some(AcceptHeaderRegex(_)) => Right(())
           case _ =>
-            Left(PresentationError.notAcceptableError(acceptHeaderErrorMsg))
+            auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber);
+            Left(PresentationError.notAcceptableError("The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."))
         }
       }
     }
