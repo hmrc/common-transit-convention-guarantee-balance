@@ -26,29 +26,36 @@ import controllers.actions.AuthActionProvider
 import controllers.actions.IOActions
 import logging.Logging
 import metrics.IOMetrics
+import models.request.AuthenticatedRequest
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.ControllerComponents
-import play.api.mvc.Request
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import v2.models.AuditInfo
 import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.HateoasResponse
 import v2.models.errors.PresentationError
+import v2.services.AuditService
 import v2.services.RequestLockingService
 import v2.services.RouterService
 import v2.services.ValidationService
+
+import scala.concurrent.ExecutionContext
 
 class GuaranteeBalanceController @Inject() (
   authenticate: AuthActionProvider,
   lockService: RequestLockingService,
   validationService: ValidationService,
   routerService: RouterService,
+  auditService: AuditService,
   cc: ControllerComponents,
   val runtime: IORuntime,
   val metrics: Metrics
-) extends BackendController(cc)
+)(implicit ec: ExecutionContext)
+    extends BackendController(cc)
     with IOActions
     with IOMetrics
     with Logging
@@ -61,34 +68,44 @@ class GuaranteeBalanceController @Inject() (
     authenticate().io(parse.json) {
       implicit request =>
         (for {
-          _                <- validateAcceptHeader
-          _                <- lockService.lock(grn, request.internalId).asPresentation
-          parsed           <- parseJson(request.body)
-          _                <- validationService.validate(parsed).asPresentation
-          internalResponse <- routerService.request(grn, parsed).asPresentation
+          _      <- validateAcceptHeader(grn)
+          parsed <- parseJson(request, grn)
+          auditInfo = AuditInfo(parsed, grn, request.internalId)
+          _                <- lockService.lock(grn, request.internalId).asPresentation(auditInfo, auditService)
+          _                <- validationService.validate(parsed).asPresentation(auditInfo, auditService)
+          internalResponse <- routerService.request(grn, parsed).asPresentation(auditInfo, auditService)
           hateoas          <- EitherT.right[PresentationError](HateoasResponse(grn, internalResponse))
+          _ = auditService.balanceRequestSucceeded(auditInfo, internalResponse.balance)
         } yield hateoas).fold(
           presentationError => Status(presentationError.code.statusCode)(Json.toJson(presentationError)),
           result => Ok(result)
         )
     }
 
-  private def parseJson(json: JsValue): EitherT[IO, PresentationError, BalanceRequest] =
+  private def parseJson(request: AuthenticatedRequest[JsValue], guaranteeReferenceNumber: GuaranteeReferenceNumber)(implicit
+    hc: HeaderCarrier
+  ): EitherT[IO, PresentationError, BalanceRequest] =
     EitherT {
       IO {
-        json.validate[BalanceRequest].asEither match {
+        request.body.validate[BalanceRequest].asEither match {
           case Right(x) => Right(x)
-          case Left(_)  => Left(PresentationError.badRequestError("The access code was not supplied."))
+          case Left(_) =>
+            auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber);
+            Left(PresentationError.badRequestError("The access code was not supplied."))
         }
       }
     }
 
-  private def validateAcceptHeader(implicit request: Request[_]): EitherT[IO, PresentationError, Unit] =
+  private def validateAcceptHeader(guaranteeReferenceNumber: GuaranteeReferenceNumber)(implicit
+    request: AuthenticatedRequest[JsValue],
+    hc: HeaderCarrier
+  ): EitherT[IO, PresentationError, Unit] =
     EitherT {
       IO {
         request.headers.get(ACCEPT) match {
           case Some(AcceptHeaderRegex(_)) => Right(())
           case _ =>
+            auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber);
             Left(PresentationError.notAcceptableError("The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."))
         }
       }

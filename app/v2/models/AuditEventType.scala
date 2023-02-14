@@ -16,10 +16,13 @@
 
 package v2.models
 
-import play.api.libs.json.Json
+sealed abstract class AuditEventType(val name: String) extends Product with Serializable
 
-case class GuaranteeReferenceNumber(value: String) extends AnyVal
-
-object GuaranteeReferenceNumber {
-  implicit val guaranteeReferenceNumberFormat = Json.valueFormat[GuaranteeReferenceNumber]
+object AuditEventType {
+  case object RateLimited             extends AuditEventType("RateLimited")
+  case object InvalidPayload          extends AuditEventType("InvalidPayload")
+  case object GRNNotFound             extends AuditEventType("GRNNotFound")
+  case object AccessCodeNotValid      extends AuditEventType("AccessCodeNotValid")
+  case object ServerError             extends AuditEventType("ServerError")
+  case object BalanceRequestSucceeded extends AuditEventType("BalanceRequestSucceeded")
 }

@@ -392,7 +392,7 @@ class GuaranteeBalanceControllerIntegrationSpec
           )
         ),
         Json.obj(
-          "a" -> "A" // we're happy for it to fail with invalid Json, that'll be enough to trigger the lock.
+          "accessCode" -> "ABCD"
         )
       ),
       internalId

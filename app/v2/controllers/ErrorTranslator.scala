@@ -19,14 +19,29 @@ package v2.controllers
 import cats.data.EitherT
 import cats.data.NonEmptyList
 import cats.effect.IO
+import uk.gov.hmrc.http.HeaderCarrier
+import v2.models.AuditInfo
 import v2.models.errors._
+import v2.services.AuditService
+
+import scala.concurrent.ExecutionContext
 
 trait ErrorTranslator {
 
   implicit class ErrorConverter[E, A](value: EitherT[IO, E, A]) {
 
-    def asPresentation(implicit c: Converter[E]): EitherT[IO, PresentationError, A] =
-      value.leftMap(c.convert)
+    def asPresentation(auditInfo: AuditInfo, auditService: AuditService)(implicit
+      c: Converter[E],
+      headerCarrier: HeaderCarrier,
+      ec: ExecutionContext
+    ): EitherT[IO, PresentationError, A] = {
+      implicit val info = auditInfo
+      value.leftMap {
+        error =>
+          auditService.balanceRequestFailed(error)
+          c.convert(error)
+      }
+    }
   }
 
   trait Converter[E] {
