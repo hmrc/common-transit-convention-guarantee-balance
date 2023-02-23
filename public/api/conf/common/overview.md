@@ -1,18 +1,13 @@
-This CTC Guarantee Balance API will allow you to provide your users with up to date information from HMRC about their Guarantee Balance or balances. This helps your users plan ahead when organising goods transit movements into or out of the UK by telling your users how much of their Guarantee Balance they have left to use.
+Use the CTC Guarantee Balance API to provide traders with up-to-date information about how much of their guarantee funds they have left to use when organising transit movements.
 
-This CTC Guarantee Balance API works alongside the [CTC Traders API](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/service/common-transit-convention-traders/1.0) which allows your software to send departure and arrival movement notifications to the New Computerised Transit System (NCTS).
+The API endpoints relate only to Great Britain and Northern Ireland.
 
-You must note:
+You can also use the HMRC sandbox environment to run tests for Great Britain and Northern Ireland transit movements.
 
-The Guarantee Balance API does not provide real time data on your users balance. It is possible that even a very short delay could coincide with events that could change their balance information. The balance responses could become out of date quickly if your users have a lot of transit movements progressing at the same time.
+**Version 1.0 of the API supports only NCTS phase 4. Version 2.0 of the API supports only NCTS phase 5.**
 
-We have released the Guarantee Balance API to HMRC's sandbox environment. You can now run tests once you have finished your software development.
+For a detailed overview of v1.0 of the API, see [CTC Guarantee Balance API phase 4 service guide](/guides/ctc-guarantee-balance-service-guide/). For a detailed overview of v2.0 of the API, see [CTC Guarantee Balance API phase 5 service guide](/guides/ctc-guarantee-balance-phase5-service-guide/).
 
-You should read:
+### Changelog
 
-* CTC Guarantee Balance Service Guide for how to integrate with this API
-* Step by step Guide to Testing to learn how to test your software and ensure it is compatible with our CTC Guarantee Balance API
-
-Further details about the User Restricted Authentication are given on the [Authorisation](https://developer.service.hmrc.gov.uk/api-documentation/docs/authorisation) page.
-
-For more information about how to develop your own client applications, including example clients for this API, see [Tutorials](https://developer.service.hmrc.gov.uk/api-documentation/docs/tutorials).
+You can find the changelog for v2.0 of the API in the [common-transit-convention-guarantee-balance](https://github.com/hmrc/common-transit-convention-guarantee-balance/wiki/CTC-Guarantee-Balance-API-v2.0-changelog) GitHub wiki.
