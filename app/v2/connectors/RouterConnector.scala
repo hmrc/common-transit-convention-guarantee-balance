@@ -73,8 +73,9 @@ class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpCli
                 .post(url"$url")
                 .withBody(Json.toJson(balanceRequest))
                 .setHeader(
-                  HeaderNames.ACCEPT       -> ContentTypes.JSON,
-                  HeaderNames.CONTENT_TYPE -> ContentTypes.JSON
+                  HeaderNames.ACCEPT        -> ContentTypes.JSON,
+                  HeaderNames.CONTENT_TYPE  -> ContentTypes.JSON,
+                  HeaderNames.AUTHORIZATION -> appConfig.internalAuthToken
                 )
                 .execute[InternalBalanceResponse]
                 .map(

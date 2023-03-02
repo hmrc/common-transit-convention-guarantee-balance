@@ -62,4 +62,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val routerCircuitBreakerConfig: CircuitBreakerConfig =
     CircuitBreakerConfig.fromServicesConfig("ctc-guarantee-balance-router", config)
+
+  lazy val internalAuthToken: String = config.get[String]("internal-auth.token")
 }
