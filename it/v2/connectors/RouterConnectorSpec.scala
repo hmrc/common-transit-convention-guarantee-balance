@@ -58,8 +58,14 @@ class RouterConnectorSpec
     with WireMockSpec
     with Generators {
 
+  lazy val dummytoken = Gen.stringOfN(20, Gen.alphaNumChar).sample.get
+
   override def portConfigKeys: Seq[String] = Seq(
     "microservice.services.ctc-guarantee-balance-router.port"
+  )
+
+  override def configuration: Seq[(String, Any)] = Seq(
+    "internal-auth.token" -> dummytoken
   )
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -72,6 +78,7 @@ class RouterConnectorSpec
       post(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withHeader(HeaderNames.AUTHORIZATION, equalTo(dummytoken))
         .withRequestBody(equalToJson(Json.stringify(Json.toJson(balanceRequest))))
         .willReturn(
           aResponse()
@@ -100,6 +107,7 @@ class RouterConnectorSpec
       post(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withHeader(HeaderNames.AUTHORIZATION, equalTo(dummytoken))
         .withRequestBody(equalToJson(Json.stringify(Json.toJson(balanceRequest))))
         .willReturn(
           aResponse()

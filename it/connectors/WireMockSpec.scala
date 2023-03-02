@@ -36,6 +36,8 @@ trait WireMockSpec extends BeforeAndAfterEach with BeforeAndAfterAll with GuiceF
 
   protected def portConfigKeys: Seq[String]
 
+  protected def configuration: Seq[(String, Any)] = Seq()
+
   override lazy val fakeApplication: Application =
     new GuiceApplicationBuilder()
       .configure(
@@ -47,6 +49,7 @@ trait WireMockSpec extends BeforeAndAfterEach with BeforeAndAfterAll with GuiceF
             key -> wireMockServer.port.toString()
         }: _*
       )
+      .configure(configuration: _*)
       .overrides(bindings: _*)
       .build()
 
