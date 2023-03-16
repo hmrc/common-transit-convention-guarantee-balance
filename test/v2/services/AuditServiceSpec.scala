@@ -26,15 +26,13 @@ import play.api.libs.json.Writes
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import v2.models.AccessCode
-import v2.models.AccessCodeNotValidEvent
+import v2.models.RateLimitedRequestEvent
 import v2.models.AuditInfo
 import v2.models.Balance
 import v2.models.BalanceRequest
-import v2.models.BalanceRequestSucceededEvent
-import v2.models.GRNNotFoundEvent
+import v2.models.ErrorResponseEvent
+import v2.models.RequestSentEvent
 import v2.models.GuaranteeReferenceNumber
-import v2.models.RateLimitedEvent
-import v2.models.ServerErrorEvent
 import v2.models.errors.RequestLockingError
 import v2.models.errors.RoutingError
 import v2.models.errors.ValidationError
@@ -58,18 +56,18 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
 
   "AuditService.balanceRequestSucceeded" should "audit a successful request" in {
 
-    val balanceRequestSucceeded = BalanceRequestSucceededEvent(internalId, guaranteeReference, accessCode, balance)
+    val balanceRequestSucceeded = RequestSentEvent(internalId, guaranteeReference, accessCode, balance)
 
     auditService
       .balanceRequestSucceeded(auditInfo, balance)
 
-    auditConnector.sendExplicitAudit[BalanceRequestSucceededEvent](
-      "BalanceRequestSucceeded",
+    auditConnector.sendExplicitAudit[RequestSentEvent](
+      "RequestSent",
       balanceRequestSucceeded
     )(
       any[HeaderCarrier],
       any[ExecutionContext],
-      any[Writes[BalanceRequestSucceededEvent]]
+      any[Writes[RequestSentEvent]]
     ) wasCalled once
 
   }
@@ -77,22 +75,23 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
   "AuditService.balanceRequestFailed with guarantee reference number not found " should "audit a failed balance request" in {
 
     val balanceRequestFailed =
-      GRNNotFoundEvent(
+      ErrorResponseEvent(
         auditInfo.internalId,
         auditInfo.guaranteeReferenceNumber,
-        auditInfo.balanceRequest.accessCode
+        auditInfo.balanceRequest.accessCode,
+        "Guarantee Reference Number NotFound"
       )
 
     auditService
       .balanceRequestFailed(RoutingError.GuaranteeReferenceNotFound)
 
-    auditConnector.sendExplicitAudit[GRNNotFoundEvent](
-      "GRNNotFound",
+    auditConnector.sendExplicitAudit[ErrorResponseEvent](
+      "ErrorResponse",
       balanceRequestFailed
     )(
       any[HeaderCarrier],
       any[ExecutionContext],
-      any[Writes[GRNNotFoundEvent]]
+      any[Writes[ErrorResponseEvent]]
     ) wasCalled once
 
   }
@@ -100,7 +99,7 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
   "AuditService.balanceRequestFailed with rate limit exceeded " should "audit a failed balance request" in {
 
     val balanceRequestFailed =
-      RateLimitedEvent(
+      RateLimitedRequestEvent(
         auditInfo.internalId,
         auditInfo.guaranteeReferenceNumber,
         auditInfo.balanceRequest.accessCode
@@ -109,13 +108,13 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
     auditService
       .balanceRequestFailed(RequestLockingError.AlreadyLocked)
 
-    auditConnector.sendExplicitAudit[RateLimitedEvent](
-      "RateLimited",
+    auditConnector.sendExplicitAudit[RateLimitedRequestEvent](
+      "RateLimitedRequest",
       balanceRequestFailed
     )(
       any[HeaderCarrier],
       any[ExecutionContext],
-      any[Writes[RateLimitedEvent]]
+      any[Writes[RateLimitedRequestEvent]]
     ) wasCalled once
 
   }
@@ -123,22 +122,23 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
   "AuditService.balanceRequestFailed with routing invalid access code" should "audit a failed balance request" in {
 
     val balanceRequestFailed =
-      AccessCodeNotValidEvent(
+      ErrorResponseEvent(
         auditInfo.internalId,
         auditInfo.guaranteeReferenceNumber,
-        auditInfo.balanceRequest.accessCode
+        auditInfo.balanceRequest.accessCode,
+        "Invalid Access Code"
       )
 
     auditService
       .balanceRequestFailed(RoutingError.InvalidAccessCode)
 
-    auditConnector.sendExplicitAudit[AccessCodeNotValidEvent](
-      "AccessCodeNotValid",
+    auditConnector.sendExplicitAudit[ErrorResponseEvent](
+      "ErrorResponse",
       balanceRequestFailed
     )(
       any[HeaderCarrier],
       any[ExecutionContext],
-      any[Writes[AccessCodeNotValidEvent]]
+      any[Writes[ErrorResponseEvent]]
     ) wasCalled once
 
   }
@@ -146,44 +146,46 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
   "AuditService.balanceRequestFailed with routing unexpected error" should "audit a failed balance request" in {
 
     val balanceRequestFailed =
-      ServerErrorEvent(
+      ErrorResponseEvent(
         auditInfo.internalId,
         auditInfo.guaranteeReferenceNumber,
-        auditInfo.balanceRequest.accessCode
+        auditInfo.balanceRequest.accessCode,
+        "Server Error"
       )
 
     auditService
       .balanceRequestFailed(RoutingError.Unexpected(Some(new Exception("unexpected routing error"))))
 
-    auditConnector.sendExplicitAudit[ServerErrorEvent](
-      "ServerError",
+    auditConnector.sendExplicitAudit[ErrorResponseEvent](
+      "ErrorResponse",
       balanceRequestFailed
     )(
       any[HeaderCarrier],
       any[ExecutionContext],
-      any[Writes[ServerErrorEvent]]
+      any[Writes[ErrorResponseEvent]]
     ) wasCalled once
   }
 
   "AuditService.balanceRequestFailed with ValidationError" should "audit a failed balance request" in {
 
     val balanceRequestFailed =
-      AccessCodeNotValidEvent(
+      ErrorResponseEvent(
         auditInfo.internalId,
         auditInfo.guaranteeReferenceNumber,
-        auditInfo.balanceRequest.accessCode
+        auditInfo.balanceRequest.accessCode,
+        "Invalid Access Code"
       )
 
     auditService
       .balanceRequestFailed((NonEmptyList.one(ValidationError.InvalidAccessCodeLength(accessCode))))
 
-    auditConnector.sendExplicitAudit[AccessCodeNotValidEvent](
-      "AccessCodeNotValid",
+    auditConnector.sendExplicitAudit[ErrorResponseEvent](
+      "ErrorResponse",
       balanceRequestFailed
     )(
       any[HeaderCarrier],
       any[ExecutionContext],
-      any[Writes[AccessCodeNotValidEvent]]
+      any[Writes[ErrorResponseEvent]]
     ) wasCalled once
 
   }

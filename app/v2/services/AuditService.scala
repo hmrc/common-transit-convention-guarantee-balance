@@ -23,16 +23,14 @@ import play.api.libs.json.JsValue
 import runtime.IOFutures
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import v2.models.AccessCodeNotValidEvent
 import v2.models.AuditEventType
 import v2.models.AuditInfo
 import v2.models.Balance
-import v2.models.BalanceRequestSucceededEvent
-import v2.models.GRNNotFoundEvent
+import v2.models.ErrorResponseEvent
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InvalidPayloadEvent
-import v2.models.RateLimitedEvent
-import v2.models.ServerErrorEvent
+import v2.models.RateLimitedRequestEvent
+import v2.models.RequestSentEvent
 import v2.models.errors.RequestLockingError
 import v2.models.errors.RoutingError
 import v2.models.errors.ValidationError
@@ -67,9 +65,9 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): Unit =
-    connector.sendExplicitAudit[BalanceRequestSucceededEvent](
-      AuditEventType.BalanceRequestSucceeded.name,
-      BalanceRequestSucceededEvent(
+    connector.sendExplicitAudit[RequestSentEvent](
+      AuditEventType.RequestSent.name,
+      RequestSentEvent(
         auditInfo.internalId,
         auditInfo.guaranteeReferenceNumber,
         auditInfo.balanceRequest.accessCode,
@@ -82,9 +80,9 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): Unit =
-    connector.sendExplicitAudit[GRNNotFoundEvent](
-      AuditEventType.GRNNotFound.name,
-      GRNNotFoundEvent.toEvent
+    connector.sendExplicitAudit[ErrorResponseEvent](
+      AuditEventType.ErrorResponse.name,
+      ErrorResponseEvent.toEvent(auditInfo, "Guarantee Reference Number NotFound")
     )
 
   private def rateLimitExceeded()(implicit
@@ -92,9 +90,9 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): Unit =
-    connector.sendExplicitAudit[RateLimitedEvent](
-      AuditEventType.RateLimited.name,
-      RateLimitedEvent.toEvent
+    connector.sendExplicitAudit[RateLimitedRequestEvent](
+      AuditEventType.RateLimitedRequest.name,
+      RateLimitedRequestEvent.toEvent
     )
 
   private def invalidAccessCode()(implicit
@@ -102,9 +100,9 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): Unit =
-    connector.sendExplicitAudit[AccessCodeNotValidEvent](
-      AuditEventType.AccessCodeNotValid.name,
-      AccessCodeNotValidEvent.toEvent
+    connector.sendExplicitAudit[ErrorResponseEvent](
+      AuditEventType.ErrorResponse.name,
+      ErrorResponseEvent.toEvent(auditInfo, "Invalid Access Code")
     )
 
   private def serverError()(implicit
@@ -112,9 +110,9 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): Unit =
-    connector.sendExplicitAudit[ServerErrorEvent](
-      AuditEventType.ServerError.name,
-      ServerErrorEvent.toEvent
+    connector.sendExplicitAudit[ErrorResponseEvent](
+      AuditEventType.ErrorResponse.name,
+      ErrorResponseEvent.toEvent(auditInfo, "Server Error")
     )
 
   override def invalidPayloadBalanceRequest(request: AuthenticatedRequest[JsValue], grn: GuaranteeReferenceNumber)(implicit
