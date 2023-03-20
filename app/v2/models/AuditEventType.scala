@@ -19,10 +19,8 @@ package v2.models
 sealed abstract class AuditEventType(val name: String) extends Product with Serializable
 
 object AuditEventType {
-  case object RateLimited             extends AuditEventType("RateLimited")
-  case object InvalidPayload          extends AuditEventType("InvalidPayload")
-  case object GRNNotFound             extends AuditEventType("GRNNotFound")
-  case object AccessCodeNotValid      extends AuditEventType("AccessCodeNotValid")
-  case object ServerError             extends AuditEventType("ServerError")
-  case object BalanceRequestSucceeded extends AuditEventType("BalanceRequestSucceeded")
+  case object RateLimitedRequest extends AuditEventType("RateLimitedRequest")
+  case object ErrorResponse      extends AuditEventType("ErrorResponse")
+  case object InvalidPayload     extends AuditEventType("InvalidPayload")
+  case object RequestSent        extends AuditEventType("RequestSent")
 }

@@ -96,7 +96,7 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
 
   "RequestLockingError" should "return a rate limited error if we are rate limited" in {
     requestLockingErrorConverter.convert(RequestLockingError.AlreadyLocked) shouldBe
-      PresentationError.rateLimited()
+      PresentationError.rateLimitedRequest()
   }
 
   it should "return an Unexpected if an exception occurs" in {
