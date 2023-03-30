@@ -32,17 +32,17 @@ class HateoasResponseSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
     arbitrary[GuaranteeReferenceNumber],
     arbitrary[Balance]
   ) {
-    (grn, amount) =>
+    (grn, balance) =>
       val expected = Json.obj(
         "_links" -> Json.obj(
           "self" -> Json.obj(
             "href" -> s"/customs/guarantees/${grn.value}/balance"
           )
         ),
-        "balance" -> amount.value
+        "balance" -> balance.value
       )
 
-      whenReady(HateoasResponse(grn, InternalBalanceResponse(amount)).unsafeToFuture()) {
+      whenReady(HateoasResponse(grn, InternalBalanceResponse(grn, balance, "GBP")).unsafeToFuture()) {
         _ shouldBe expected
       }
   }

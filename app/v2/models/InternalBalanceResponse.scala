@@ -23,4 +23,4 @@ object InternalBalanceResponse {
   implicit lazy val internalBalanceResponseFormat: OFormat[InternalBalanceResponse] = Json.format[InternalBalanceResponse]
 }
 
-case class InternalBalanceResponse(balance: Balance)
+case class InternalBalanceResponse(grn: GuaranteeReferenceNumber, balance: Balance, currencyCL: String)

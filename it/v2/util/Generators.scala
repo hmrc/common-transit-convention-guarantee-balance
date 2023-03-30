@@ -52,12 +52,15 @@ trait Generators {
     Gen.chooseNum(0.0, Double.MaxValue).map(Balance(_))
   }
 
-  implicit val internalBalanceResponseGenerator: Arbitrary[InternalBalanceResponse] = Arbitrary {
-    arbitrary[Balance].map(InternalBalanceResponse(_))
-  }
-
   implicit val internalIdGenerator: Arbitrary[InternalId] = Arbitrary {
     Gen.stringOfN(18, Gen.alphaNumChar).map(InternalId(_))
+  }
+
+  implicit val internalBalanceResponseGenerator: Arbitrary[InternalBalanceResponse] = Arbitrary {
+    for {
+      grn     <- guaranteeReferenceNumberGenerator.arbitrary
+      balance <- arbitrary[Balance]
+    } yield InternalBalanceResponse(grn, balance, "GBP")
   }
 
 }
