@@ -52,7 +52,7 @@ class ValidationServiceImpl extends ValidationService {
 
   override def validate(payload: BalanceRequest): EitherT[IO, NonEmptyList[ValidationError], Unit] = EitherT {
     IO {
-      validateAccessCode(payload.accessCode).toEither
+      validateAccessCode(payload.masterAccessCode).toEither
     }
   }
 

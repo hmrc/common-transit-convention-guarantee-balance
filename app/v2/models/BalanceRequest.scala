@@ -23,4 +23,4 @@ object BalanceRequest {
   implicit lazy val balanceRequest: OFormat[BalanceRequest] = Json.format[BalanceRequest]
 }
 
-case class BalanceRequest(accessCode: AccessCode)
+case class BalanceRequest(masterAccessCode: AccessCode)

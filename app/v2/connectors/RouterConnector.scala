@@ -70,11 +70,10 @@ class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpCli
               val url = appConfig.routerUrl.addPathPart(grn.value).addPathPart("balance")
 
               httpClientV2
-                .post(url"$url")
+                .get(url"$url")
                 .withBody(Json.toJson(balanceRequest))
                 .setHeader(
                   HeaderNames.ACCEPT        -> ContentTypes.JSON,
-                  HeaderNames.CONTENT_TYPE  -> ContentTypes.JSON,
                   HeaderNames.AUTHORIZATION -> appConfig.internalAuthToken
                 )
                 .execute[InternalBalanceResponse]

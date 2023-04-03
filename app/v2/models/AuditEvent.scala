@@ -64,7 +64,7 @@ case object RateLimitedRequestEvent {
     RateLimitedRequestEvent(
       auditInfo.internalId,
       auditInfo.guaranteeReferenceNumber,
-      auditInfo.balanceRequest.accessCode
+      auditInfo.balanceRequest.masterAccessCode
     )
 }
 
@@ -84,7 +84,7 @@ case object ErrorResponseEvent {
     ErrorResponseEvent(
       auditInfo.internalId,
       auditInfo.guaranteeReferenceNumber,
-      auditInfo.balanceRequest.accessCode,
+      auditInfo.balanceRequest.masterAccessCode,
       errorDetails
     )
 }

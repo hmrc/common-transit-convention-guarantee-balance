@@ -21,6 +21,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import connectors.WireMockSpec
 import org.scalacheck.Arbitrary.arbitrary
@@ -38,7 +39,6 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import v2.models.AccessCode
-import v2.models.Balance
 import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
@@ -76,9 +76,8 @@ class RouterConnectorSpec
     val internalBalanceResponse = arbitrary[InternalBalanceResponse].sample.get
 
     wireMockServer.stubFor(
-      post(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
+      get(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
-        .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.AUTHORIZATION, equalTo(dummytoken))
         .withRequestBody(equalToJson(Json.stringify(Json.toJson(balanceRequest))))
         .willReturn(
@@ -103,9 +102,8 @@ class RouterConnectorSpec
     val balanceRequest = arbitrary[AccessCode].map(BalanceRequest(_)).sample.get
     val errorCode      = Gen.oneOf(ErrorCode.errorCodes).sample.get
     wireMockServer.stubFor(
-      post(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
+      get(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
-        .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.AUTHORIZATION, equalTo(dummytoken))
         .withRequestBody(equalToJson(Json.stringify(Json.toJson(balanceRequest))))
         .willReturn(

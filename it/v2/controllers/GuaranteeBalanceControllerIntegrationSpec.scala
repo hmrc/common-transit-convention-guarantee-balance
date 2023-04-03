@@ -19,8 +19,7 @@ package v2.controllers
 import akka.stream.scaladsl.Sink
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
-import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
-import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.kenshoo.play.metrics.Metrics
 import connectors.WireMockSpec
@@ -82,10 +81,8 @@ class GuaranteeBalanceControllerIntegrationSpec
     val amount     = arbitrary[Balance].sample.get
 
     wireMockServer.stubFor(
-      post(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
+      get(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
-        .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
-        .withRequestBody(equalToJson(Json.stringify(Json.obj("accessCode" -> "ABCD"))))
         .willReturn(
           aResponse()
             .withStatus(OK)
@@ -109,7 +106,7 @@ class GuaranteeBalanceControllerIntegrationSpec
           )
         ),
         Json.obj(
-          "accessCode" -> "ABCD"
+          "masterAccessCode" -> "ABCD"
         )
       ),
       internalId
@@ -144,10 +141,8 @@ class GuaranteeBalanceControllerIntegrationSpec
     val internalId = arbitrary[InternalId].sample.get
 
     wireMockServer.stubFor(
-      post(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
+      get(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
-        .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
-        .withRequestBody(equalToJson(Json.stringify(Json.obj("accessCode" -> "ABCD"))))
         .willReturn(
           aResponse()
             .withStatus(NOT_FOUND)
@@ -172,7 +167,7 @@ class GuaranteeBalanceControllerIntegrationSpec
           )
         ),
         Json.obj(
-          "accessCode" -> "ABCD"
+          "masterAccessCode" -> "ABCD"
         )
       ),
       internalId
@@ -203,10 +198,8 @@ class GuaranteeBalanceControllerIntegrationSpec
     val internalId = arbitrary[InternalId].sample.get
 
     wireMockServer.stubFor(
-      post(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
+      get(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
-        .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
-        .withRequestBody(equalToJson(Json.stringify(Json.obj("accessCode" -> "ABCD"))))
         .willReturn(
           aResponse()
             .withStatus(FORBIDDEN)
@@ -231,7 +224,7 @@ class GuaranteeBalanceControllerIntegrationSpec
           )
         ),
         Json.obj(
-          "accessCode" -> "ABCD"
+          "masterAccessCode" -> "ABCD"
         )
       ),
       internalId
@@ -271,7 +264,7 @@ class GuaranteeBalanceControllerIntegrationSpec
           )
         ),
         Json.obj(
-          "accessCode" -> "ABCD"
+          "masterAccessCode" -> "ABCD"
         )
       ),
       internalId
@@ -352,7 +345,7 @@ class GuaranteeBalanceControllerIntegrationSpec
               )
             ),
             Json.obj(
-              "accessCode" -> accessCode
+              "masterAccessCode" -> accessCode
             )
           ),
           internalId
@@ -392,7 +385,7 @@ class GuaranteeBalanceControllerIntegrationSpec
           )
         ),
         Json.obj(
-          "accessCode" -> "ABCD"
+          "masterAccessCode" -> "ABCD"
         )
       ),
       internalId

@@ -70,7 +70,7 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
       RequestSentEvent(
         auditInfo.internalId,
         auditInfo.guaranteeReferenceNumber,
-        auditInfo.balanceRequest.accessCode,
+        auditInfo.balanceRequest.masterAccessCode,
         balance
       )
     )
