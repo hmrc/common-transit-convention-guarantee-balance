@@ -42,7 +42,7 @@ class RouterServiceImpl @Inject() (routerConnector: RouterConnector) extends Rou
   override def request(grn: GuaranteeReferenceNumber, request: BalanceRequest)(implicit hc: HeaderCarrier): EitherT[IO, RoutingError, InternalBalanceResponse] =
     EitherT {
       for {
-        response  <- routerConnector.post(grn, request)
+        response  <- routerConnector.get(grn)
         converted <- convertException(response)
       } yield converted
     }

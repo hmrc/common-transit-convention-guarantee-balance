@@ -46,7 +46,7 @@ class ValidationServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar 
     Gen.stringOfN(5, Gen.alphaNumChar).map(AccessCode(_))
   ) {
     (balanceRequest, brokenAccessCode) =>
-      whenReady(sut.validate(balanceRequest.copy(masterAccessCode = brokenAccessCode)).value.unsafeToFuture()) {
+      whenReady(sut.validate(balanceRequest.copy(accessCode = brokenAccessCode)).value.unsafeToFuture()) {
         r => r shouldBe Left(NonEmptyList.one(ValidationError.InvalidAccessCodeLength(brokenAccessCode)))
       }
   }
@@ -60,7 +60,7 @@ class ValidationServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar 
       )
   ) {
     (balanceRequest, brokenAccessCode) =>
-      whenReady(sut.validate(balanceRequest.copy(masterAccessCode = brokenAccessCode)).value.unsafeToFuture()) {
+      whenReady(sut.validate(balanceRequest.copy(accessCode = brokenAccessCode)).value.unsafeToFuture()) {
         r => r shouldBe Left(NonEmptyList.one(ValidationError.InvalidAccessCodeCharacters(brokenAccessCode)))
       }
   }
@@ -74,7 +74,7 @@ class ValidationServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar 
       )
   ) {
     (balanceRequest, brokenAccessCode) =>
-      whenReady(sut.validate(balanceRequest.copy(masterAccessCode = brokenAccessCode)).value.unsafeToFuture()) {
+      whenReady(sut.validate(balanceRequest.copy(accessCode = brokenAccessCode)).value.unsafeToFuture()) {
         r =>
           r shouldBe Left(
             NonEmptyList.of(

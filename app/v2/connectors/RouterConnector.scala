@@ -29,14 +29,12 @@ import metrics.IOMetrics
 import metrics.MetricsKeys
 import play.api.http.ContentTypes
 import play.api.http.HeaderNames
-import play.api.libs.json.Json
 import runtime.IOFutures
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.client.HttpClientV2
-import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
 
@@ -47,7 +45,7 @@ import scala.util.control.NonFatal
 @ImplementedBy(classOf[RouterConnectorImpl])
 trait RouterConnector {
 
-  def post(grn: GuaranteeReferenceNumber, balanceRequest: BalanceRequest)(implicit hc: HeaderCarrier): IO[Either[Throwable, InternalBalanceResponse]]
+  def get(grn: GuaranteeReferenceNumber)(implicit hc: HeaderCarrier): IO[Either[Throwable, InternalBalanceResponse]]
 
 }
 
@@ -61,17 +59,16 @@ class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpCli
 
   override def circuitBreakerConfig: CircuitBreakerConfig = appConfig.routerCircuitBreakerConfig
 
-  override def post(grn: GuaranteeReferenceNumber, balanceRequest: BalanceRequest)(implicit hc: HeaderCarrier): IO[Either[Throwable, InternalBalanceResponse]] =
+  override def get(grn: GuaranteeReferenceNumber)(implicit hc: HeaderCarrier): IO[Either[Throwable, InternalBalanceResponse]] =
     withMetricsTimerResponse(MetricsKeys.Connectors.RouterRequest) {
       IO.runFuture {
         implicit ec =>
           circuitBreaker.withCircuitBreaker(
             {
-              val url = appConfig.routerUrl.addPathPart(grn.value).addPathPart("balance")
+              val url = appConfig.routerUrl.addPathPart("guarantees").addPathPart(grn.value).addPathPart("balance")
 
               httpClientV2
                 .get(url"$url")
-                .withBody(Json.toJson(balanceRequest))
                 .setHeader(
                   HeaderNames.ACCEPT        -> ContentTypes.JSON,
                   HeaderNames.AUTHORIZATION -> appConfig.internalAuthToken

@@ -19,8 +19,6 @@ package v2.connectors
 import cats.effect.unsafe.implicits.global
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
-import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
-import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import connectors.WireMockSpec
@@ -70,16 +68,14 @@ class RouterConnectorSpec
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  "RouterConnectorSpec#post" should "return a balance if successful" in {
+  "RouterConnectorSpec#get" should "return a balance if successful" in {
     val grn                     = arbitrary[GuaranteeReferenceNumber].sample.get
-    val balanceRequest          = arbitrary[AccessCode].map(BalanceRequest(_)).sample.get
     val internalBalanceResponse = arbitrary[InternalBalanceResponse].sample.get
 
     wireMockServer.stubFor(
-      get(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
+      get(urlEqualTo(s"/ctc-guarantee-balance-router/guarantees/${grn.value}/balance"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.AUTHORIZATION, equalTo(dummytoken))
-        .withRequestBody(equalToJson(Json.stringify(Json.toJson(balanceRequest))))
         .willReturn(
           aResponse()
             .withStatus(OK)
@@ -92,7 +88,7 @@ class RouterConnectorSpec
     )
 
     val sut = injector.instanceOf[RouterConnector]
-    sut.post(grn, balanceRequest).unsafeToFuture().map {
+    sut.get(grn).unsafeToFuture().map {
       result => result shouldBe Right(internalBalanceResponse)
     }
   }
@@ -102,10 +98,9 @@ class RouterConnectorSpec
     val balanceRequest = arbitrary[AccessCode].map(BalanceRequest(_)).sample.get
     val errorCode      = Gen.oneOf(ErrorCode.errorCodes).sample.get
     wireMockServer.stubFor(
-      get(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
+      get(urlEqualTo(s"/ctc-guarantee-balance-router/guarantees/${grn.value}/balance"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .withHeader(HeaderNames.AUTHORIZATION, equalTo(dummytoken))
-        .withRequestBody(equalToJson(Json.stringify(Json.toJson(balanceRequest))))
         .willReturn(
           aResponse()
             .withStatus(errorCode.statusCode)
@@ -121,7 +116,7 @@ class RouterConnectorSpec
     )
 
     val sut = injector.instanceOf[RouterConnector]
-    sut.post(grn, balanceRequest).unsafeToFuture().map {
+    sut.get(grn).unsafeToFuture().map {
       case Left(UpstreamErrorResponse(_, errorCode.statusCode, _, _)) => succeed
       case x                                                          => fail(s"Expected failure with status code ${errorCode.statusCode}, but got $x instead")
     }

@@ -81,7 +81,7 @@ class GuaranteeBalanceControllerIntegrationSpec
     val amount     = arbitrary[Balance].sample.get
 
     wireMockServer.stubFor(
-      get(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
+      get(urlEqualTo(s"/ctc-guarantee-balance-router/guarantees/${grn.value}/balance"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .willReturn(
           aResponse()
@@ -89,7 +89,9 @@ class GuaranteeBalanceControllerIntegrationSpec
             .withBody(
               Json.stringify(
                 Json.obj(
-                  "balance" -> amount.value
+                  "grn"        -> grn.value,
+                  "balance"    -> amount.value,
+                  "currencyCL" -> "GBP"
                 )
               )
             )
@@ -106,7 +108,7 @@ class GuaranteeBalanceControllerIntegrationSpec
           )
         ),
         Json.obj(
-          "masterAccessCode" -> "ABCD"
+          "accessCode" -> "ABCD"
         )
       ),
       internalId
@@ -141,7 +143,7 @@ class GuaranteeBalanceControllerIntegrationSpec
     val internalId = arbitrary[InternalId].sample.get
 
     wireMockServer.stubFor(
-      get(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
+      get(urlEqualTo(s"/ctc-guarantee-balance-router/guarantees/${grn.value}/balance"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .willReturn(
           aResponse()
@@ -167,7 +169,7 @@ class GuaranteeBalanceControllerIntegrationSpec
           )
         ),
         Json.obj(
-          "masterAccessCode" -> "ABCD"
+          "accessCode" -> "ABCD"
         )
       ),
       internalId
@@ -198,7 +200,7 @@ class GuaranteeBalanceControllerIntegrationSpec
     val internalId = arbitrary[InternalId].sample.get
 
     wireMockServer.stubFor(
-      get(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
+      get(urlEqualTo(s"/ctc-guarantee-balance-router/guarantees${grn.value}/balance"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .willReturn(
           aResponse()
@@ -224,7 +226,7 @@ class GuaranteeBalanceControllerIntegrationSpec
           )
         ),
         Json.obj(
-          "masterAccessCode" -> "ABCD"
+          "accessCode" -> "ABCD"
         )
       ),
       internalId
@@ -264,7 +266,7 @@ class GuaranteeBalanceControllerIntegrationSpec
           )
         ),
         Json.obj(
-          "masterAccessCode" -> "ABCD"
+          "accessCode" -> "ABCD"
         )
       ),
       internalId
@@ -345,7 +347,7 @@ class GuaranteeBalanceControllerIntegrationSpec
               )
             ),
             Json.obj(
-              "masterAccessCode" -> accessCode
+              "accessCode" -> accessCode
             )
           ),
           internalId
@@ -385,7 +387,7 @@ class GuaranteeBalanceControllerIntegrationSpec
           )
         ),
         Json.obj(
-          "masterAccessCode" -> "ABCD"
+          "accessCode" -> "ABCD"
         )
       ),
       internalId

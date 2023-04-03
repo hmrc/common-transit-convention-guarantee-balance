@@ -49,7 +49,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
   ) {
     (balanceRequest, grn, response) =>
       val mockConnector = mock[RouterConnector]
-      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(any()))
+      when(mockConnector.get(GuaranteeReferenceNumber(eqTo(grn.value)))(any()))
         .thenReturn(IO.pure(Right(response)))
 
       val sut = new RouterServiceImpl(mockConnector)
@@ -64,7 +64,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
   ) {
     (balanceRequest, grn) =>
       val mockConnector = mock[RouterConnector]
-      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(any()))
+      when(mockConnector.get(GuaranteeReferenceNumber(eqTo(grn.value)))(any()))
         .thenReturn(IO.pure(Left(UpstreamErrorResponse("nope", FORBIDDEN))))
 
       val sut = new RouterServiceImpl(mockConnector)
@@ -79,7 +79,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
   ) {
     (balanceRequest, grn) =>
       val mockConnector = mock[RouterConnector]
-      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(any()))
+      when(mockConnector.get(GuaranteeReferenceNumber(eqTo(grn.value)))(any()))
         .thenReturn(IO.pure(Left(UpstreamErrorResponse("nope", NOT_FOUND))))
 
       val sut = new RouterServiceImpl(mockConnector)
@@ -95,7 +95,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
     (balanceRequest, grn) =>
       val exception     = UpstreamErrorResponse("nope", INTERNAL_SERVER_ERROR)
       val mockConnector = mock[RouterConnector]
-      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(any()))
+      when(mockConnector.get(GuaranteeReferenceNumber(eqTo(grn.value)))(any()))
         .thenReturn(IO.pure(Left(exception)))
 
       val sut = new RouterServiceImpl(mockConnector)
