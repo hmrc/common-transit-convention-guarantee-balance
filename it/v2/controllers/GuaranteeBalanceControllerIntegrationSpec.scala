@@ -200,7 +200,7 @@ class GuaranteeBalanceControllerIntegrationSpec
     val internalId = arbitrary[InternalId].sample.get
 
     wireMockServer.stubFor(
-      get(urlEqualTo(s"/ctc-guarantee-balance-router/guarantees${grn.value}/balance"))
+      get(urlEqualTo(s"/ctc-guarantee-balance-router/guarantees/${grn.value}/balance"))
         .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
         .willReturn(
           aResponse()

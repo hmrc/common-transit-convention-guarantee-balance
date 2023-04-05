@@ -42,7 +42,7 @@ class HateoasResponseSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
         "balance" -> balance.value
       )
 
-      whenReady(HateoasResponse(grn, InternalBalanceResponse(grn, balance, "GBP")).unsafeToFuture()) {
+      whenReady(HateoasResponse(grn, InternalBalanceResponse(grn, balance, CurrencyCL("GBP"))).unsafeToFuture()) {
         _ shouldBe expected
       }
   }

@@ -23,6 +23,7 @@ import org.scalacheck.Gen
 import v2.models.AccessCode
 import v2.models.Balance
 import v2.models.BalanceRequest
+import v2.models.CurrencyCL
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
 
@@ -60,7 +61,7 @@ trait Generators {
     for {
       grn     <- guaranteeReferenceNumberGenerator.arbitrary
       balance <- arbitrary[Balance]
-    } yield InternalBalanceResponse(grn, balance, "GBP")
+    } yield InternalBalanceResponse(grn, balance, CurrencyCL("GBP"))
   }
 
 }
