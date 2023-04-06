@@ -92,7 +92,9 @@ class GuaranteeBalanceControllerIntegrationSpec
             .withBody(
               Json.stringify(
                 Json.obj(
-                  "balance" -> amount.value
+                  "grn"        -> grn.value,
+                  "balance"    -> amount.value,
+                  "currencyCL" -> "GBP"
                 )
               )
             )
