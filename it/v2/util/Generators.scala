@@ -55,9 +55,8 @@ trait Generators {
 
   implicit val internalBalanceResponseGenerator: Arbitrary[InternalBalanceResponse] = Arbitrary {
     for {
-      grn     <- guaranteeReferenceNumberGenerator.arbitrary
       balance <- arbitrary[Balance]
-    } yield InternalBalanceResponse(grn, balance, CurrencyCL("GBP"))
+    } yield InternalBalanceResponse(balance, CurrencyCL("GBP"))
   }
 
   implicit val internalIdGenerator: Arbitrary[InternalId] = Arbitrary {

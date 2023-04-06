@@ -88,9 +88,10 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
   "GuaranteeBalanceController#postRequest" should "return OK with a result if everything is okay" in forAll(
     arbitrary[InternalId],
+    arbitrary[GuaranteeReferenceNumber],
     arbitrary[InternalBalanceResponse]
   ) {
-    (internalId, internalBalanceResponse) =>
+    (internalId, grn, internalBalanceResponse) =>
       val request = FakeRequest(
         "POST",
         "/",
@@ -105,14 +106,14 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       )
 
       val mockLockService = mock[RequestLockingService]
-      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(internalBalanceResponse.grn.value)), InternalId(eqTo(internalId.value))))
+      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value))))
         .thenReturn(EitherT.rightT[IO, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(internalBalanceResponse.grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
         .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditServiceImpl]
@@ -128,9 +129,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         new FakeMetrics
       )
 
-      val result = sut.postRequest(internalBalanceResponse.grn)(request = request)
+      val result = sut.postRequest(grn)(request = request)
       status(result) shouldBe OK
-      whenReady(HateoasResponse(internalBalanceResponse.grn, internalBalanceResponse).unsafeToFuture()) {
+      whenReady(HateoasResponse(grn, internalBalanceResponse).unsafeToFuture()) {
         r => contentAsJson(result) shouldBe r
       }
       verify(mockAuditService, times(1)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
