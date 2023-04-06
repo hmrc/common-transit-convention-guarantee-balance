@@ -87,10 +87,10 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
   implicit val ec = ExecutionContext.global
 
   "GuaranteeBalanceController#postRequest" should "return OK with a result if everything is okay" in forAll(
-    arbitrary[GuaranteeReferenceNumber],
-    arbitrary[InternalId]
+    arbitrary[InternalId],
+    arbitrary[InternalBalanceResponse]
   ) {
-    (grn, internalId) =>
+    (internalId, internalBalanceResponse) =>
       val request = FakeRequest(
         "POST",
         "/",
@@ -105,15 +105,15 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       )
 
       val mockLockService = mock[RequestLockingService]
-      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value))))
+      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(internalBalanceResponse.grn.value)), InternalId(eqTo(internalId.value))))
         .thenReturn(EitherT.rightT[IO, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
-        .thenReturn(EitherT.rightT[IO, RoutingError](InternalBalanceResponse(Balance(3.14))))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(internalBalanceResponse.grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
+        .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditServiceImpl]
 
@@ -128,9 +128,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         new FakeMetrics
       )
 
-      val result = sut.postRequest(grn)(request = request)
+      val result = sut.postRequest(internalBalanceResponse.grn)(request = request)
       status(result) shouldBe OK
-      whenReady(HateoasResponse(grn, InternalBalanceResponse(Balance(3.14))).unsafeToFuture()) {
+      whenReady(HateoasResponse(internalBalanceResponse.grn, internalBalanceResponse).unsafeToFuture()) {
         r => contentAsJson(result) shouldBe r
       }
       verify(mockAuditService, times(1)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
@@ -140,9 +140,10 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
   it should "return OK with a result if everything is okay but we have additional junk in the JSON payload" in forAll(
     arbitrary[GuaranteeReferenceNumber],
-    arbitrary[InternalId]
+    arbitrary[InternalId],
+    arbitrary[InternalBalanceResponse]
   ) {
-    (grn, internalId) =>
+    (grn, internalId, internalBalanceResponse) =>
       val request = FakeRequest(
         "POST",
         "/",
@@ -166,7 +167,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
       val mockRouterService = mock[RouterService]
       when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
-        .thenReturn(EitherT.rightT[IO, RoutingError](InternalBalanceResponse(Balance(3.14))))
+        .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
 
@@ -183,7 +184,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
       val result = sut.postRequest(grn)(request = request)
       status(result) shouldBe OK
-      whenReady(HateoasResponse(grn, InternalBalanceResponse(Balance(3.14))).unsafeToFuture()) {
+      whenReady(HateoasResponse(grn, internalBalanceResponse).unsafeToFuture()) {
         r => contentAsJson(result) shouldBe r
       }
       verify(mockAuditService, times(1)).balanceRequestSucceeded(any(), Balance(any()))(any(), any())
@@ -193,9 +194,10 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
   it should "return not acceptable if the accept header is wrong" in forAll(
     arbitrary[GuaranteeReferenceNumber],
-    arbitrary[InternalId]
+    arbitrary[InternalId],
+    arbitrary[InternalBalanceResponse]
   ) {
-    (grn, internalId) =>
+    (grn, internalId, internalBalanceResponse) =>
       val request = AuthenticatedRequest(
         FakeRequest(
           "POST",
@@ -221,7 +223,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
       val mockRouterService = mock[RouterService]
       when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
-        .thenReturn(EitherT.rightT[IO, RoutingError](InternalBalanceResponse(Balance(3.14))))
+        .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
 
@@ -250,9 +252,10 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
   it should "return Too Many Requests if rate limiting is in effect" in forAll(
     arbitrary[GuaranteeReferenceNumber],
-    arbitrary[InternalId]
+    arbitrary[InternalId],
+    arbitrary[InternalBalanceResponse]
   ) {
-    (grn, internalId) =>
+    (grn, internalId, internalBalanceResponse) =>
       val request = FakeRequest(
         "POST",
         "/",
@@ -275,7 +278,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
       val mockRouterService = mock[RouterService]
       when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
-        .thenReturn(EitherT.rightT[IO, RoutingError](InternalBalanceResponse(Balance(3.14))))
+        .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
 
@@ -304,9 +307,10 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
   it should "return an error if the body cannot be parsed correctly" in forAll(
     arbitrary[GuaranteeReferenceNumber],
-    arbitrary[InternalId]
+    arbitrary[InternalId],
+    arbitrary[InternalBalanceResponse]
   ) {
-    (grn, internalId) =>
+    (grn, internalId, internalBalanceResponse) =>
       val request: AuthenticatedRequest[JsValue] =
         AuthenticatedRequest(
           FakeRequest(
@@ -333,7 +337,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
       val mockRouterService = mock[RouterService]
       when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
-        .thenReturn(EitherT.rightT[IO, RoutingError](InternalBalanceResponse(Balance(3.14))))
+        .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
 
@@ -363,9 +367,10 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
   it should "return BAD_REQUEST if the access code is not valid" in forAll(
     arbitrary[GuaranteeReferenceNumber],
-    arbitrary[InternalId]
+    arbitrary[InternalId],
+    arbitrary[InternalBalanceResponse]
   ) {
-    (grn, internalId) =>
+    (grn, internalId, internalBalanceResponse) =>
       val request = FakeRequest(
         "POST",
         "/",
@@ -389,7 +394,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
       val mockRouterService = mock[RouterService]
       when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
-        .thenReturn(EitherT.rightT[IO, RoutingError](InternalBalanceResponse(Balance(3.14))))
+        .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
 

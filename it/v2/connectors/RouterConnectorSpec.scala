@@ -38,7 +38,6 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import v2.models.AccessCode
-import v2.models.Balance
 import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
@@ -71,8 +70,9 @@ class RouterConnectorSpec
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "RouterConnectorSpec#post" should "return a balance if successful" in {
-    val grn            = arbitrary[GuaranteeReferenceNumber].sample.get
-    val balanceRequest = arbitrary[AccessCode].map(BalanceRequest(_)).sample.get
+    val grn                     = arbitrary[GuaranteeReferenceNumber].sample.get
+    val balanceRequest          = arbitrary[AccessCode].map(BalanceRequest(_)).sample.get
+    val internalBalanceResponse = arbitrary[InternalBalanceResponse].sample.get
 
     wireMockServer.stubFor(
       post(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
@@ -85,9 +85,7 @@ class RouterConnectorSpec
             .withStatus(OK)
             .withBody(
               Json.stringify(
-                Json.obj(
-                  "balance" -> 12345678.9
-                )
+                Json.toJson(internalBalanceResponse)
               )
             )
         )
@@ -95,7 +93,7 @@ class RouterConnectorSpec
 
     val sut = injector.instanceOf[RouterConnector]
     sut.post(grn, balanceRequest).unsafeToFuture().map {
-      result => result shouldBe Right(InternalBalanceResponse(Balance(12345678.9)))
+      result => result shouldBe Right(internalBalanceResponse)
     }
   }
 
@@ -132,10 +130,11 @@ class RouterConnectorSpec
   }
 
   "RouterConnectorImpl#isFailure" should "return false when there is a successful call" in {
-    val connector = injector.instanceOf[RouterConnectorImpl]
+    val connector               = injector.instanceOf[RouterConnectorImpl]
+    val internalBalanceResponse = arbitrary[InternalBalanceResponse].sample.get
 
     Future.successful(
-      connector.isFailure(Success(Right(InternalBalanceResponse(Balance(1.0))))) shouldBe false
+      connector.isFailure(Success(Right(internalBalanceResponse))) shouldBe false
     )
   }
 
