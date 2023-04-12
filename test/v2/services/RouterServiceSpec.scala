@@ -18,7 +18,6 @@ package v2.services
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
-import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.mockito.MockitoSugar
 import org.scalacheck.Arbitrary.arbitrary
@@ -49,7 +48,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
   ) {
     (balanceRequest, grn, response) =>
       val mockConnector = mock[RouterConnector]
-      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(any()))
+      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(eqTo(hc)))
         .thenReturn(IO.pure(Right(response)))
 
       val sut = new RouterServiceImpl(mockConnector)
@@ -64,7 +63,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
   ) {
     (balanceRequest, grn) =>
       val mockConnector = mock[RouterConnector]
-      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(any()))
+      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(eqTo(hc)))
         .thenReturn(IO.pure(Left(UpstreamErrorResponse("nope", FORBIDDEN))))
 
       val sut = new RouterServiceImpl(mockConnector)
@@ -79,7 +78,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
   ) {
     (balanceRequest, grn) =>
       val mockConnector = mock[RouterConnector]
-      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(any()))
+      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(eqTo(hc)))
         .thenReturn(IO.pure(Left(UpstreamErrorResponse("nope", NOT_FOUND))))
 
       val sut = new RouterServiceImpl(mockConnector)
@@ -95,7 +94,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
     (balanceRequest, grn) =>
       val exception     = UpstreamErrorResponse("nope", INTERNAL_SERVER_ERROR)
       val mockConnector = mock[RouterConnector]
-      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(any()))
+      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(eqTo(hc)))
         .thenReturn(IO.pure(Left(exception)))
 
       val sut = new RouterServiceImpl(mockConnector)

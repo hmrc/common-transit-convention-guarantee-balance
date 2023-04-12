@@ -17,10 +17,9 @@
 package v2.models
 
 import play.api.libs.json.Json
-import play.api.libs.json.OFormat
 
-object InternalBalanceResponse {
-  implicit lazy val internalBalanceResponseFormat: OFormat[InternalBalanceResponse] = Json.format[InternalBalanceResponse]
+case class CurrencyCL(value: String) extends AnyVal
+
+object CurrencyCL {
+  implicit val format = Json.valueFormat[CurrencyCL]
 }
-
-case class InternalBalanceResponse(balance: Balance, currencyCL: CurrencyCL)
