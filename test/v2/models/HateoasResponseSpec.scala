@@ -39,7 +39,8 @@ class HateoasResponseSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
             "href" -> s"/customs/guarantees/${grn.value}/balance"
           )
         ),
-        "balance" -> internalBalanceResponse.balance.value
+        "balance"  -> internalBalanceResponse.balance.value,
+        "currency" -> internalBalanceResponse.currencyCL
       )
 
       whenReady(HateoasResponse(grn, internalBalanceResponse).unsafeToFuture()) {

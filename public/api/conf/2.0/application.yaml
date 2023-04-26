@@ -7,7 +7,7 @@ info:
     # Overview
     Use the CTC Guarantee Balance API to provide traders with up-to-date
     information about how much of their guarantee funds they have left to
-    use when organising transit movements. For a detailed overview of v2.0 of 
+    use when organising transit movements. For a detailed overview of v2.0 of
     the API, see [CTC Guarantee Balance API phase 5 service guide](/guides/ctc-guarantee-balance-phase5-service-guide).
 servers:
   - url: https://test-api.service.hmrc.gov.uk
@@ -52,11 +52,13 @@ paths:
                   - $ref: '#/components/schemas/GetBalanceOk'
                   - example:
                       balance: 12345678.90
+                      currency: GBP
               example:
                 _links:
                   self:
                     href: /customs/guarantees/23GB0123456789AB2/balance
                 balance: 12345678.90
+                currency: GBP
         '400':
           description: Bad Request
           content:
@@ -171,6 +173,12 @@ components:
         balance:
           description: The guarantee's balance.
           type: number
+        currency:
+          pattern: ^[A-Z]{3}$
+          type: string
+          description: >-
+            The alphanumeric 3-character ISO currency code of the currency in
+            which the balance is held.
     BadRequest:
       title: BadRequest
       description: An error in the supplied payload, or the guarantee reference number did not match the expected format.

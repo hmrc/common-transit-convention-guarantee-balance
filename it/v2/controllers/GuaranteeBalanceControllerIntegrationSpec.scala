@@ -123,7 +123,8 @@ class GuaranteeBalanceControllerIntegrationSpec
           "href" -> s"/customs/guarantees/${grn.value}/balance"
         )
       ),
-      "balance" -> amount.value
+      "balance"  -> amount.value,
+      "currency" -> "GBP"
     )
 
     val sut = injector.instanceOf[GuaranteeBalanceController]
