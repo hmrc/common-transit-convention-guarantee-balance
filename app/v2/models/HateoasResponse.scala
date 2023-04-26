@@ -30,7 +30,8 @@ object HateoasResponse extends LocationWithContext {
           "href" -> v2.controllers.routes.GuaranteeBalanceController.postRequest(grn).pathWithContext()
         )
       ),
-      "balance" -> response.balance.value
+      "balance"  -> response.balance.value,
+      "currency" -> response.currencyCL
     )
   }
 
