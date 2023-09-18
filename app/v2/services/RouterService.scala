@@ -20,15 +20,21 @@ import cats.data.EitherT
 import cats.effect.IO
 import com.google.inject.ImplementedBy
 import com.google.inject.Inject
+import play.api.http.Status.BAD_REQUEST
 import play.api.http.Status.FORBIDDEN
 import play.api.http.Status.NOT_FOUND
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.UpstreamErrorResponse
 import v2.connectors.RouterConnector
 import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
+import v2.models.errors.ErrorCode
 import v2.models.errors.RoutingError
+import v2.models.errors.StandardError
+import v2.models.errors.UpstreamError
+
+import scala.util.Try
 
 @ImplementedBy(classOf[RouterServiceImpl])
 trait RouterService {
@@ -50,10 +56,20 @@ class RouterServiceImpl @Inject() (routerConnector: RouterConnector) extends Rou
   private def convertException(result: Either[Throwable, InternalBalanceResponse]): IO[Either[RoutingError, InternalBalanceResponse]] =
     IO {
       result match {
-        case Right(internalBalanceResponse)                  => Right(internalBalanceResponse)
-        case Left(UpstreamErrorResponse(_, FORBIDDEN, _, _)) => Left(RoutingError.InvalidAccessCode)
-        case Left(UpstreamErrorResponse(_, NOT_FOUND, _, _)) => Left(RoutingError.GuaranteeReferenceNotFound)
-        case Left(ex)                                        => Left(RoutingError.Unexpected(Some(ex)))
+        case Right(internalBalanceResponse)                 => Right(internalBalanceResponse)
+        case Left(UpstreamError(_, FORBIDDEN, _, _))        => Left(RoutingError.InvalidAccessCode)
+        case Left(UpstreamError(_, NOT_FOUND, _, _))        => Left(RoutingError.GuaranteeReferenceNotFound)
+        case Left(ex @ UpstreamError(_, BAD_REQUEST, _, _)) => determineBadRequest(ex)
+        case Left(ex)                                       => Left(RoutingError.Unexpected(Some(ex)))
       }
     }
+
+  private def determineBadRequest(ex: UpstreamError): Left[RoutingError, InternalBalanceResponse] =
+    Try {
+      if (Json.parse(ex.message).validate[StandardError].map(_.code).contains(ErrorCode.InvalidGuaranteeType)) Left(RoutingError.InvalidGuaranteeType)
+      else Left(RoutingError.Unexpected(Some(ex.asUpstreamErrorResponse)))
+    }.fold(
+      _ => Left(RoutingError.Unexpected(Some(ex.asUpstreamErrorResponse))),
+      x => x
+    )
 }

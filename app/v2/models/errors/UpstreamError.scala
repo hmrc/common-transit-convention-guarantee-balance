@@ -16,12 +16,9 @@
 
 package v2.models.errors
 
-sealed trait RoutingError
+import uk.gov.hmrc.http.UpstreamErrorResponse
 
-object RoutingError {
-
-  case object InvalidAccessCode                 extends RoutingError
-  case object GuaranteeReferenceNotFound        extends RoutingError
-  case object InvalidGuaranteeType              extends RoutingError
-  case class Unexpected(thr: Option[Throwable]) extends RoutingError
+// Used to ensure we avoid breaking changes with http verbs
+case class UpstreamError(message: String, statusCode: Int, reportAs: Int, headers: Map[String, Seq[String]]) extends Exception(message) {
+  lazy val asUpstreamErrorResponse: UpstreamErrorResponse = UpstreamErrorResponse(message, statusCode, reportAs, headers)
 }

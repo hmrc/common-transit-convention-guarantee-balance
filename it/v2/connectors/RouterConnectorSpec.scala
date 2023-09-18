@@ -42,6 +42,7 @@ import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
 import v2.models.errors.ErrorCode
+import v2.models.errors.UpstreamError
 import v2.util.Generators
 
 import scala.concurrent.Future
@@ -123,8 +124,8 @@ class RouterConnectorSpec
 
     val sut = injector.instanceOf[RouterConnector]
     sut.post(grn, balanceRequest).unsafeToFuture().map {
-      case Left(UpstreamErrorResponse(_, errorCode.statusCode, _, _)) => succeed
-      case x                                                          => fail(s"Expected failure with status code ${errorCode.statusCode}, but got $x instead")
+      case Left(UpstreamError(_, errorCode.statusCode, _, _)) => succeed
+      case x                                                  => fail(s"Expected failure with status code ${errorCode.statusCode}, but got $x instead")
     }
 
   }
@@ -138,11 +139,11 @@ class RouterConnectorSpec
     )
   }
 
-  it should "return false when there is a failed call but with an UpstreamErrorResponse" in {
+  it should "return false when there is a failed call but with an UpstreamError" in {
     val connector = injector.instanceOf[RouterConnectorImpl]
 
     Future.successful(
-      connector.isFailure(Success(Left(UpstreamErrorResponse("nope", NOT_FOUND)))) shouldBe false
+      connector.isFailure(Success(Left(UpstreamError("nope", NOT_FOUND, NOT_FOUND, Map.empty)))) shouldBe false
     )
   }
 

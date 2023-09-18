@@ -115,6 +115,11 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
       PresentationError.notFoundError("Guarantee balance not found.")
   }
 
+  it should "return a bad request if the type is not supported" in {
+    routingErrorConverter.convert(RoutingError.InvalidGuaranteeType) shouldBe
+      PresentationError.invalidGuaranteeTypeError("Guarantee type is not supported.")
+  }
+
   it should "return an Unexpected if an exception occurs" in {
     val exception = new IllegalStateException()
     routingErrorConverter.convert(RoutingError.Unexpected(thr = Some(exception))) shouldBe
