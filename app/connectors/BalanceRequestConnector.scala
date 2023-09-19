@@ -79,7 +79,7 @@ class BalanceRequestConnectorImpl @Inject() (
   implicit val eitherBalanceIdOrResponseReads: HttpReads[Either[BalanceId, BalanceRequestResponse]] =
     HttpReads[HttpResponse].map {
       response =>
-        response.status match {
+        (response.status: @unchecked) match {
           case Status.ACCEPTED =>
             Left(response.json.as[BalanceId])
           case Status.OK =>

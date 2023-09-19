@@ -60,21 +60,15 @@ paths:
                 balance: 12345678.90
                 currency: GBP
         '400':
-          description: Bad Request
+          description: Bad request or invalid guarantee type
           content:
             application/json:
               schema:
-                allOf:
+                oneOf:
                   - $ref: '#/components/schemas/BadRequest'
-                  - description: The supplied guarantee reference number or JSON payload was invalid.
-                    example:
-                      code: BAD_REQUEST
-                      message: The access code was not supplied.
-              example:
-                code: BAD_REQUEST
-                message: The access code was not supplied.
+                  - $ref: '#/components/schemas/InvalidGuaranteeType'
         '404':
-          description: Not Found
+          description: Guarantee not found or invalid access code
           content:
             application/json:
               schema:
@@ -180,7 +174,7 @@ components:
             The alphanumeric 3-character ISO currency code of the currency in
             which the balance is held.
     BadRequest:
-      title: BadRequest
+      title: Bad Request
       description: An error in the supplied payload, or the guarantee reference number did not match the expected format.
       required:
         - code
@@ -194,6 +188,27 @@ components:
         message:
           type: string
           description: The description of the error.
+      example:
+        code: BAD_REQUEST
+        message: The access code was not supplied.
+    InvalidGuaranteeType:
+      title: Invalid Guarantee Type
+      description: The supplied guarantee reference number refers to a guarantee that is not type 0, 1 or 9, and so a balance could not be obtained.
+      required:
+        - code
+        - message
+      type: object
+      properties:
+        code:
+          enum:
+            - INVALID_GUARANTEE_TYPE
+          type: string
+        message:
+          type: string
+          description: The description of the error.
+      example:
+        code: INVALID_GUARANTEE_TYPE
+        message: Guarantee type is not supported.
     NotFound:
       title: NotFound
       description: A guarantee was not found that matched the supplied guarantee reference number and access code.
