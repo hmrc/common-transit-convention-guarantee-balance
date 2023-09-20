@@ -18,6 +18,7 @@ package v2.models.errors
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.functional.syntax.unlift
+import play.api.libs.json.Json
 import play.api.libs.json.OWrites
 import play.api.libs.json.Reads
 import play.api.libs.json.__
@@ -34,6 +35,9 @@ object PresentationError extends CommonFormats {
 
   def badRequestError(message: String): PresentationError =
     StandardError(message, ErrorCode.BadRequest)
+
+  def invalidGuaranteeTypeError(message: String): PresentationError =
+    StandardError(message, ErrorCode.InvalidGuaranteeType)
 
   def notFoundError(message: String): PresentationError =
     StandardError(message, ErrorCode.NotFound)
@@ -63,11 +67,7 @@ object PresentationError extends CommonFormats {
         (__ \ CodeFieldName).write[ErrorCode]
     )(unlift(PresentationError.unapply))
 
-  implicit val standardErrorReads: Reads[StandardError] =
-    (
-      (__ \ MessageFieldName).read[String] and
-        (__ \ CodeFieldName).read[ErrorCode]
-    )(StandardError.apply _)
+  implicit val standardErrorReads: Reads[StandardError] = Json.reads[StandardError]
 
 }
 

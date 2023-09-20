@@ -33,12 +33,13 @@ import play.api.libs.json.Json
 import runtime.IOFutures
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.http.StringContextOps
-import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.client.HttpClientV2
 import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
+import v2.models.errors.UpstreamError
 
 import scala.util.Success
 import scala.util.Try
@@ -77,10 +78,14 @@ class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpCli
                   HeaderNames.CONTENT_TYPE  -> ContentTypes.JSON,
                   HeaderNames.AUTHORIZATION -> appConfig.internalAuthToken
                 )
-                .execute[InternalBalanceResponse]
-                .map(
-                  r => Right[Throwable, InternalBalanceResponse](r)
-                )
+                .execute[HttpResponse]
+                .map {
+                  response =>
+                    response.status match {
+                      case x if x <= 399 => Right(response.json.as[InternalBalanceResponse])
+                      case _             => Left(UpstreamError(response.body, response.status, response.status, response.headers))
+                    }
+                }
                 .recover {
                   case NonFatal(ex) => Left[Throwable, InternalBalanceResponse](ex)
                 }
@@ -93,8 +98,8 @@ class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpCli
   def isFailure(result: Try[Either[Throwable, InternalBalanceResponse]]): Boolean =
     result match {
       // we can communicate with the backend, so that should handle if EIS/ERMIS is being iffy
-      case Success(Right(_) | Left(_: UpstreamErrorResponse)) => false
-      case _                                                  => true
+      case Success(Right(_) | Left(_: UpstreamError)) => false
+      case _                                          => true
     }
 
 }

@@ -21,10 +21,13 @@ import cats.effect.unsafe.implicits.global
 import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.mockito.MockitoSugar
 import org.scalacheck.Arbitrary.arbitrary
+import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.time.SpanSugar.convertIntToGrainOfTime
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import play.api.http.Status.BAD_REQUEST
 import play.api.http.Status.FORBIDDEN
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.http.Status.NOT_FOUND
@@ -36,10 +39,12 @@ import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
 import v2.models.errors.RoutingError
+import v2.models.errors.UpstreamError
 
 class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
+  val timeout: Timeout           = Timeout(1.second)
 
   "RouterService" should "return a Right with an internal balance response on success" in forAll(
     arbitrary[BalanceRequest],
@@ -64,7 +69,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
     (balanceRequest, grn) =>
       val mockConnector = mock[RouterConnector]
       when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(eqTo(hc)))
-        .thenReturn(IO.pure(Left(UpstreamErrorResponse("nope", FORBIDDEN))))
+        .thenReturn(IO.pure(Left(UpstreamError("nope", FORBIDDEN, FORBIDDEN, Map.empty))))
 
       val sut = new RouterServiceImpl(mockConnector)
       whenReady(sut.request(grn, balanceRequest).value.unsafeToFuture()) {
@@ -79,11 +84,50 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with
     (balanceRequest, grn) =>
       val mockConnector = mock[RouterConnector]
       when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(eqTo(hc)))
-        .thenReturn(IO.pure(Left(UpstreamErrorResponse("nope", NOT_FOUND))))
+        .thenReturn(IO.pure(Left(UpstreamError("nope", NOT_FOUND, NOT_FOUND, Map.empty))))
 
       val sut = new RouterServiceImpl(mockConnector)
       whenReady(sut.request(grn, balanceRequest).value.unsafeToFuture()) {
         result => result shouldBe Left(RoutingError.GuaranteeReferenceNotFound)
+      }
+  }
+
+  "RouterService" should "return a Left with an InvalidGuaranteeType response if the guarantee type is invalid" in forAll(
+    arbitrary[BalanceRequest],
+    arbitrary[GuaranteeReferenceNumber]
+  ) {
+    (balanceRequest, grn) =>
+      val mockConnector = mock[RouterConnector]
+      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(eqTo(hc)))
+        .thenReturn(
+          IO.pure(
+            Left(UpstreamError("""{ "code":"INVALID_GUARANTEE_TYPE", "message":"Guarantee Type is not supported." }""", BAD_REQUEST, BAD_REQUEST, Map.empty))
+          )
+        )
+
+      val sut = new RouterServiceImpl(mockConnector)
+      whenReady(sut.request(grn, balanceRequest).value.unsafeToFuture(), timeout) {
+        result => result shouldBe Left(RoutingError.InvalidGuaranteeType)
+      }
+  }
+
+  "RouterService" should "return a Left with an UpstreamErrorResponse response if bad request was not invalid guarantee type" in forAll(
+    arbitrary[BalanceRequest],
+    arbitrary[GuaranteeReferenceNumber]
+  ) {
+    (balanceRequest, grn) =>
+      val message       = """{ "code":"BAD_REQUEST", "message":"Guarantee Type is not supported." }"""
+      val mockConnector = mock[RouterConnector]
+      when(mockConnector.post(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(balanceRequest))(eqTo(hc)))
+        .thenReturn(
+          IO.pure(Left(UpstreamError("""{ "code":"BAD_REQUEST", "message":"Guarantee Type is not supported." }""", BAD_REQUEST, BAD_REQUEST, Map.empty)))
+        )
+
+      val sut      = new RouterServiceImpl(mockConnector)
+      val EmptyMap = Map.empty[String, Seq[String]]
+      whenReady(sut.request(grn, balanceRequest).value.unsafeToFuture(), timeout) {
+        case Left(RoutingError.Unexpected(Some(UpstreamErrorResponse(`message`, BAD_REQUEST, BAD_REQUEST, EmptyMap)))) => succeed
+        case x                                                                                                         => fail(s"Expected Left(Unexpected(Some(UpstreamErrorResponse))), got $x")
       }
   }
 

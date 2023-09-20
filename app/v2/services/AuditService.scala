@@ -133,7 +133,7 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
     case RoutingError.GuaranteeReferenceNotFound                        => grnNotFound()
     case RoutingError.Unexpected(_) | RequestLockingError.Unexpected(_) => serverError()
     case RequestLockingError.AlreadyLocked                              => rateLimitExceeded()
-    case e: NonEmptyList[ValidationError]                               => invalidAccessCode()
+    case _: NonEmptyList[ValidationError]                               => invalidAccessCode()
     case _                                                              => serverError()
   }
 

@@ -260,6 +260,65 @@ class GuaranteeBalanceControllerIntegrationSpec
 
   }
 
+  it should "return bad request if the guarantee type is invalid" in {
+    val grn        = arbitrary[GuaranteeReferenceNumber].sample.get
+    val internalId = arbitrary[InternalId].sample.get
+
+    wireMockServer.stubFor(
+      post(urlEqualTo(s"/ctc-guarantee-balance-router/${grn.value}/balance"))
+        .withHeader(HeaderNames.ACCEPT, equalTo(ContentTypes.JSON))
+        .withHeader(HeaderNames.CONTENT_TYPE, equalTo(ContentTypes.JSON))
+        .withRequestBody(equalToJson(Json.stringify(Json.obj("accessCode" -> "ABCD"))))
+        .willReturn(
+          aResponse()
+            .withStatus(BAD_REQUEST)
+            .withBody(
+              Json.stringify(
+                Json.obj(
+                  "code"    -> "INVALID_GUARANTEE_TYPE",
+                  "message" -> "Guarantee type is not supported."
+                )
+              )
+            )
+        )
+    )
+
+    val request = AuthenticatedRequest(
+      FakeRequest(
+        "POST",
+        "/",
+        FakeHeaders(
+          Seq(
+            HeaderNames.ACCEPT -> "application/vnd.hmrc.2.0+json"
+          )
+        ),
+        Json.obj(
+          "accessCode" -> "ABCD"
+        )
+      ),
+      internalId
+    )
+
+    val expected = Json.obj(
+      "code"    -> "INVALID_GUARANTEE_TYPE",
+      "message" -> "Guarantee type is not supported."
+    )
+
+    val sut = injector.instanceOf[GuaranteeBalanceController]
+    sut
+      .postRequest(grn)(request)
+      .flatMap {
+        result =>
+          result.header.status shouldBe BAD_REQUEST
+          result.body.dataStream.reduce(_ ++ _).map(_.utf8String).runWith(Sink.head[String])
+      }
+      .map {
+        result =>
+          Json.parse(result) shouldBe expected
+      }
+
+  }
+
   it should "return not acceptable if the accept header is incorrect" in {
     val grn        = arbitrary[GuaranteeReferenceNumber].sample.get
     val internalId = arbitrary[InternalId].sample.get

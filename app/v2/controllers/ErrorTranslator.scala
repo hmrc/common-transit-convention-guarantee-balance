@@ -71,6 +71,7 @@ trait ErrorTranslator {
     override def convert(input: RoutingError): PresentationError = input match {
       case RoutingError.GuaranteeReferenceNotFound => PresentationError.notFoundError("Guarantee balance not found.")
       case RoutingError.InvalidAccessCode          => PresentationError.notFoundError("Guarantee balance not found.")
+      case RoutingError.InvalidGuaranteeType       => PresentationError.invalidGuaranteeTypeError("Guarantee type is not supported.")
       case RoutingError.Unexpected(thr)            => PresentationError.internalServiceError(cause = thr)
     }
   }
