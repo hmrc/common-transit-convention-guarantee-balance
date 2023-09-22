@@ -37,6 +37,11 @@ class BindersSpec extends AnyFlatSpec with Matchers with MockitoSugar with Scala
       Binders.grnBinder.bind("a", grn.value) shouldBe Left("ERROR_INVALID_GRN_COUNTRY_CODE")
   }
 
+  it should "return a left if the GRN is a type 4 with voucher" in forAll(guarantee24ReferenceNumberGenerator(Gen.oneOf("GB", "XI"))) {
+    grn =>
+      Binders.grnBinder.bind("a", grn) shouldBe Left("ERROR_INVALID_GRN_FORMAT")
+  }
+
   it should "return a left if the GRN is not a valid format" in forAll(Gen.stringOfN(10, Gen.alphaChar)) {
     grn =>
       Binders.grnBinder.bind("a", grn) shouldBe Left("ERROR_INVALID_GRN_FORMAT")

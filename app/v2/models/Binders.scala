@@ -23,11 +23,11 @@ import play.api.mvc.PathBindable
 object Binders {
 
   implicit val grnBinder: PathBindable[GuaranteeReferenceNumber] = new PathBindable[GuaranteeReferenceNumber] {
-    private val grnPattern = """[0-9]{2}([A-Z]{2})[A-Z0-9]{12}[0-9]([A-Z][0-9]{6})?""".r
+    private val grnPattern = """[0-9]{2}([A-Z]{2})[A-Z0-9]{12}[0-9]""".r
 
     override def bind(key: String, value: String): Either[String, GuaranteeReferenceNumber] = value match {
-      case grnPattern("GB", _) | grnPattern("XI", _) => Right(GuaranteeReferenceNumber(value))
-      case grnPattern(_, _) =>
+      case grnPattern("GB") | grnPattern("XI") => Right(GuaranteeReferenceNumber(value))
+      case grnPattern(_) =>
         Left(InvalidGRNCode) // String passed to Left(InvalidGRNCode) Interpreted by CustomJsonErrorHandler to filter out specific type of bad request.
       case _ =>
         Left(InvalidGRNFormat) // String passed to Left(InvalidGRNFormat) Interpreted by CustomJsonErrorHandler to filter out specific type of bad request.
