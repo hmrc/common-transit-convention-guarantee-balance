@@ -107,12 +107,12 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
 
   "RoutingError" should "return a not found if we don't find the GRN" in {
     routingErrorConverter.convert(RoutingError.GuaranteeReferenceNotFound) shouldBe
-      PresentationError.notFoundError("Guarantee balance not found.")
+      PresentationError.notFoundError("The guarantee reference number or access code did not match an existing guarantee.")
   }
 
   it should "return a not found if the access code does not match" in {
     routingErrorConverter.convert(RoutingError.InvalidAccessCode) shouldBe
-      PresentationError.notFoundError("Guarantee balance not found.")
+      PresentationError.notFoundError("The guarantee reference number or access code did not match an existing guarantee.")
   }
 
   it should "return a bad request if the type is not supported" in {

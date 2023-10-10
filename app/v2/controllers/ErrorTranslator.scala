@@ -68,9 +68,11 @@ trait ErrorTranslator {
 
   implicit val routingErrorConverter = new Converter[RoutingError] {
 
+    private val notFoundError = "The guarantee reference number or access code did not match an existing guarantee."
+
     override def convert(input: RoutingError): PresentationError = input match {
-      case RoutingError.GuaranteeReferenceNotFound => PresentationError.notFoundError("Guarantee balance not found.")
-      case RoutingError.InvalidAccessCode          => PresentationError.notFoundError("Guarantee balance not found.")
+      case RoutingError.GuaranteeReferenceNotFound => PresentationError.notFoundError(notFoundError)
+      case RoutingError.InvalidAccessCode          => PresentationError.notFoundError(notFoundError)
       case RoutingError.InvalidGuaranteeType       => PresentationError.invalidGuaranteeTypeError("Guarantee type is not supported.")
       case RoutingError.Unexpected(thr)            => PresentationError.internalServiceError(cause = thr)
     }

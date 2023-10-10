@@ -183,7 +183,7 @@ class GuaranteeBalanceControllerIntegrationSpec
 
     val expected = Json.obj(
       "code"    -> "NOT_FOUND",
-      "message" -> "Guarantee balance not found."
+      "message" -> "The guarantee reference number or access code did not match an existing guarantee."
     )
 
     val sut = injector.instanceOf[GuaranteeBalanceController]
@@ -242,7 +242,7 @@ class GuaranteeBalanceControllerIntegrationSpec
 
     val expected = Json.obj(
       "code"    -> "NOT_FOUND",
-      "message" -> "Guarantee balance not found."
+      "message" -> "The guarantee reference number or access code did not match an existing guarantee."
     )
 
     val sut = injector.instanceOf[GuaranteeBalanceController]
