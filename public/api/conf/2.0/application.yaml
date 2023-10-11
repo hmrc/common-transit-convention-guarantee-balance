@@ -77,10 +77,10 @@ paths:
                   - description: The guarantee reference number or access code did not match an existing guarantee.
                     example:
                       code: NOT_FOUND
-                      message: Guarantee balance not found.
+                      message: The guarantee reference number or access code did not match an existing guarantee.
               example:
                 code: NOT_FOUND
-                message: Guarantee balance not found.
+                message: The guarantee reference number or access code did not match an existing guarantee.
         '406':
           description: Not Acceptable
           content:

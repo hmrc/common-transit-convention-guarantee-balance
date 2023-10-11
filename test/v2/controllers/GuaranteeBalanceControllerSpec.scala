@@ -468,7 +468,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       status(result) shouldBe NOT_FOUND
       contentAsJson(result) shouldBe Json.obj(
         "code"    -> "NOT_FOUND",
-        "message" -> "Guarantee balance not found."
+        "message" -> "The guarantee reference number or access code did not match an existing guarantee."
       )
 
       verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
@@ -522,7 +522,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       status(result) shouldBe NOT_FOUND
       contentAsJson(result) shouldBe Json.obj(
         "code"    -> "NOT_FOUND",
-        "message" -> "Guarantee balance not found."
+        "message" -> "The guarantee reference number or access code did not match an existing guarantee."
       )
 
       verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
