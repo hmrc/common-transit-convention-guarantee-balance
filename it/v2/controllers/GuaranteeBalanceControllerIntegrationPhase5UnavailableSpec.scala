@@ -81,7 +81,7 @@ class GuaranteeBalanceControllerIntegrationPhase5UnavailableSpec
               Json.stringify(
                 Json.obj(
                   "code"    -> "NOT_ACCEPTABLE",
-                  "message" -> "CTC Traders API version 2 is not yet available. Please continue to use version 1 to submit transit messages."
+                  "message" -> "CTC Guarantee Balance API version 2 is not yet available. Please continue to use version 1 to submit transit messages."
                 )
               )
             )
@@ -106,7 +106,7 @@ class GuaranteeBalanceControllerIntegrationPhase5UnavailableSpec
 
     val expected = Json.obj(
       "code"    -> "NOT_ACCEPTABLE",
-      "message" -> "CTC Traders API version 2 is not yet available. Please continue to use version 1 to submit transit messages."
+      "message" -> "CTC Guarantee Balance API version 2 is not yet available. Please continue to use version 1 to submit transit messages."
     )
 
     val sut = injector.instanceOf[GuaranteeBalanceController]

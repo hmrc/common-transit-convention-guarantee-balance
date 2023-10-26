@@ -87,7 +87,7 @@ class GuaranteeBalanceController @Inject() (
         } else {
           // Let the client know Phase 5 is not yet available.
           val presentationError = PresentationError.notAcceptableError(
-            "CTC Traders API version 2 is not yet available. Please continue to use version 1 to submit transit messages."
+            "CTC Guarantee Balance API version 2 is not yet available. Please continue to use version 1 to submit transit messages."
           )
           IO(Status(presentationError.code.statusCode)(Json.toJson(presentationError)))
         }

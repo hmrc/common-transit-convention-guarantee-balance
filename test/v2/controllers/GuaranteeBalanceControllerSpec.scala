@@ -604,7 +604,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       status(result) shouldBe NOT_ACCEPTABLE
       contentAsJson(result) shouldBe Json.obj(
         "code"    -> "NOT_ACCEPTABLE",
-        "message" -> "CTC Traders API version 2 is not yet available. Please continue to use version 1 to submit transit messages."
+        "message" -> "CTC Guarantee Balance API version 2 is not yet available. Please continue to use version 1 to submit transit messages."
       )
 
       verify(mockAppConfig, times(1)).enablePhase5
