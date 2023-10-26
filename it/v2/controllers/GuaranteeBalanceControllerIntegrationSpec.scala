@@ -74,6 +74,8 @@ class GuaranteeBalanceControllerIntegrationSpec
     bind[AuthActionProvider].toInstance(FakeIntegrationAuthActionProvider)
   )
 
+  override def configuration: Seq[(String, Any)] = Seq("enable-phase-5" -> true)
+
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "GuaranteeBalanceController#postRequest" should "return OK with a result if everything is okay" in {
