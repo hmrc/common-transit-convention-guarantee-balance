@@ -21,6 +21,7 @@ import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import com.google.inject.Inject
 import com.kenshoo.play.metrics.Metrics
+import config.AppConfig
 import controllers.ErrorLogging
 import controllers.actions.AuthActionProvider
 import controllers.actions.IOActions
@@ -46,6 +47,7 @@ import v2.services.ValidationService
 import scala.concurrent.ExecutionContext
 
 class GuaranteeBalanceController @Inject() (
+  appConfig: AppConfig,
   authenticate: AuthActionProvider,
   lockService: RequestLockingService,
   validationService: ValidationService,
@@ -67,19 +69,27 @@ class GuaranteeBalanceController @Inject() (
   def postRequest(grn: GuaranteeReferenceNumber): Action[JsValue] =
     authenticate().io(parse.json) {
       implicit request =>
-        (for {
-          _      <- validateAcceptHeader(grn)
-          parsed <- parseJson(request, grn)
-          auditInfo = AuditInfo(parsed, grn, request.internalId)
-          _                <- lockService.lock(grn, request.internalId).asPresentation(auditInfo, auditService)
-          _                <- validationService.validate(parsed).asPresentation(auditInfo, auditService)
-          internalResponse <- routerService.request(grn, parsed).asPresentation(auditInfo, auditService)
-          hateoas          <- EitherT.right[PresentationError](HateoasResponse(grn, internalResponse))
-          _ = auditService.balanceRequestSucceeded(auditInfo, internalResponse.balance)
-        } yield hateoas).fold(
-          presentationError => Status(presentationError.code.statusCode)(Json.toJson(presentationError)),
-          result => Ok(result)
-        )
+        if (appConfig.enablePhase5) {
+          (for {
+            _      <- validateAcceptHeader(grn)
+            parsed <- parseJson(request, grn)
+            auditInfo = AuditInfo(parsed, grn, request.internalId)
+            _                <- lockService.lock(grn, request.internalId).asPresentation(auditInfo, auditService)
+            _                <- validationService.validate(parsed).asPresentation(auditInfo, auditService)
+            internalResponse <- routerService.request(grn, parsed).asPresentation(auditInfo, auditService)
+            hateoas          <- EitherT.right[PresentationError](HateoasResponse(grn, internalResponse))
+            _ = auditService.balanceRequestSucceeded(auditInfo, internalResponse.balance)
+          } yield hateoas).fold(
+            presentationError => Status(presentationError.code.statusCode)(Json.toJson(presentationError)),
+            result => Ok(result)
+          )
+        } else {
+          // Let the client know Phase 5 is not yet available.
+          val presentationError = PresentationError.notAcceptableError(
+            "CTC Guarantee Balance API version 2 is not yet available. Please continue to use version 1 to submit transit messages."
+          )
+          IO(Status(presentationError.code.statusCode)(Json.toJson(presentationError)))
+        }
     }
 
   private def parseJson(request: AuthenticatedRequest[JsValue], guaranteeReferenceNumber: GuaranteeReferenceNumber)(implicit
