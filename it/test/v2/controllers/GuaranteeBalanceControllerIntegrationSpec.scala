@@ -22,7 +22,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import com.codahale.metrics.MetricRegistry
 import connectors.WireMockSpec
 import controllers.actions.AuthActionProvider
 import fakes.controllers.actions.FakeIntegrationAuthActionProvider
@@ -52,6 +51,7 @@ import v2.models.Balance
 import v2.models.GuaranteeReferenceNumber
 import v2.util.Generators
 import v2.util.TestActorSystem
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 /** These tests test the full journey from request to response, via all parts of the system.
   * Note that the authentication isn't done as part of this, so checking the internal IDs is not provided for here.
@@ -70,7 +70,7 @@ class GuaranteeBalanceControllerIntegrationSpec
   )
 
   override protected val bindings: Seq[GuiceableModule] = Seq(
-    bind[MetricRegistry].toInstance(new FakeMetrics),
+    bind[Metrics].toInstance(new FakeMetrics),
     bind[AuthActionProvider].toInstance(FakeIntegrationAuthActionProvider)
   )
 

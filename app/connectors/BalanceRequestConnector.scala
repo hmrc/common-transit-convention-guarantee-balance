@@ -40,6 +40,7 @@ import uk.gov.hmrc.http.HttpReads
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -63,7 +64,7 @@ trait BalanceRequestConnector {
 class BalanceRequestConnectorImpl @Inject() (
   appConfig: AppConfig,
   http: HttpClient,
-  val metrics: MetricRegistry
+  val metrics: Metrics
 )(implicit val materializer: Materializer)
     extends BalanceRequestConnector
     with IOFutures

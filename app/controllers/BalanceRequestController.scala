@@ -58,6 +58,7 @@ import services.BalanceRequestLockService
 import services.BalanceRequestService
 import services.BalanceRequestValidationService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -73,7 +74,7 @@ class BalanceRequestController @Inject() (
   validator: BalanceRequestValidationService,
   cc: ControllerComponents,
   val runtime: IORuntime,
-  val metrics: MetricRegistry
+  val metrics: Metrics
 ) extends BackendController(cc)
     with IOActions
     with IOMetrics

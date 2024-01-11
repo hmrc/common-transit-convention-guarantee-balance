@@ -34,6 +34,7 @@ import play.api.test.Helpers._
 import runtime.IOFutures
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import java.util.concurrent.CancellationException
 import scala.concurrent.Future
@@ -41,7 +42,7 @@ import scala.concurrent.duration._
 
 class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach with IdiomaticMockito with ArgumentMatchersSugar {
 
-  class IOMetricsConnector(val metrics: MetricRegistry) extends IOFutures with IOMetrics {
+  class IOMetricsConnector(val metrics: Metrics) extends IOFutures with IOMetrics {
 
     def okHttpCall =
       withMetricsTimerResponse("connector-ok") {
@@ -98,7 +99,7 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
       withMetricsTimer("connector-manual-failure")(_.completeWithFailure())
   }
 
-  class IOMetricsController(val metrics: com.codahale.metrics.MetricRegistry, val runtime: IORuntime)
+  class IOMetricsController(val metrics: Metrics, val runtime: IORuntime)
       extends BackendController(Helpers.stubControllerComponents())
       with IOActions
       with IOMetrics {
@@ -134,17 +135,19 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
     }
   }
 
-  val metrics        = mock[MetricRegistry]
+  val metrics        = mock[Metrics]
+  val registry       = mock[MetricRegistry]
   val timer          = mock[Timer]
   val timerContext   = mock[Timer.Context]
   val successCounter = mock[Counter]
   val failureCounter = mock[Counter]
 
   override protected def beforeEach(): Unit = {
-    reset(metrics, timer, timerContext, successCounter, failureCounter)
-    metrics.timer(*[String]) returns timer
-    metrics.counter(endsWith("-success-counter")) returns successCounter
-    metrics.counter(endsWith("-failed-counter")) returns failureCounter
+    reset(metrics, registry, timer, timerContext, successCounter, failureCounter)
+    metrics.defaultRegistry returns registry
+    registry.timer(*[String]) returns timer
+    registry.counter(endsWith("-success-counter")) returns successCounter
+    registry.counter(endsWith("-failed-counter")) returns failureCounter
     timer.time() returns timerContext
   }
 

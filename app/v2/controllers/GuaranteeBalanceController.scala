@@ -19,7 +19,7 @@ package v2.controllers
 import cats.data.EitherT
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
-import com.codahale.metrics.MetricRegistry
+// import com.codahale.metrics.MetricRegistry
 import com.google.inject.Inject
 import config.AppConfig
 import controllers.ErrorLogging
@@ -43,6 +43,7 @@ import v2.services.AuditService
 import v2.services.RequestLockingService
 import v2.services.RouterService
 import v2.services.ValidationService
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.concurrent.ExecutionContext
 
@@ -55,7 +56,7 @@ class GuaranteeBalanceController @Inject() (
   auditService: AuditService,
   cc: ControllerComponents,
   val runtime: IORuntime,
-  val metrics: MetricRegistry
+  val metrics: Metrics
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with IOActions

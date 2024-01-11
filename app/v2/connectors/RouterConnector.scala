@@ -40,6 +40,7 @@ import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
 import v2.models.errors.UpstreamError
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.util.Success
 import scala.util.Try
@@ -52,7 +53,7 @@ trait RouterConnector {
 
 }
 
-class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpClientV2, val metrics: MetricRegistry)(implicit
+class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpClientV2, val metrics: Metrics)(implicit
   val materializer: Materializer
 ) extends RouterConnector
     with IOFutures

@@ -18,7 +18,6 @@ package v2.controllers
 
 import org.apache.pekko.stream.scaladsl.Sink
 import com.github.tomakehurst.wiremock.client.WireMock._
-import com.codahale.metrics.MetricRegistry
 import connectors.WireMockSpec
 import controllers.actions.AuthActionProvider
 import fakes.controllers.actions.FakeIntegrationAuthActionProvider
@@ -37,6 +36,8 @@ import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.Json
 import play.api.test._
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
+
 import v2.models._
 import v2.util._
 
@@ -57,7 +58,7 @@ class GuaranteeBalanceControllerIntegrationPhase5UnavailableSpec
   )
 
   override protected val bindings: Seq[GuiceableModule] = Seq(
-    bind[MetricRegistry].toInstance(new FakeMetrics),
+    bind[Metrics].toInstance(new FakeMetrics),
     bind[AuthActionProvider].toInstance(FakeIntegrationAuthActionProvider)
   )
 

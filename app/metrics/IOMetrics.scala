@@ -21,12 +21,13 @@ import cats.effect.kernel.Deferred
 import cats.effect.kernel.Resource
 import cats.effect.kernel.Resource.ExitCase
 import com.codahale.metrics.MetricRegistry
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import play.api.mvc.Result
 
 trait IOMetrics {
-  def metrics: MetricRegistry
+  def metrics: Metrics
 
-  private lazy val registry: MetricRegistry = metrics
+  private lazy val registry: MetricRegistry = metrics.defaultRegistry
 
   class MetricsTimer private[metrics] (metricKey: String, timerCompleted: Deferred[IO, Boolean]) {
     val timerContext   = registry.timer(s"$metricKey-timer").time()

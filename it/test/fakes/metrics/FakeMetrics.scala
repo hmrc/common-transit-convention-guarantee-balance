@@ -16,4 +16,9 @@
 
 package fakes.metrics
 
-class FakeMetrics extends com.codahale.metrics.MetricRegistry {}
+import com.codahale.metrics.MetricRegistry
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
+
+class FakeMetrics extends Metrics {
+  override def defaultRegistry: MetricRegistry = new MetricRegistry
+}
