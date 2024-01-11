@@ -16,11 +16,10 @@
 
 package v2.connectors
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import cats.effect.IO
 import com.google.inject.ImplementedBy
 import com.google.inject.Inject
-import com.kenshoo.play.metrics.Metrics
 import config.AppConfig
 import config.CircuitBreakerConfig
 import connectors.CircuitBreakers
@@ -52,7 +51,7 @@ trait RouterConnector {
 
 }
 
-class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpClientV2, val metrics: Metrics)(implicit
+class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpClientV2, val metrics: com.codahale.metrics.MetricRegistry)(implicit
   val materializer: Materializer
 ) extends RouterConnector
     with IOFutures

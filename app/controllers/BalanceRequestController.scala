@@ -19,7 +19,6 @@ package controllers
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cats.syntax.all._
-import com.kenshoo.play.metrics.Metrics
 import config.AppConfig
 import controllers.actions.AuthActionProvider
 import controllers.actions.IOActions
@@ -73,7 +72,7 @@ class BalanceRequestController @Inject() (
   validator: BalanceRequestValidationService,
   cc: ControllerComponents,
   val runtime: IORuntime,
-  val metrics: Metrics
+  val metrics: com.codahale.metrics.MetricRegistry
 ) extends BackendController(cc)
     with IOActions
     with IOMetrics

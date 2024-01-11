@@ -16,9 +16,8 @@
 
 package v2.controllers
 
-import akka.stream.scaladsl.Sink
+import org.apache.pekko.stream.scaladsl.Sink
 import com.github.tomakehurst.wiremock.client.WireMock._
-import com.kenshoo.play.metrics.Metrics
 import connectors.WireMockSpec
 import controllers.actions.AuthActionProvider
 import fakes.controllers.actions.FakeIntegrationAuthActionProvider
@@ -57,7 +56,7 @@ class GuaranteeBalanceControllerIntegrationPhase5UnavailableSpec
   )
 
   override protected val bindings: Seq[GuiceableModule] = Seq(
-    bind[Metrics].toInstance(new FakeMetrics),
+    bind[com.codahale.metrics.MetricRegistry].toInstance(new FakeMetrics),
     bind[AuthActionProvider].toInstance(FakeIntegrationAuthActionProvider)
   )
 

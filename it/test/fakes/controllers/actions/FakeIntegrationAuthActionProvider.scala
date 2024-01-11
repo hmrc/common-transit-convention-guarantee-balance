@@ -39,5 +39,6 @@ object FakeIntegrationAuthAction extends ActionTransformer[Request, Authenticate
   override protected def transform[A](request: Request[A]): Future[AuthenticatedRequest[A]] =
     request match {
       case x: AuthenticatedRequest[A] => Future.successful(x)
+      case _                          => Future.failed(new Exception("Non-authenticated request"))
     }
 }

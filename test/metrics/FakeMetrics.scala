@@ -17,9 +17,5 @@
 package metrics
 
 import com.codahale.metrics.MetricRegistry
-import com.kenshoo.play.metrics.Metrics
 
-class FakeMetrics extends Metrics {
-  override def defaultRegistry: MetricRegistry = new MetricRegistry
-  override def toJson: String                  = "null"
-}
+class FakeMetrics extends com.codahale.metrics.MetricRegistry {}

@@ -22,7 +22,6 @@ import cats.effect.unsafe.implicits.global
 import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.Timer
-import com.kenshoo.play.metrics.Metrics
 import controllers.actions.IOActions
 import org.mockito.ArgumentMatchersSugar
 import org.mockito.IdiomaticMockito
@@ -42,7 +41,7 @@ import scala.concurrent.duration._
 
 class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach with IdiomaticMockito with ArgumentMatchersSugar {
 
-  class IOMetricsConnector(val metrics: Metrics) extends IOFutures with IOMetrics {
+  class IOMetricsConnector(val metrics: com.codahale.metrics.MetricRegistry) extends IOFutures with IOMetrics {
 
     def okHttpCall =
       withMetricsTimerResponse("connector-ok") {
@@ -99,7 +98,7 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
       withMetricsTimer("connector-manual-failure")(_.completeWithFailure())
   }
 
-  class IOMetricsController(val metrics: Metrics, val runtime: IORuntime)
+  class IOMetricsController(val metrics: com.codahale.metrics.MetricRegistry, val runtime: IORuntime)
       extends BackendController(Helpers.stubControllerComponents())
       with IOActions
       with IOMetrics {
@@ -135,19 +134,17 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
     }
   }
 
-  val metrics        = mock[Metrics]
-  val registry       = mock[MetricRegistry]
+  val metrics        = mock[com.codahale.metrics.MetricRegistry]
   val timer          = mock[Timer]
   val timerContext   = mock[Timer.Context]
   val successCounter = mock[Counter]
   val failureCounter = mock[Counter]
 
   override protected def beforeEach(): Unit = {
-    reset(metrics, registry, timer, timerContext, successCounter, failureCounter)
-    metrics.defaultRegistry returns registry
-    registry.timer(*[String]) returns timer
-    registry.counter(endsWith("-success-counter")) returns successCounter
-    registry.counter(endsWith("-failed-counter")) returns failureCounter
+    reset(metrics, timer, timerContext, successCounter, failureCounter)
+    metrics.timer(*[String]) returns timer
+    metrics.counter(endsWith("-success-counter")) returns successCounter
+    metrics.counter(endsWith("-failed-counter")) returns failureCounter
     timer.time() returns timerContext
   }
 

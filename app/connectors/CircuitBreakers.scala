@@ -16,8 +16,8 @@
 
 package connectors
 
-import akka.pattern.CircuitBreaker
-import akka.stream.Materializer
+import org.apache.pekko.pattern.CircuitBreaker
+import org.apache.pekko.stream.Materializer
 import config.CircuitBreakerConfig
 import logging.Logging
 

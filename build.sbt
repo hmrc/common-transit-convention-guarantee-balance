@@ -2,23 +2,20 @@ import play.sbt.routes.RoutesKeys
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings
 
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "2.13.12"
+
 val appName = "common-transit-convention-guarantee-balance"
 
 lazy val microservice = Project(appName, file("."))
-  .configs(IntegrationTest)
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(
     JUnitXmlReportPlugin
   ) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
-  .settings(DefaultBuildSettings.integrationTestSettings())
   .settings(inThisBuild(buildSettings))
-  .settings(inConfig(IntegrationTest)(ScalafmtPlugin.scalafmtConfigSettings))
-  .settings(inConfig(IntegrationTest)(scalafixConfigSettings(IntegrationTest)))
   .settings(scalacSettings)
   .settings(scoverageSettings)
   .settings(
-    majorVersion := 0,
-    scalaVersion := "2.13.8",
     PlayKeys.playDefaultPort := 10207,
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
@@ -29,6 +26,14 @@ lazy val microservice = Project(appName, file("."))
       "v2.models.Binders._",
       "v2.models.GuaranteeReferenceNumber"
     )
+  )
+
+  lazy val it = project
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test")
+  .settings(DefaultBuildSettings.itSettings())
+  .settings(
+    libraryDependencies ++= AppDependencies.test,
   )
 
 lazy val buildSettings = Def.settings(

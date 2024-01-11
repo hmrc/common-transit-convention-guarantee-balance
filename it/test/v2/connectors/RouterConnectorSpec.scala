@@ -36,7 +36,7 @@ import play.api.http.Status.NOT_FOUND
 import play.api.http.Status.OK
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.UpstreamErrorResponse
+// import uk.gov.hmrc.http.UpstreamErrorResponse
 import v2.models.AccessCode
 import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber

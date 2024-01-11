@@ -44,7 +44,7 @@ class RequestLockingServiceSpec
     with DefaultPlayMongoRepositorySupport[Lock]
     with ScalaCheckDrivenPropertyChecks {
 
-  implicit val ec = ExecutionContext.global
+  implicit val ec: ExecutionContext = ExecutionContext.global
 
   def mkAppConfig(config: Configuration) = {
     val servicesConfig = new ServicesConfig(config)

@@ -16,10 +16,9 @@
 
 package connectors
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import cats.effect.IO
 import com.google.inject.ImplementedBy
-import com.kenshoo.play.metrics.Metrics
 import config.AppConfig
 import config.Constants
 import logging.Logging
@@ -63,7 +62,7 @@ trait BalanceRequestConnector {
 class BalanceRequestConnectorImpl @Inject() (
   appConfig: AppConfig,
   http: HttpClient,
-  val metrics: Metrics
+  val metrics: com.codahale.metrics.MetricRegistry
 )(implicit val materializer: Materializer)
     extends BalanceRequestConnector
     with IOFutures
