@@ -41,7 +41,7 @@ import scala.concurrent.duration._
 
 class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach with IdiomaticMockito with ArgumentMatchersSugar {
 
-  class IOMetricsConnector(val metrics: com.codahale.metrics.MetricRegistry) extends IOFutures with IOMetrics {
+  class IOMetricsConnector(val metrics: MetricRegistry) extends IOFutures with IOMetrics {
 
     def okHttpCall =
       withMetricsTimerResponse("connector-ok") {
@@ -134,7 +134,7 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
     }
   }
 
-  val metrics        = mock[com.codahale.metrics.MetricRegistry]
+  val metrics        = mock[MetricRegistry]
   val timer          = mock[Timer]
   val timerContext   = mock[Timer.Context]
   val successCounter = mock[Counter]

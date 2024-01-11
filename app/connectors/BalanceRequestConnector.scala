@@ -17,6 +17,7 @@
 package connectors
 
 import org.apache.pekko.stream.Materializer
+import com.codahale.metrics.MetricRegistry
 import cats.effect.IO
 import com.google.inject.ImplementedBy
 import config.AppConfig
@@ -62,7 +63,7 @@ trait BalanceRequestConnector {
 class BalanceRequestConnectorImpl @Inject() (
   appConfig: AppConfig,
   http: HttpClient,
-  val metrics: com.codahale.metrics.MetricRegistry
+  val metrics: MetricRegistry
 )(implicit val materializer: Materializer)
     extends BalanceRequestConnector
     with IOFutures

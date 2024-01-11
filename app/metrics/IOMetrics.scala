@@ -24,7 +24,7 @@ import com.codahale.metrics.MetricRegistry
 import play.api.mvc.Result
 
 trait IOMetrics {
-  def metrics: com.codahale.metrics.MetricRegistry
+  def metrics: MetricRegistry
 
   private lazy val registry: MetricRegistry = metrics
 

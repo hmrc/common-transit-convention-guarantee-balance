@@ -22,6 +22,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.codahale.metrics.MetricRegistry
 import connectors.WireMockSpec
 import controllers.actions.AuthActionProvider
 import fakes.controllers.actions.FakeIntegrationAuthActionProvider
@@ -69,7 +70,7 @@ class GuaranteeBalanceControllerIntegrationSpec
   )
 
   override protected val bindings: Seq[GuiceableModule] = Seq(
-    bind[com.codahale.metrics.MetricRegistry].toInstance(new FakeMetrics),
+    bind[MetricRegistry].toInstance(new FakeMetrics),
     bind[AuthActionProvider].toInstance(FakeIntegrationAuthActionProvider)
   )
 

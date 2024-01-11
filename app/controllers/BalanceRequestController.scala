@@ -20,6 +20,7 @@ import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cats.syntax.all._
 import config.AppConfig
+import com.codahale.metrics.MetricRegistry
 import controllers.actions.AuthActionProvider
 import controllers.actions.IOActions
 import logging.Logging
@@ -72,7 +73,7 @@ class BalanceRequestController @Inject() (
   validator: BalanceRequestValidationService,
   cc: ControllerComponents,
   val runtime: IORuntime,
-  val metrics: com.codahale.metrics.MetricRegistry
+  val metrics: MetricRegistry
 ) extends BackendController(cc)
     with IOActions
     with IOMetrics

@@ -18,6 +18,7 @@ package v2.connectors
 
 import org.apache.pekko.stream.Materializer
 import cats.effect.IO
+import com.codahale.metrics.MetricRegistry
 import com.google.inject.ImplementedBy
 import com.google.inject.Inject
 import config.AppConfig
@@ -51,7 +52,7 @@ trait RouterConnector {
 
 }
 
-class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpClientV2, val metrics: com.codahale.metrics.MetricRegistry)(implicit
+class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpClientV2, val metrics: MetricRegistry)(implicit
   val materializer: Materializer
 ) extends RouterConnector
     with IOFutures

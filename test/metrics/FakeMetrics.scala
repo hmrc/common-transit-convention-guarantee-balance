@@ -18,4 +18,4 @@ package metrics
 
 import com.codahale.metrics.MetricRegistry
 
-class FakeMetrics extends com.codahale.metrics.MetricRegistry {}
+class FakeMetrics extends MetricRegistry {}
