@@ -19,7 +19,6 @@ package v2.controllers
 import cats.data.EitherT
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
-// import com.codahale.metrics.MetricRegistry
 import com.google.inject.Inject
 import config.AppConfig
 import controllers.ErrorLogging
