@@ -16,11 +16,11 @@
 
 package v2.connectors
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import cats.effect.IO
+import com.codahale.metrics.MetricRegistry
 import com.google.inject.ImplementedBy
 import com.google.inject.Inject
-import com.kenshoo.play.metrics.Metrics
 import config.AppConfig
 import config.CircuitBreakerConfig
 import connectors.CircuitBreakers
@@ -40,6 +40,7 @@ import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
 import v2.models.errors.UpstreamError
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.util.Success
 import scala.util.Try

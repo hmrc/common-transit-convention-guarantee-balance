@@ -14,17 +14,11 @@
  * limitations under the License.
  */
 
-package v2.util
+package fakes.metrics
 
-import akka.actor.ActorSystem
-import akka.stream.Materializer
-import org.scalatest.Suite
+import com.codahale.metrics.MetricRegistry
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
-object TestActorSystem {
-  val system: ActorSystem = ActorSystem("test")
-}
-
-trait TestActorSystem { self: Suite =>
-  implicit val system: ActorSystem        = TestActorSystem.system
-  implicit val materializer: Materializer = Materializer(TestActorSystem.system)
+class FakeMetrics extends Metrics {
+  override def defaultRegistry: MetricRegistry = new MetricRegistry
 }

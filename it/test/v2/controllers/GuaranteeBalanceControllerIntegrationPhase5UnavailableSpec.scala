@@ -16,9 +16,8 @@
 
 package v2.controllers
 
-import akka.stream.scaladsl.Sink
+import org.apache.pekko.stream.scaladsl.Sink
 import com.github.tomakehurst.wiremock.client.WireMock._
-import com.kenshoo.play.metrics.Metrics
 import connectors.WireMockSpec
 import controllers.actions.AuthActionProvider
 import fakes.controllers.actions.FakeIntegrationAuthActionProvider
@@ -37,6 +36,8 @@ import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.Json
 import play.api.test._
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
+
 import v2.models._
 import v2.util._
 

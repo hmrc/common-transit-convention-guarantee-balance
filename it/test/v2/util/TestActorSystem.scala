@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-package fakes.metrics
+package v2.util
 
-import com.codahale.metrics.MetricRegistry
-import com.kenshoo.play.metrics.Metrics
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.Materializer
+import org.scalatest.Suite
 
-class FakeMetrics extends Metrics {
-  override def defaultRegistry: MetricRegistry = new MetricRegistry
-  override def toJson: String                  = "null"
+object TestActorSystem {
+  val system: ActorSystem = ActorSystem("test")
+}
+
+trait TestActorSystem { self: Suite =>
+  implicit val system: ActorSystem        = TestActorSystem.system
+  implicit val materializer: Materializer = Materializer(TestActorSystem.system)
 }

@@ -22,7 +22,6 @@ import cats.effect.unsafe.implicits.global
 import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.Timer
-import com.kenshoo.play.metrics.Metrics
 import controllers.actions.IOActions
 import org.mockito.ArgumentMatchersSugar
 import org.mockito.IdiomaticMockito
@@ -35,6 +34,7 @@ import play.api.test.Helpers._
 import runtime.IOFutures
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import java.util.concurrent.CancellationException
 import scala.concurrent.Future

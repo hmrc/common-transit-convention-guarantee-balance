@@ -16,10 +16,10 @@
 
 package connectors
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
+import com.codahale.metrics.MetricRegistry
 import cats.effect.IO
 import com.google.inject.ImplementedBy
-import com.kenshoo.play.metrics.Metrics
 import config.AppConfig
 import config.Constants
 import logging.Logging
@@ -40,6 +40,7 @@ import uk.gov.hmrc.http.HttpReads
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import javax.inject.Inject
 import javax.inject.Singleton

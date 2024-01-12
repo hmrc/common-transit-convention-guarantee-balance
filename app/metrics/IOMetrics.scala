@@ -21,7 +21,7 @@ import cats.effect.kernel.Deferred
 import cats.effect.kernel.Resource
 import cats.effect.kernel.Resource.ExitCase
 import com.codahale.metrics.MetricRegistry
-import com.kenshoo.play.metrics.Metrics
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import play.api.mvc.Result
 
 trait IOMetrics {

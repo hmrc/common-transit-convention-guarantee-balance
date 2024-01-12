@@ -19,8 +19,8 @@ package controllers
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cats.syntax.all._
-import com.kenshoo.play.metrics.Metrics
 import config.AppConfig
+import com.codahale.metrics.MetricRegistry
 import controllers.actions.AuthActionProvider
 import controllers.actions.IOActions
 import logging.Logging
@@ -58,6 +58,7 @@ import services.BalanceRequestLockService
 import services.BalanceRequestService
 import services.BalanceRequestValidationService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import javax.inject.Inject
 import javax.inject.Singleton

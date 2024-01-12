@@ -20,7 +20,6 @@ import cats.data.EitherT
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import com.google.inject.Inject
-import com.kenshoo.play.metrics.Metrics
 import config.AppConfig
 import controllers.ErrorLogging
 import controllers.actions.AuthActionProvider
@@ -43,6 +42,7 @@ import v2.services.AuditService
 import v2.services.RequestLockingService
 import v2.services.RouterService
 import v2.services.ValidationService
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.concurrent.ExecutionContext
 

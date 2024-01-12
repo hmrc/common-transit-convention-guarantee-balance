@@ -49,7 +49,7 @@ class BalanceRequestConnectorSpec extends AsyncFlatSpec with Matchers with Eithe
     "microservice.services.transit-movements-guarantee-balance.port"
   )
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val requestJson = Json.obj(
     "taxIdentifier"      -> "GB12345678900",

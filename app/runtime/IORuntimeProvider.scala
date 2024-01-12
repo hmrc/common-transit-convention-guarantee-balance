@@ -16,7 +16,7 @@
 
 package runtime
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import cats.effect.unsafe.IORuntime
 import cats.effect.unsafe.IORuntimeConfig
 import play.api.inject.ApplicationLifecycle
