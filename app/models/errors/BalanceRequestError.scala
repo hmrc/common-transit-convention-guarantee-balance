@@ -26,6 +26,8 @@ sealed abstract class BalanceRequestError extends Product with Serializable {
 
 case class NotFoundError(message: String) extends BalanceRequestError
 
+case class GoneError(message: String) extends BalanceRequestError
+
 case class UpstreamTimeoutError(message: String = "Request timed out") extends BalanceRequestError
 
 case class InternalServiceError(
@@ -69,6 +71,11 @@ object BalanceRequestError {
       s"The balance request with ID ${balanceId.value} was not found"
     )
 
+  def goneError(): BalanceRequestError =
+    GoneError(
+      "Requests for New Guarantee Balance enquiries using the CTC Guarantee Balance API v1.0 are no longer supported. Please use CTC Guarantee Balance API v2.0 for balance inquiries."
+    )
+
   implicit lazy val upstreamServiceErrorWrites: OWrites[UpstreamServiceError] =
     (__ \ "message").write[String].contramap(_.message)
 
@@ -79,6 +86,9 @@ object BalanceRequestError {
     (__ \ "message").write[String].contramap(_.message)
 
   implicit lazy val notFoundErrorWrites: OWrites[NotFoundError] =
+    (__ \ "message").write[String].contramap(_.message)
+
+  implicit lazy val goneErrorWrites: OWrites[GoneError] =
     (__ \ "message").write[String].contramap(_.message)
 
   def withErrorCode(jsObject: JsObject, code: String): JsObject =
@@ -97,5 +107,8 @@ object BalanceRequestError {
 
       case err @ NotFoundError(_) =>
         withErrorCode(notFoundErrorWrites.writes(err), ErrorCode.NotFound)
+      
+      case err @ GoneError(_) =>
+        withErrorCode(goneErrorWrites.writes(err), ErrorCode.GoneError)
     }
 }

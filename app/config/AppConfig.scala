@@ -65,6 +65,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val internalAuthToken: String = config.get[String]("internal-auth.token")
 
-  lazy val enablePhase5: Boolean = config.get[Boolean]("enable-phase-5")
+  lazy val enablePhase5: Boolean = config.getOptional[Boolean]("enable-phase-5").getOrElse(false)
 
 }
