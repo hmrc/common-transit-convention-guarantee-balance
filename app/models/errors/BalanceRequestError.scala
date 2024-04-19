@@ -107,7 +107,7 @@ object BalanceRequestError {
 
       case err @ NotFoundError(_) =>
         withErrorCode(notFoundErrorWrites.writes(err), ErrorCode.NotFound)
-      
+
       case err @ GoneError(_) =>
         withErrorCode(goneErrorWrites.writes(err), ErrorCode.GoneError)
     }

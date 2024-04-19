@@ -59,8 +59,6 @@ import java.util.UUID
 
 class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
 
-  
-
   def mkAppConfig(config: Configuration) = {
     val servicesConfig = new ServicesConfig(config)
     new AppConfig(config, servicesConfig)
