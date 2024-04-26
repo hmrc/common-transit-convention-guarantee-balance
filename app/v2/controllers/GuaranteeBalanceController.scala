@@ -65,13 +65,14 @@ class GuaranteeBalanceController @Inject() (
     with ErrorTranslator {
 
   private val AcceptHeaderRegex = """application/vnd\.hmrc\.(2.0)\+json""".r
+  private val HeaderRegexV1     = """application/vnd\.hmrc\.(1.0)\+json""".r
 
   def postRequest(grn: GuaranteeReferenceNumber): Action[JsValue] =
     authenticate().io(parse.json) {
       implicit request =>
         if (appConfig.enablePhase5) {
           (for {
-            _      <- validateAcceptHeader(grn)
+            _ <- validateAcceptHeader(grn)
             parsed <- parseJson(request, grn)
             auditInfo = AuditInfo(parsed, grn, request.internalId)
             _                <- lockService.lock(grn, request.internalId).asPresentation(auditInfo, auditService)
@@ -115,11 +116,13 @@ class GuaranteeBalanceController @Inject() (
       IO {
         request.headers.get(ACCEPT) match {
           case Some(AcceptHeaderRegex(_)) => Right(())
+          case Some(HeaderRegexV1(_)) =>
+            auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber);
+            Left(PresentationError.goneError())
           case _ =>
             auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber);
             Left(PresentationError.notAcceptableError("The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."))
         }
       }
     }
-
 }

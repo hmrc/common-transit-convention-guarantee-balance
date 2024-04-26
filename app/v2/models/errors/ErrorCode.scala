@@ -37,6 +37,7 @@ object ErrorCode {
   case object Unauthorized         extends ErrorCode("UNAUTHORIZED", UNAUTHORIZED)
   case object NotAcceptable        extends ErrorCode("NOT_ACCEPTABLE", NOT_ACCEPTABLE)
   case object TooManyRequests      extends ErrorCode("MESSAGE_THROTTLED_OUT", TOO_MANY_REQUESTS) // to match API Platform
+  case object Gone                 extends ErrorCode("GONE", GONE)
 
   lazy val errorCodes: Seq[ErrorCode] = Seq(
     BadRequest,
