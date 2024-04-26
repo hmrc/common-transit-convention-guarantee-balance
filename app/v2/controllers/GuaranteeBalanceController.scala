@@ -72,7 +72,7 @@ class GuaranteeBalanceController @Inject() (
       implicit request =>
         if (appConfig.enablePhase5) {
           (for {
-            _ <- validateAcceptHeader(grn)
+            _      <- validateAcceptHeader(grn)
             parsed <- parseJson(request, grn)
             auditInfo = AuditInfo(parsed, grn, request.internalId)
             _                <- lockService.lock(grn, request.internalId).asPresentation(auditInfo, auditService)
