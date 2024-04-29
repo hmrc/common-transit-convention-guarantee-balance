@@ -131,7 +131,7 @@ class BalanceRequestController @Inject() (
   def submitBalanceRequest: Action[JsValue] =
     authenticate().io(parse.json) {
       implicit request =>
-        if (appConfig.enablePhase5) {
+        if (appConfig.disablePhase4) {
           val errorJson = Json.toJson(BalanceRequestError.goneError())
           IO.pure(Gone(errorJson))
         } else {
@@ -198,7 +198,7 @@ class BalanceRequestController @Inject() (
   def getBalanceRequest(balanceId: BalanceId): Action[AnyContent] =
     authenticate().io {
       implicit request =>
-        if (appConfig.enablePhase5) {
+        if (appConfig.disablePhase4) {
           val errorJson = Json.toJson(BalanceRequestError.goneError())
           IO.pure(Gone(errorJson))
         } else {
