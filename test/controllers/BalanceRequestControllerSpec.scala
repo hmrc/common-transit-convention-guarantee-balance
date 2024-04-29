@@ -732,7 +732,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
 
     val result = controller(
       getRequestResponse = IO.some(Right(pendingBalanceRequest)),
-      appConfig = mkAppConfig(Configuration("enable-phase-5" -> "true"))
+      appConfig = mkAppConfig(Configuration("disable-phase-4" -> "true"))
     ).getBalanceRequest(balanceId)(request)
 
     status(result) shouldBe GONE
@@ -905,7 +905,7 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
 
     val result = controller(
       sendRequestResponse = IO(Right(Right(balanceRequestSuccess))),
-      appConfig = mkAppConfig(Configuration("enable-phase-5" -> "true"))
+      appConfig = mkAppConfig(Configuration("disable-phase-4" -> "true"))
     ).submitBalanceRequest(request)
 
     status(result) shouldBe GONE

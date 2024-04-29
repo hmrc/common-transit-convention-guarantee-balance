@@ -67,4 +67,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val enablePhase5: Boolean = config.getOptional[Boolean]("enable-phase-5").getOrElse(false)
 
+  lazy val disablePhase4: Boolean = config.getOptional[Boolean]("disable-phase-4").getOrElse(false)
+
 }
