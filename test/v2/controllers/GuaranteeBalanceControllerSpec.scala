@@ -186,7 +186,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
   }
 
-  it should "return not acceptable if the accept header is wrong" in forAll(
+  it should "return gone if the accept header is is version 1" in forAll(
     arbitrary[GuaranteeReferenceNumber],
     arbitrary[InternalId],
     arbitrary[InternalBalanceResponse]
@@ -237,10 +237,10 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       )
 
       val result = sut.postRequest(grn)(request = request)
-      status(result) shouldBe NOT_ACCEPTABLE
+      status(result) shouldBe GONE
       contentAsJson(result) shouldBe Json.obj(
-        "code"    -> "NOT_ACCEPTABLE",
-        "message" -> "The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."
+        "code"    -> "GONE",
+        "message" -> "Requests for New Guarantee Balance enquiries using the CTC Guarantee Balance API v1.0 are no longer supported. Please use CTC Guarantee Balance API v2.0 for balance inquiries."
       )
 
       verify(mockAppConfig, times(1)).enablePhase5

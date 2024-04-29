@@ -37,10 +37,10 @@ import play.api.http.ContentTypes
 import play.api.http.HeaderNames
 import play.api.http.Status.BAD_REQUEST
 import play.api.http.Status.FORBIDDEN
-import play.api.http.Status.NOT_ACCEPTABLE
 import play.api.http.Status.NOT_FOUND
 import play.api.http.Status.OK
 import play.api.http.Status.TOO_MANY_REQUESTS
+import play.api.http.Status.GONE
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.Json
@@ -321,7 +321,7 @@ class GuaranteeBalanceControllerIntegrationSpec
 
   }
 
-  it should "return not acceptable if the accept header is incorrect" in {
+  it should "return gone if the accept header is application/vnd.hmrc.1.0+json" in {
     val grn        = arbitrary[GuaranteeReferenceNumber].sample.get
     val internalId = arbitrary[InternalId].sample.get
 
@@ -342,8 +342,8 @@ class GuaranteeBalanceControllerIntegrationSpec
     )
 
     val expected = Json.obj(
-      "code"    -> "NOT_ACCEPTABLE",
-      "message" -> "The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."
+      "code"    -> "GONE",
+      "message" -> "Requests for New Guarantee Balance enquiries using the CTC Guarantee Balance API v1.0 are no longer supported. Please use CTC Guarantee Balance API v2.0 for balance inquiries."
     )
 
     val sut = injector.instanceOf[GuaranteeBalanceController]
@@ -351,7 +351,7 @@ class GuaranteeBalanceControllerIntegrationSpec
       .postRequest(grn)(request)
       .flatMap {
         result =>
-          result.header.status shouldBe NOT_ACCEPTABLE
+          result.header.status shouldBe GONE
           result.body.dataStream.reduce(_ ++ _).map(_.utf8String).runWith(Sink.head[String])
       }
       .map {

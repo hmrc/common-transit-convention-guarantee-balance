@@ -710,6 +710,39 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     )
   }
 
+  it should "BalanceRequestController.getBalanceRequest return 410 when phase 5 is enabled" in {
+    val uuid      = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
+    val balanceId = BalanceId(uuid)
+
+    val balanceRequestSuccess =
+      BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
+
+    val pendingBalanceRequest = PendingBalanceRequest(
+      balanceId,
+      TaxIdentifier("GB12345678900"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 52, 15), ZoneOffset.UTC).toInstant,
+      completedAt = Some(
+        OffsetDateTime.of(LocalDateTime.of(2021, 9, 14, 9, 53, 5), ZoneOffset.UTC).toInstant
+      ),
+      response = Some(balanceRequestSuccess)
+    )
+
+    val request = FakeRequest().withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      getRequestResponse = IO.some(Right(pendingBalanceRequest)),
+      appConfig = mkAppConfig(Configuration("enable-phase-5" -> "true"))
+    ).getBalanceRequest(balanceId)(request)
+
+    status(result) shouldBe GONE
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "GONE",
+      "message" -> "Requests for New Guarantee Balance enquiries using the CTC Guarantee Balance API v1.0 are no longer supported. Please use CTC Guarantee Balance API v2.0 for balance inquiries."
+    )
+  }
+
   it should "return 500 when the balance request response is an XML error" in {
     val uuid      = UUID.fromString("22b9899e-24ee-48e6-a189-97d1f45391c4")
     val balanceId = BalanceId(uuid)
@@ -827,6 +860,59 @@ class BalanceRequestControllerSpec extends AnyFlatSpec with Matchers {
     contentAsJson(result) shouldBe Json.obj(
       "code"    -> "INTERNAL_SERVER_ERROR",
       "message" -> "Internal server error"
+    )
+  }
+
+  it should "return 200 when phase 5 is disabled" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB12345678900"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("1234")
+    )
+
+    val balanceRequestSuccess =
+      BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
+
+    val request = FakeRequest()
+      .withBody(Json.toJson(balanceRequest))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      sendRequestResponse = IO(Right(Right(balanceRequestSuccess))),
+      appConfig = mkAppConfig(Configuration("enable-phase-5" -> "false"))
+    ).submitBalanceRequest(request)
+
+    status(result) shouldBe OK
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.toJson(
+      PostBalanceRequestSuccessResponse(balanceRequestSuccess)
+    )
+  }
+
+  it should "return 410 when phase 5 is enabled" in {
+    val balanceRequest = BalanceRequest(
+      TaxIdentifier("GB12345678900"),
+      GuaranteeReference("05DE3300BE0001067A001017"),
+      AccessCode("1234")
+    )
+
+    val balanceRequestSuccess =
+      BalanceRequestSuccess(BigDecimal("12345678.90"), CurrencyCode("GBP"))
+
+    val request = FakeRequest()
+      .withBody(Json.toJson(balanceRequest))
+      .withHeaders(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+
+    val result = controller(
+      sendRequestResponse = IO(Right(Right(balanceRequestSuccess))),
+      appConfig = mkAppConfig(Configuration("enable-phase-5" -> "true"))
+    ).submitBalanceRequest(request)
+
+    status(result) shouldBe GONE
+    contentType(result) shouldBe Some(ContentTypes.JSON)
+    contentAsJson(result) shouldBe Json.obj(
+      "code"    -> "GONE",
+      "message" -> "Requests for New Guarantee Balance enquiries using the CTC Guarantee Balance API v1.0 are no longer supported. Please use CTC Guarantee Balance API v2.0 for balance inquiries."
     )
   }
 }

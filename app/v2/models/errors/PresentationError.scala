@@ -33,6 +33,12 @@ object PresentationError extends CommonFormats {
   def notAcceptableError(message: String): PresentationError =
     StandardError(message, ErrorCode.NotAcceptable)
 
+  def goneError(): PresentationError =
+    StandardError(
+      "Requests for New Guarantee Balance enquiries using the CTC Guarantee Balance API v1.0 are no longer supported. Please use CTC Guarantee Balance API v2.0 for balance inquiries.",
+      ErrorCode.Gone
+    )
+
   def badRequestError(message: String): PresentationError =
     StandardError(message, ErrorCode.BadRequest)
 
