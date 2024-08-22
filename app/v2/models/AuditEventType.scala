@@ -22,5 +22,5 @@ object AuditEventType {
   case object RateLimitedRequest extends AuditEventType("RateLimitedRequest")
   case object ErrorResponse      extends AuditEventType("ErrorResponse")
   case object InvalidPayload     extends AuditEventType("InvalidPayload")
-  case object RequestSent        extends AuditEventType("RequestSent")
+  case object SuccessResponse    extends AuditEventType("SuccessResponse")
 }

@@ -26,13 +26,13 @@ import play.api.libs.json.Writes
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import v2.models.AccessCode
-import v2.models.RateLimitedRequestEvent
 import v2.models.AuditInfo
 import v2.models.Balance
 import v2.models.BalanceRequest
 import v2.models.ErrorResponseEvent
-import v2.models.RequestSentEvent
 import v2.models.GuaranteeReferenceNumber
+import v2.models.RateLimitedRequestEvent
+import v2.models.SuccessResponseEvent
 import v2.models.errors.RequestLockingError
 import v2.models.errors.RoutingError
 import v2.models.errors.ValidationError
@@ -56,18 +56,18 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
 
   "AuditService.balanceRequestSucceeded" should "audit a successful request" in {
 
-    val balanceRequestSucceeded = RequestSentEvent(internalId, guaranteeReference, accessCode, balance)
+    val balanceRequestSucceeded = SuccessResponseEvent(internalId, guaranteeReference, accessCode, balance)
 
     auditService
       .balanceRequestSucceeded(auditInfo, balance)
 
-    auditConnector.sendExplicitAudit[RequestSentEvent](
-      "RequestSent",
+    auditConnector.sendExplicitAudit[SuccessResponseEvent](
+      "SuccessResponse",
       balanceRequestSucceeded
     )(
       any[HeaderCarrier],
       any[ExecutionContext],
-      any[Writes[RequestSentEvent]]
+      any[Writes[SuccessResponseEvent]]
     ) wasCalled once
 
   }
@@ -177,7 +177,7 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
       )
 
     auditService
-      .balanceRequestFailed((NonEmptyList.one(ValidationError.InvalidAccessCodeLength(accessCode))))
+      .balanceRequestFailed(NonEmptyList.one(ValidationError.InvalidAccessCodeLength(accessCode)))
 
     auditConnector.sendExplicitAudit[ErrorResponseEvent](
       "ErrorResponse",

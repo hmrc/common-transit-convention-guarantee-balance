@@ -30,7 +30,7 @@ import v2.models.ErrorResponseEvent
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InvalidPayloadEvent
 import v2.models.RateLimitedRequestEvent
-import v2.models.RequestSentEvent
+import v2.models.SuccessResponseEvent
 import v2.models.errors.RequestLockingError
 import v2.models.errors.RoutingError
 import v2.models.errors.ValidationError
@@ -65,9 +65,9 @@ class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditServic
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): Unit =
-    connector.sendExplicitAudit[RequestSentEvent](
-      AuditEventType.RequestSent.name,
-      RequestSentEvent(
+    connector.sendExplicitAudit[SuccessResponseEvent](
+      AuditEventType.SuccessResponse.name,
+      SuccessResponseEvent(
         auditInfo.internalId,
         auditInfo.guaranteeReferenceNumber,
         auditInfo.balanceRequest.accessCode,
