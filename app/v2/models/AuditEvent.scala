@@ -23,17 +23,17 @@ import play.api.libs.json.OWrites
 
 sealed abstract class AuditEvent extends Product with Serializable
 
-case class RequestSentEvent(
+case class SuccessResponseEvent(
   userInternalId: InternalId,
   guaranteeReference: GuaranteeReferenceNumber,
   accessCode: AccessCode,
   balance: Balance
 ) extends AuditEvent
 
-case object RequestSentEvent {
+case object SuccessResponseEvent {
 
-  implicit val successResponseEventWrites: OWrites[RequestSentEvent] =
-    Json.writes[RequestSentEvent]
+  implicit val successResponseEventWrites: OWrites[SuccessResponseEvent] =
+    Json.writes[SuccessResponseEvent]
 
 }
 
