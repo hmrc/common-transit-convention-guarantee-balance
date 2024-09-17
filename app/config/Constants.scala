@@ -18,7 +18,6 @@ package config
 
 object Constants {
   val Context          = "/customs/guarantees"
-  val ChannelHeader    = "Channel"
   val InvalidGRNCode   = "ERROR_INVALID_GRN_COUNTRY_CODE"
   val InvalidGRNFormat = "ERROR_INVALID_GRN_FORMAT"
 }

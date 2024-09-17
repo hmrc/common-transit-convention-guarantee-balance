@@ -16,9 +16,9 @@
 
 package runtime
 
-import org.apache.pekko.actor.ActorSystem
 import cats.effect.unsafe.IORuntime
 import cats.effect.unsafe.IORuntimeConfig
+import org.apache.pekko.actor.ActorSystem
 import play.api.inject.ApplicationLifecycle
 
 import javax.inject.Inject

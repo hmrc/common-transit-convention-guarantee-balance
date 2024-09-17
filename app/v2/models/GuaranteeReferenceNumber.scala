@@ -16,10 +16,11 @@
 
 package v2.models
 
+import play.api.libs.json.Format
 import play.api.libs.json.Json
 
 case class GuaranteeReferenceNumber(value: String) extends AnyVal
 
 object GuaranteeReferenceNumber {
-  implicit val guaranteeReferenceNumberFormat = Json.valueFormat[GuaranteeReferenceNumber]
+  implicit val guaranteeReferenceNumberFormat: Format[GuaranteeReferenceNumber] = Json.valueFormat[GuaranteeReferenceNumber]
 }

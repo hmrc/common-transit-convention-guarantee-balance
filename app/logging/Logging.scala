@@ -17,10 +17,12 @@
 package logging
 
 import cats.effect.IO
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 trait Logging {
-  val logger      = Slf4jLogger.getLoggerFromClass[IO](getClass())
-  val slf4jLogger = LoggerFactory.getLogger(getClass())
+  val logger: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLoggerFromClass[IO](getClass)
+  val slf4jLogger: Logger                   = LoggerFactory.getLogger(getClass)
 }

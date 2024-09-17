@@ -16,8 +16,12 @@
 
 package controllers.actions
 
+import models.request.AuthenticatedRequest
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
+import play.api.mvc.ActionBuilder
+import play.api.mvc.AnyContent
+import play.api.mvc.ControllerComponents
 import play.api.mvc.DefaultActionBuilder
 import play.api.mvc.Results
 import play.api.test.FakeRequest
@@ -30,11 +34,11 @@ import scala.concurrent.Future
 
 class AuthActionSpec extends AsyncFlatSpec with Matchers {
 
-  val cc = Helpers.stubControllerComponents()
+  val cc: ControllerComponents = Helpers.stubControllerComponents()
 
   val internalId = "internalId"
 
-  def mkAuthActionBuilder(authConnector: AuthConnector) = {
+  def mkAuthActionBuilder(authConnector: AuthConnector): ActionBuilder[AuthenticatedRequest, AnyContent] = {
     val authAction           = new AuthAction(authConnector)
     val defaultActionBuilder = DefaultActionBuilder(cc.parsers.default)
     val authActionProvider   = new AuthActionProviderImpl(defaultActionBuilder, authAction)

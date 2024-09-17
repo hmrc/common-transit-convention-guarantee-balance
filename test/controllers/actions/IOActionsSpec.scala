@@ -22,6 +22,7 @@ import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
+import play.api.mvc.Action
 import play.api.mvc.AnyContent
 import play.api.mvc.Request
 import play.api.mvc.Result
@@ -41,13 +42,13 @@ class IOActionsSpec extends AsyncFlatSpec with Matchers {
     runIOWithJsonParserResult: Request[JsValue] => IO[Result] = _ => IO.stub
   ) extends BackendController(Helpers.stubControllerComponents())
       with IOActions {
-    val runtime = IORuntime.global
+    val runtime: IORuntime = IORuntime.global
 
-    def runIO = Action.io(runIOResult)
+    def runIO: Action[AnyContent] = Action.io(runIOResult)
 
-    def runIOWithRequest = Action.io(runIOWithRequestResult(_))
+    def runIOWithRequest: Action[AnyContent] = Action.io(runIOWithRequestResult(_))
 
-    def runIOWithJsonParser = Action.io(parse.json)(runIOWithJsonParserResult(_))
+    def runIOWithJsonParser: Action[JsValue] = Action.io(parse.json)(runIOWithJsonParserResult(_))
   }
 
   "IOAction.io" should "succeed when IO succeeds" in {

@@ -20,8 +20,6 @@ import cats.data.EitherT
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import com.google.inject.Inject
-import config.AppConfig
-import controllers.ErrorLogging
 import controllers.actions.AuthActionProvider
 import controllers.actions.IOActions
 import logging.Logging
@@ -33,6 +31,7 @@ import play.api.mvc.Action
 import play.api.mvc.ControllerComponents
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import v2.models.AuditInfo
 import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
@@ -42,12 +41,10 @@ import v2.services.AuditService
 import v2.services.RequestLockingService
 import v2.services.RouterService
 import v2.services.ValidationService
-import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.concurrent.ExecutionContext
 
 class GuaranteeBalanceController @Inject() (
-  appConfig: AppConfig,
   authenticate: AuthActionProvider,
   lockService: RequestLockingService,
   validationService: ValidationService,
@@ -61,37 +58,26 @@ class GuaranteeBalanceController @Inject() (
     with IOActions
     with IOMetrics
     with Logging
-    with ErrorLogging
     with ErrorTranslator {
 
   private val AcceptHeaderRegex = """application/vnd\.hmrc\.(2.0)\+json""".r
-  private val HeaderRegexV1     = """application/vnd\.hmrc\.(1.0)\+json""".r
 
   def postRequest(grn: GuaranteeReferenceNumber): Action[JsValue] =
     authenticate().io(parse.json) {
       implicit request =>
-        if (appConfig.enablePhase5) {
-          (for {
-            _      <- validateAcceptHeader(grn)
-            parsed <- parseJson(request, grn)
-            auditInfo = AuditInfo(parsed, grn, request.internalId)
-            _                <- lockService.lock(grn, request.internalId).asPresentation(auditInfo, auditService)
-            _                <- validationService.validate(parsed).asPresentation(auditInfo, auditService)
-            internalResponse <- routerService.request(grn, parsed).asPresentation(auditInfo, auditService)
-            hateoas          <- EitherT.right[PresentationError](HateoasResponse(grn, internalResponse))
-            _ = auditService.balanceRequestSucceeded(auditInfo, internalResponse.balance)
-          } yield hateoas).fold(
-            presentationError => Status(presentationError.code.statusCode)(Json.toJson(presentationError)),
-            result => Ok(result)
-          )
-        } else {
-
-          // Let the client know Phase 5 is not yet available.
-          val presentationError = PresentationError.notAcceptableError(
-            "CTC Guarantee Balance API version 2 is not yet available. Please continue to use version 1 to submit transit messages."
-          )
-          IO(Status(presentationError.code.statusCode)(Json.toJson(presentationError)))
-        }
+        (for {
+          _      <- validateAcceptHeader(grn)
+          parsed <- parseJson(request, grn)
+          auditInfo = AuditInfo(parsed, grn, request.internalId)
+          _                <- lockService.lock(grn, request.internalId).asPresentation(auditInfo, auditService)
+          _                <- validationService.validate(parsed).asPresentation(auditInfo, auditService)
+          internalResponse <- routerService.request(grn, parsed).asPresentation(auditInfo, auditService)
+          hateoas          <- EitherT.right[PresentationError](HateoasResponse(grn, internalResponse))
+          _ = auditService.balanceRequestSucceeded(auditInfo, internalResponse.balance)
+        } yield hateoas).fold(
+          presentationError => Status(presentationError.code.statusCode)(Json.toJson(presentationError)),
+          result => Ok(result)
+        )
     }
 
   private def parseJson(request: AuthenticatedRequest[JsValue], guaranteeReferenceNumber: GuaranteeReferenceNumber)(implicit
@@ -102,7 +88,7 @@ class GuaranteeBalanceController @Inject() (
         request.body.validate[BalanceRequest].asEither match {
           case Right(x) => Right(x)
           case Left(_) =>
-            auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber);
+            auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber)
             Left(PresentationError.badRequestError("The access code was not supplied."))
         }
       }
@@ -116,11 +102,8 @@ class GuaranteeBalanceController @Inject() (
       IO {
         request.headers.get(ACCEPT) match {
           case Some(AcceptHeaderRegex(_)) => Right(())
-          case Some(HeaderRegexV1(_)) =>
-            auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber);
-            Left(PresentationError.goneError())
           case _ =>
-            auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber);
+            auditService.invalidPayloadBalanceRequest(request, guaranteeReferenceNumber)
             Left(PresentationError.notAcceptableError("The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."))
         }
       }

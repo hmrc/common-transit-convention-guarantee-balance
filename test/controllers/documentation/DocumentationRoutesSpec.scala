@@ -26,7 +26,7 @@ import play.api.test.Helpers._
 
 class DocumentationRoutesSpec extends AnyFlatSpec with Matchers with GuiceOneAppPerSuite {
 
-  implicit val materializer = app.injector.instanceOf[Materializer]
+  implicit val materializer: Materializer = app.injector.instanceOf[Materializer]
 
   "API documentation route" should "return 200 and JSON response for definition.json" in {
     val request = FakeRequest(Call("GET", "/api/definition"))

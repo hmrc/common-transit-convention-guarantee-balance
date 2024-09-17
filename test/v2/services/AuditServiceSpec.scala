@@ -41,16 +41,16 @@ import scala.concurrent.ExecutionContext
 
 class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMockito with BeforeAndAfterEach {
 
-  val auditConnector = mock[AuditConnector]
-  val auditService   = new AuditServiceImpl(auditConnector)
+  val auditConnector: AuditConnector = mock[AuditConnector]
+  val auditService                   = new AuditServiceImpl(auditConnector)
 
-  val internalId         = InternalId("ABC123")
-  val accessCode         = AccessCode("1234")
-  val guaranteeReference = GuaranteeReferenceNumber("05DE3300BE0001067A001017")
-  val balance            = Balance(123.45)
-  implicit val auditInfo = AuditInfo(BalanceRequest(accessCode), guaranteeReference, internalId)
+  val internalId: InternalId                       = InternalId("ABC123")
+  val accessCode: AccessCode                       = AccessCode("1234")
+  val guaranteeReference: GuaranteeReferenceNumber = GuaranteeReferenceNumber("05DE3300BE0001067A001017")
+  val balance: Balance                             = Balance(123.45)
+  implicit val auditInfo: AuditInfo                = AuditInfo(BalanceRequest(accessCode), guaranteeReference, internalId)
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   override protected def beforeEach(): Unit = reset(auditConnector)
 

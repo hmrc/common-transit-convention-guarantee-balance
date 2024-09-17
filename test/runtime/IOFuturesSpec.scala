@@ -32,7 +32,7 @@ class IOFuturesSpec extends AnyFlatSpec with Matchers with ScalaCheckPropertyChe
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   "IO.runFuture" should "run successful Futures to identical result" in forAll {
-    (fn: (String => Int), str: String) =>
+    (fn: String => Int, str: String) =>
       val viaIO =
         IO.runFuture {
           implicit ec => Future(str)(ec).map(fn)(ec)

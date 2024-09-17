@@ -29,6 +29,7 @@ import uk.gov.hmrc.auth.core.AuthProviders
 import uk.gov.hmrc.auth.core.AuthorisationException
 import uk.gov.hmrc.auth.core.AuthorisedFunctions
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import javax.inject.Inject
@@ -46,7 +47,7 @@ class AuthAction @Inject() (val authConnector: AuthConnector)(implicit
   override protected def refine[A](
     request: Request[A]
   ): Future[Either[Result, AuthenticatedRequest[A]]] = {
-    implicit val hc = HeaderCarrierConverter.fromRequest(request)
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
     authorised(AuthProviders(AuthProvider.GovernmentGateway))
       .retrieve(Retrievals.internalId) {

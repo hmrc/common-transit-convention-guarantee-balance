@@ -38,13 +38,13 @@ class ValidationServiceImpl extends ValidationService {
 
   type ValidateResult = Validated[NonEmptyList[ValidationError], Unit]
 
-  def exactLength(value: String, length: Int, error: Int => ValidationError): ValidateResult =
+  private def exactLength(value: String, length: Int, error: Int => ValidationError): ValidateResult =
     Validated.condNel(value.length == length, (), error(length))
 
-  def alphanumeric(value: String, error: => ValidationError): ValidateResult =
+  private def alphanumeric(value: String, error: => ValidationError): ValidateResult =
     Validated.condNel(value.forall(_.isLetterOrDigit), (), error)
 
-  def validateAccessCode(code: AccessCode): ValidateResult =
+  private def validateAccessCode(code: AccessCode): ValidateResult =
     (
       exactLength(code.value, 4, _ => ValidationError.InvalidAccessCodeLength(code)),
       alphanumeric(code.value, ValidationError.InvalidAccessCodeCharacters(code))

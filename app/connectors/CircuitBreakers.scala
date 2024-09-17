@@ -29,7 +29,7 @@ trait CircuitBreakers { self: Logging =>
 
   private val clazz = getClass.getSimpleName
 
-  lazy val circuitBreaker = new CircuitBreaker(
+  lazy val circuitBreaker: CircuitBreaker = new CircuitBreaker(
     scheduler = materializer.system.scheduler,
     maxFailures = circuitBreakerConfig.maxFailures,
     callTimeout = circuitBreakerConfig.callTimeout,
