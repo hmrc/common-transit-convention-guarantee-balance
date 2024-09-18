@@ -44,7 +44,7 @@ class DocumentationRoutesSpec extends AnyFlatSpec with Matchers with GuiceOneApp
   }
 
   it should "return 200 and plain text response for the OAS YAML definition file" in {
-    val request = FakeRequest(Call("GET", "/api/conf/1.0/application.yaml"))
+    val request = FakeRequest(Call("GET", "/api/conf/2.0/application.yaml"))
     val result  = route(app, request).get
     status(result) shouldBe OK
     contentType(result) should contain(BINARY)
@@ -58,7 +58,7 @@ class DocumentationRoutesSpec extends AnyFlatSpec with Matchers with GuiceOneApp
   }
 
   it should "return 404 for nonexistent resource" in {
-    val request = FakeRequest(Call("GET", "/api/conf/1.0/docs/foobar.md"))
+    val request = FakeRequest(Call("GET", "/api/conf/2.0/docs/foobar.md"))
     val result  = route(app, request).get
     status(result) shouldBe NOT_FOUND
   }
