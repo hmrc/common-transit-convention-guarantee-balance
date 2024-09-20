@@ -28,25 +28,7 @@ import scala.concurrent.duration.Duration
 @Singleton
 class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
 
-  private lazy val backendBaseUrl: AbsoluteUrl =
-    AbsoluteUrl.parse(servicesConfig.baseUrl("transit-movements-guarantee-balance"))
-
-  private lazy val backendPath: UrlPath =
-    UrlPath.parse(
-      config.get[String]("microservice.services.transit-movements-guarantee-balance.path")
-    )
-
-  lazy val backendUrl: AbsoluteUrl =
-    backendBaseUrl.withPath(backendPath)
-
-  lazy val features = config.getOptional[Map[String, Boolean]]("features").getOrElse(Map.empty)
-
-  lazy val asyncBalanceResponse = features.get("async-balance-response").getOrElse(false)
-
-  lazy val backendCircuitBreakerConfig =
-    CircuitBreakerConfig.fromServicesConfig("transit-movements-guarantee-balance", config)
-
-  lazy val balanceRequestLockoutTtl =
+  lazy val balanceRequestLockoutTtl: Duration =
     config.get[Duration]("balance-request.lockout-ttl")
 
   private lazy val routerBaseUrl: AbsoluteUrl =
@@ -64,9 +46,5 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
     CircuitBreakerConfig.fromServicesConfig("ctc-guarantee-balance-router", config)
 
   lazy val internalAuthToken: String = config.get[String]("internal-auth.token")
-
-  lazy val enablePhase5: Boolean = config.getOptional[Boolean]("enable-phase-5").getOrElse(false)
-
-  lazy val disablePhase4: Boolean = config.getOptional[Boolean]("disable-phase-4").getOrElse(false)
 
 }

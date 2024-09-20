@@ -35,7 +35,7 @@ trait ErrorTranslator {
       headerCarrier: HeaderCarrier,
       ec: ExecutionContext
     ): EitherT[IO, PresentationError, A] = {
-      implicit val info = auditInfo
+      implicit val info: AuditInfo = auditInfo
       value.leftMap {
         error =>
           auditService.balanceRequestFailed(error)
@@ -48,25 +48,20 @@ trait ErrorTranslator {
     def convert(input: E): PresentationError
   }
 
-  implicit val validationErrorConverter = new Converter[NonEmptyList[ValidationError]] {
-
-    override def convert(validationError: NonEmptyList[ValidationError]): PresentationError = validationError.head match {
+  implicit val validationErrorConverter: Converter[NonEmptyList[ValidationError]] = (validationError: NonEmptyList[ValidationError]) =>
+    validationError.head match {
       case ValidationError.InvalidAccessCodeLength(accessCode) =>
         PresentationError.badRequestError(s"Access code ${accessCode.value} must be four alphanumeric characters.")
       case ValidationError.InvalidAccessCodeCharacters(accessCode) =>
         PresentationError.badRequestError(s"Access code ${accessCode.value} must be four alphanumeric characters.")
     }
+
+  implicit val requestLockingErrorConverter: Converter[RequestLockingError] = {
+    case RequestLockingError.AlreadyLocked   => PresentationError.rateLimitedRequest()
+    case RequestLockingError.Unexpected(thr) => PresentationError.internalServiceError(cause = thr)
   }
 
-  implicit val requestLockingErrorConverter = new Converter[RequestLockingError] {
-
-    override def convert(input: RequestLockingError): PresentationError = input match {
-      case RequestLockingError.AlreadyLocked   => PresentationError.rateLimitedRequest()
-      case RequestLockingError.Unexpected(thr) => PresentationError.internalServiceError(cause = thr)
-    }
-  }
-
-  implicit val routingErrorConverter = new Converter[RoutingError] {
+  implicit val routingErrorConverter: Converter[RoutingError] = new Converter[RoutingError] {
 
     private val notFoundError = "The guarantee reference number or access code did not match an existing guarantee."
 

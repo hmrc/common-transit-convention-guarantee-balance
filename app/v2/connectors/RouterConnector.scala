@@ -16,9 +16,7 @@
 
 package v2.connectors
 
-import org.apache.pekko.stream.Materializer
 import cats.effect.IO
-import com.codahale.metrics.MetricRegistry
 import com.google.inject.ImplementedBy
 import com.google.inject.Inject
 import config.AppConfig
@@ -27,20 +25,21 @@ import connectors.CircuitBreakers
 import logging.Logging
 import metrics.IOMetrics
 import metrics.MetricsKeys
+import org.apache.pekko.stream.Materializer
 import play.api.http.ContentTypes
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import runtime.IOFutures
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
 import v2.models.errors.UpstreamError
-import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import scala.util.Success
 import scala.util.Try

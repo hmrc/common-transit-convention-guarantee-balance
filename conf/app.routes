@@ -2,8 +2,5 @@
 
 POST    /:grn/balance     v2.controllers.GuaranteeBalanceController.postRequest(grn: GuaranteeReferenceNumber)
 
-POST    /balances         controllers.BalanceRequestController.submitBalanceRequest
-GET     /balances/:id     controllers.BalanceRequestController.getBalanceRequest(id: BalanceId)
-
 GET     /api/definition   controllers.Assets.at(path="/public/api", file="definition.json")
 GET     /api/conf/*file   controllers.Assets.at(path="/public/api/conf", file)

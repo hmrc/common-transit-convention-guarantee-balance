@@ -28,6 +28,8 @@ import org.mockito.IdiomaticMockito
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import play.api.mvc.Action
+import play.api.mvc.AnyContent
 import play.api.test.FakeRequest
 import play.api.test.Helpers
 import play.api.test.Helpers._
@@ -44,58 +46,58 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
 
   class IOMetricsConnector(val metrics: Metrics) extends IOFutures with IOMetrics {
 
-    def okHttpCall =
+    def okHttpCall: IO[Either[Nothing, Int]] =
       withMetricsTimerResponse("connector-ok") {
         IO.runFuture {
           _ => Future.successful(Right(1))
         }
       }
 
-    def clientErrorHttpCall =
+    def clientErrorHttpCall: IO[Either[UpstreamErrorResponse, Nothing]] =
       withMetricsTimerResponse("connector-client-error") {
         IO.runFuture {
           _ => Future.successful(Left(UpstreamErrorResponse("Arghhh!!!", 400)))
         }
       }
 
-    def serverErrorHttpCall =
+    def serverErrorHttpCall: IO[Either[UpstreamErrorResponse, Nothing]] =
       withMetricsTimerResponse("connector-server-error") {
         IO.runFuture {
           _ => Future.successful(Left(UpstreamErrorResponse("Kaboom!!!", 502)))
         }
       }
 
-    def unhandledExceptionHttpCall =
+    def unhandledExceptionHttpCall: IO[Either[Nothing, Nothing]] =
       withMetricsTimerResponse("connector-unhandled-exception") {
         IO.runFuture {
           _ => Future.failed(new RuntimeException)
         }
       }
 
-    def cancelledHttpCall =
+    def cancelledHttpCall: IO[Either[Nothing, Int]] =
       withMetricsTimerResponse("connector-unhandled-exception") {
         IO.canceled.as(Right(1))
       }
 
-    def autoCompleteWithSuccessCall =
+    def autoCompleteWithSuccessCall: IO[Unit] =
       withMetricsTimer("connector-auto-success")(
         _ => IO.unit
       )
 
-    def autoCompleteWithFailureErrorCall =
+    def autoCompleteWithFailureErrorCall: IO[Int] =
       withMetricsTimer("connector-auto-success")(
         _ => IO.raiseError[Int](new RuntimeException)
       )
 
-    def autoCompleteWithFailureCancelledCall =
+    def autoCompleteWithFailureCancelledCall: IO[Unit] =
       withMetricsTimer("connector-auto-success")(
         _ => IO.canceled
       )
 
-    def manualCompleteSuccessCall =
+    def manualCompleteSuccessCall: IO[Unit] =
       withMetricsTimer("connector-manual-success")(_.completeWithSuccess())
 
-    def manualCompleteFailureCall =
+    def manualCompleteFailureCall: IO[Unit] =
       withMetricsTimer("connector-manual-failure")(_.completeWithFailure())
   }
 
@@ -104,43 +106,43 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
       with IOActions
       with IOMetrics {
 
-    def okEndpoint = Action.io {
+    def okEndpoint: Action[AnyContent] = Action.io {
       withMetricsTimerResult("controller-ok") {
         IO.sleep(50.millis).as(Ok)
       }
     }
 
-    def clientErrorEndpoint = Action.io {
+    def clientErrorEndpoint: Action[AnyContent] = Action.io {
       withMetricsTimerResult("controller-client-error") {
         IO.sleep(50.millis).as(BadRequest)
       }
     }
 
-    def serverErrorEndpoint = Action.io {
+    def serverErrorEndpoint: Action[AnyContent] = Action.io {
       withMetricsTimerResult("controller-server-error") {
         IO.sleep(50.millis).as(BadGateway)
       }
     }
 
-    def unhandledExceptionEndpoint = Action.io {
+    def unhandledExceptionEndpoint: Action[AnyContent] = Action.io {
       withMetricsTimerResult("controller-unhandled-exception") {
         IO.raiseError(new RuntimeException).as(Ok)
       }
     }
 
-    def cancelledEndpoint = Action.io {
+    def cancelledEndpoint: Action[AnyContent] = Action.io {
       withMetricsTimerResult("controller-unhandled-exception") {
         IO.canceled.as(Ok)
       }
     }
   }
 
-  val metrics        = mock[Metrics]
-  val registry       = mock[MetricRegistry]
-  val timer          = mock[Timer]
-  val timerContext   = mock[Timer.Context]
-  val successCounter = mock[Counter]
-  val failureCounter = mock[Counter]
+  val metrics: Metrics            = mock[Metrics]
+  val registry: MetricRegistry    = mock[MetricRegistry]
+  val timer: Timer                = mock[Timer]
+  val timerContext: Timer.Context = mock[Timer.Context]
+  val successCounter: Counter     = mock[Counter]
+  val failureCounter: Counter     = mock[Counter]
 
   override protected def beforeEach(): Unit = {
     reset(metrics, registry, timer, timerContext, successCounter, failureCounter)

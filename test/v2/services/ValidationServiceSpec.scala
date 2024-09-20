@@ -21,6 +21,7 @@ import cats.effect.unsafe.implicits.global
 import org.mockito.MockitoSugar
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
+import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -30,13 +31,15 @@ import v2.models.AccessCode
 import v2.models.BalanceRequest
 import v2.models.errors.ValidationError
 
+import scala.concurrent.duration.DurationInt
+
 class ValidationServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
 
-  val sut = new ValidationServiceImpl
-
+  val sut              = new ValidationServiceImpl
+  val timeout: Timeout = Timeout(1.second)
   "ValidationService#validate" should "validate a valid request" in forAll(arbitrary[BalanceRequest]) {
     balanceRequest =>
-      whenReady(sut.validate(balanceRequest).value.unsafeToFuture()) {
+      whenReady(sut.validate(balanceRequest).value.unsafeToFuture(), timeout) {
         r => r shouldBe Right(())
       }
   }

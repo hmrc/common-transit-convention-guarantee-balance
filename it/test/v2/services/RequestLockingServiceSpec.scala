@@ -46,7 +46,7 @@ class RequestLockingServiceSpec
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  def mkAppConfig(config: Configuration) = {
+  def mkAppConfig(config: Configuration): AppConfig = {
     val servicesConfig = new ServicesConfig(config)
     new AppConfig(config, servicesConfig)
   }

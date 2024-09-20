@@ -20,7 +20,9 @@ import cats.effect.IO
 import cats.effect.kernel.Deferred
 import cats.effect.kernel.Resource
 import cats.effect.kernel.Resource.ExitCase
+import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
+import com.codahale.metrics.Timer
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import play.api.mvc.Result
 
@@ -30,9 +32,9 @@ trait IOMetrics {
   private lazy val registry: MetricRegistry = metrics.defaultRegistry
 
   class MetricsTimer private[metrics] (metricKey: String, timerCompleted: Deferred[IO, Boolean]) {
-    val timerContext   = registry.timer(s"$metricKey-timer").time()
-    val successCounter = registry.counter(s"$metricKey-success-counter")
-    val failureCounter = registry.counter(s"$metricKey-failed-counter")
+    val timerContext: Timer.Context = registry.timer(s"$metricKey-timer").time()
+    val successCounter: Counter     = registry.counter(s"$metricKey-success-counter")
+    val failureCounter: Counter     = registry.counter(s"$metricKey-failed-counter")
 
     def completeWithSuccess(): IO[Unit] =
       timerCompleted
@@ -81,7 +83,7 @@ trait IOMetrics {
         }
     }
 
-  def withMetricsTimerResult[A](metricKey: String)(block: IO[Result]): IO[Result] =
+  def withMetricsTimerResult(metricKey: String)(block: IO[Result]): IO[Result] =
     timerResource(metricKey).use {
       timer =>
         block.flatMap {

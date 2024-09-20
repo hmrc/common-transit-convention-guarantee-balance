@@ -16,10 +16,11 @@
 
 package v2.models
 
+import play.api.libs.json.Format
 import play.api.libs.json.Json
 
 object Balance {
-  implicit val amountFormat = Json.valueFormat[Balance]
+  implicit val amountFormat: Format[Balance] = Json.valueFormat[Balance]
 }
 
 case class Balance(value: Double) extends AnyVal

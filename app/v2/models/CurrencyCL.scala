@@ -16,10 +16,11 @@
 
 package v2.models
 
+import play.api.libs.json.Format
 import play.api.libs.json.Json
 
 case class CurrencyCL(value: String) extends AnyVal
 
 object CurrencyCL {
-  implicit val format = Json.valueFormat[CurrencyCL]
+  implicit val format: Format[CurrencyCL] = Json.valueFormat[CurrencyCL]
 }

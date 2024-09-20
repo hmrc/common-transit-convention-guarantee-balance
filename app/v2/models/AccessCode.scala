@@ -16,10 +16,11 @@
 
 package v2.models
 
+import play.api.libs.json.Format
 import play.api.libs.json.Json
 
 object AccessCode {
-  implicit val accessCodeFormat = Json.valueFormat[AccessCode]
+  implicit val accessCodeFormat: Format[AccessCode] = Json.valueFormat[AccessCode]
 }
 
 case class AccessCode(value: String) extends AnyVal

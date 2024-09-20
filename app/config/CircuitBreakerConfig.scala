@@ -31,7 +31,7 @@ case class CircuitBreakerConfig(
 
 object CircuitBreakerConfig {
 
-  def fromServicesConfig(serviceName: String, config: Configuration) =
+  def fromServicesConfig(serviceName: String, config: Configuration): CircuitBreakerConfig =
     CircuitBreakerConfig(
       config.get[Int](
         s"microservice.services.$serviceName.circuit-breaker.max-failures"

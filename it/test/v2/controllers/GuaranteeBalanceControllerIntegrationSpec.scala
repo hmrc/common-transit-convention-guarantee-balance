@@ -16,18 +16,14 @@
 
 package v2.controllers
 
-import org.apache.pekko.stream.scaladsl.Sink
-import com.github.tomakehurst.wiremock.client.WireMock.aResponse
-import com.github.tomakehurst.wiremock.client.WireMock.equalTo
-import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
-import com.github.tomakehurst.wiremock.client.WireMock.post
-import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock._
 import connectors.WireMockSpec
 import controllers.actions.AuthActionProvider
 import fakes.controllers.actions.FakeIntegrationAuthActionProvider
 import fakes.metrics.FakeMetrics
 import models.request.AuthenticatedRequest
 import models.values.InternalId
+import org.apache.pekko.stream.scaladsl.Sink
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.Inside
 import org.scalatest.concurrent.ScalaFutures
@@ -35,23 +31,18 @@ import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.http.ContentTypes
 import play.api.http.HeaderNames
-import play.api.http.Status.BAD_REQUEST
-import play.api.http.Status.FORBIDDEN
-import play.api.http.Status.NOT_FOUND
-import play.api.http.Status.OK
-import play.api.http.Status.TOO_MANY_REQUESTS
-import play.api.http.Status.GONE
+import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.Json
 import play.api.test.FakeHeaders
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import v2.models.Balance
 import v2.models.GuaranteeReferenceNumber
 import v2.util.Generators
 import v2.util.TestActorSystem
-import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 /** These tests test the full journey from request to response, via all parts of the system.
   * Note that the authentication isn't done as part of this, so checking the internal IDs is not provided for here.
@@ -321,7 +312,7 @@ class GuaranteeBalanceControllerIntegrationSpec
 
   }
 
-  it should "return gone if the accept header is application/vnd.hmrc.1.0+json" in {
+  it should "return NOT_ACCEPTABLE if the accept header is application/vnd.hmrc.1.0+json" in {
     val grn        = arbitrary[GuaranteeReferenceNumber].sample.get
     val internalId = arbitrary[InternalId].sample.get
 
@@ -342,8 +333,8 @@ class GuaranteeBalanceControllerIntegrationSpec
     )
 
     val expected = Json.obj(
-      "code"    -> "GONE",
-      "message" -> "Requests for New Guarantee Balance enquiries using the CTC Guarantee Balance API v1.0 are no longer supported. Please use CTC Guarantee Balance API v2.0 for balance inquiries."
+      "code"    -> "NOT_ACCEPTABLE",
+      "message" -> "The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."
     )
 
     val sut = injector.instanceOf[GuaranteeBalanceController]
@@ -351,7 +342,7 @@ class GuaranteeBalanceControllerIntegrationSpec
       .postRequest(grn)(request)
       .flatMap {
         result =>
-          result.header.status shouldBe GONE
+          result.header.status shouldBe NOT_ACCEPTABLE
           result.body.dataStream.reduce(_ ++ _).map(_.utf8String).runWith(Sink.head[String])
       }
       .map {

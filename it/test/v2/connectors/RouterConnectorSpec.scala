@@ -57,7 +57,7 @@ class RouterConnectorSpec
     with WireMockSpec
     with Generators {
 
-  lazy val dummytoken = Gen.stringOfN(20, Gen.alphaNumChar).sample.get
+  lazy val dummytoken: String = Gen.stringOfN(20, Gen.alphaNumChar).sample.get
 
   override def portConfigKeys: Seq[String] = Seq(
     "microservice.services.ctc-guarantee-balance-router.port"

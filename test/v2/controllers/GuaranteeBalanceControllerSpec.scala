@@ -21,7 +21,6 @@ import cats.data._
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cats.effect.unsafe.implicits.global
-import config.AppConfig
 import controllers.actions._
 import metrics.FakeMetrics
 import models.request.AuthenticatedRequest
@@ -40,11 +39,11 @@ import play.api.http.HeaderNames
 import play.api.http.Status._
 import play.api.libs.json._
 import play.api.mvc.Request
-import play.api.test._
 import play.api.test.Helpers.contentAsJson
 import play.api.test.Helpers.defaultAwaitTimeout
 import play.api.test.Helpers.status
 import play.api.test.Helpers.stubControllerComponents
+import play.api.test._
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.generators.Generators
 import v2.models._
@@ -52,6 +51,7 @@ import v2.models.errors._
 import v2.services._
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContextExecutor
 
 class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
 
@@ -65,8 +65,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       stubControllerComponents()
     )
 
-  implicit val hc = HeaderCarrier()
-  implicit val ec = ExecutionContext.global
+  implicit val hc: HeaderCarrier            = HeaderCarrier()
+  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
 
   "GuaranteeBalanceController#postRequest" should "return OK with a result if everything is okay" in forAll(
     arbitrary[InternalId],
@@ -98,13 +98,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
         .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
-      val mockAppConfig = mock[AppConfig]
-      when(mockAppConfig.enablePhase5).thenReturn(true)
-
       val mockAuditService = mock[AuditServiceImpl]
 
       val sut = new GuaranteeBalanceController(
-        mockAppConfig,
         fakeAuthActionProvider(internalId),
         mockLockService,
         mockValidationService,
@@ -121,7 +117,6 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         r => contentAsJson(result) shouldBe r
       }
 
-      verify(mockAppConfig, times(1)).enablePhase5
       verify(mockAuditService, times(1)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
       verify(mockAuditService, times(0)).balanceRequestFailed(any())(any(), any(), any())
       verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
@@ -160,11 +155,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
       val mockAuditService = mock[AuditService]
 
-      val mockAppConfig = mock[AppConfig]
-      when(mockAppConfig.enablePhase5).thenReturn(true)
-
       val sut = new GuaranteeBalanceController(
-        mockAppConfig,
         fakeAuthActionProvider(internalId),
         mockLockService,
         mockValidationService,
@@ -180,13 +171,13 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       whenReady(HateoasResponse(grn, internalBalanceResponse).unsafeToFuture()) {
         r => contentAsJson(result) shouldBe r
       }
-      verify(mockAppConfig, times(1)).enablePhase5
+
       verify(mockAuditService, times(1)).balanceRequestSucceeded(any(), Balance(any()))(any(), any())
       verify(mockAuditService, times(0)).balanceRequestFailed(any())(any(), any(), any())
       verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
   }
 
-  it should "return gone if the accept header is is version 1" in forAll(
+  it should "return NOT_ACCEPTABLE if the accept header is is version 1" in forAll(
     arbitrary[GuaranteeReferenceNumber],
     arbitrary[InternalId],
     arbitrary[InternalBalanceResponse]
@@ -221,11 +212,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
       val mockAuditService = mock[AuditService]
 
-      val mockAppConfig = mock[AppConfig]
-      when(mockAppConfig.enablePhase5).thenReturn(true)
-
       val sut = new GuaranteeBalanceController(
-        mockAppConfig,
         FakeAuthActionProvider,
         mockLockService,
         mockValidationService,
@@ -237,13 +224,12 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       )
 
       val result = sut.postRequest(grn)(request = request)
-      status(result) shouldBe GONE
+      status(result) shouldBe NOT_ACCEPTABLE
       contentAsJson(result) shouldBe Json.obj(
-        "code"    -> "GONE",
-        "message" -> "Requests for New Guarantee Balance enquiries using the CTC Guarantee Balance API v1.0 are no longer supported. Please use CTC Guarantee Balance API v2.0 for balance inquiries."
+        "code"    -> "NOT_ACCEPTABLE",
+        "message" -> "The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."
       )
 
-      verify(mockAppConfig, times(1)).enablePhase5
       verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
       verify(mockAuditService, times(0)).balanceRequestFailed(any())(any(), any(), any())
       verify(mockAuditService, times(1)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
@@ -281,11 +267,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
       val mockAuditService = mock[AuditService]
 
-      val mockAppConfig = mock[AppConfig]
-      when(mockAppConfig.enablePhase5).thenReturn(true)
-
       val sut = new GuaranteeBalanceController(
-        mockAppConfig,
         fakeAuthActionProvider(internalId),
         mockLockService,
         mockValidationService,
@@ -303,7 +285,6 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "message" -> "The request for the API is throttled as you have exceeded your quota."
       )
 
-      verify(mockAppConfig, times(1)).enablePhase5
       verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
       verify(mockAuditService, times(1)).balanceRequestFailed(eqTo(RequestLockingError.AlreadyLocked))(any(), any(), any())
       verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
@@ -345,11 +326,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
 
       val mockAuditService = mock[AuditService]
 
-      val mockAppConfig = mock[AppConfig]
-      when(mockAppConfig.enablePhase5).thenReturn(true)
-
       val sut = new GuaranteeBalanceController(
-        mockAppConfig,
         fakeAuthActionProvider(internalId),
         mockLockService,
         mockValidationService,
@@ -366,8 +343,6 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "code"    -> "BAD_REQUEST",
         "message" -> "The access code was not supplied."
       )
-
-      verify(mockAppConfig, times(1)).enablePhase5
       verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
       verify(mockAuditService, times(0)).balanceRequestFailed(any())(any(), any(), any())
       verify(mockAuditService, times(1)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
@@ -405,13 +380,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
         .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
-      val mockAppConfig = mock[AppConfig]
-      when(mockAppConfig.enablePhase5).thenReturn(true)
-
       val mockAuditService = mock[AuditService]
 
       val sut = new GuaranteeBalanceController(
-        mockAppConfig,
         fakeAuthActionProvider(internalId),
         mockLockService,
         mockValidationService,
@@ -429,7 +400,6 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "message" -> "Access code 1 must be four alphanumeric characters."
       )
 
-      verify(mockAppConfig, times(1)).enablePhase5
       verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
       verify(mockAuditService, times(1)).balanceRequestFailed(any())(any(), any(), any())
       verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
@@ -464,13 +434,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
         .thenReturn(EitherT.leftT[IO, InternalBalanceResponse](RoutingError.GuaranteeReferenceNotFound))
 
-      val mockAppConfig = mock[AppConfig]
-      when(mockAppConfig.enablePhase5).thenReturn(true)
-
       val mockAuditService = mock[AuditService]
 
       val sut = new GuaranteeBalanceController(
-        mockAppConfig,
         fakeAuthActionProvider(internalId),
         mockLockService,
         mockValidationService,
@@ -488,7 +454,6 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "message" -> "The guarantee reference number or access code did not match an existing guarantee."
       )
 
-      verify(mockAppConfig, times(1)).enablePhase5
       verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
       verify(mockAuditService, times(1)).balanceRequestFailed(eqTo(RoutingError.GuaranteeReferenceNotFound))(any(), any(), any())
       verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
@@ -523,13 +488,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
         .thenReturn(EitherT.leftT[IO, InternalBalanceResponse](RoutingError.InvalidAccessCode))
 
-      val mockAppConfig = mock[AppConfig]
-      when(mockAppConfig.enablePhase5).thenReturn(true)
-
       val mockAuditService = mock[AuditService]
 
       val sut = new GuaranteeBalanceController(
-        mockAppConfig,
         fakeAuthActionProvider(internalId),
         mockLockService,
         mockValidationService,
@@ -547,71 +508,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "message" -> "The guarantee reference number or access code did not match an existing guarantee."
       )
 
-      verify(mockAppConfig, times(1)).enablePhase5
       verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
       verify(mockAuditService, times(1)).balanceRequestFailed(eqTo(RoutingError.InvalidAccessCode))(any(), any(), any())
       verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
-  }
-
-  "GuaranteeBalanceController#postRequest" should "return NOT_ACCEPTABLE if Phase 5 is disabled" in forAll(
-    arbitrary[GuaranteeReferenceNumber],
-    arbitrary[InternalId]
-  ) {
-    (grn, internalId) =>
-      val request = FakeRequest(
-        "POST",
-        "/",
-        FakeHeaders(
-          Seq(
-            HeaderNames.ACCEPT -> "application/vnd.hmrc.2.0+json"
-          )
-        ),
-        Json.obj(
-          "accessCode" -> "1"
-        )
-      )
-
-      val mockLockService = mock[RequestLockingService]
-      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value))))
-        .thenReturn(EitherT.rightT[IO, RequestLockingError](()))
-
-      val mockValidationService = mock[ValidationService]
-      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
-
-      val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
-        .thenReturn(EitherT.leftT[IO, InternalBalanceResponse](RoutingError.InvalidAccessCode))
-
-      val mockAppConfig = mock[AppConfig]
-      when(mockAppConfig.enablePhase5).thenReturn(false)
-
-      val mockAuditService = mock[AuditService]
-
-      val sut = new GuaranteeBalanceController(
-        mockAppConfig,
-        fakeAuthActionProvider(internalId),
-        mockLockService,
-        mockValidationService,
-        mockRouterService,
-        mockAuditService,
-        stubControllerComponents(),
-        IORuntime.global,
-        new FakeMetrics
-      )
-
-      val result = sut.postRequest(grn)(request = request)
-
-      status(result) shouldBe NOT_ACCEPTABLE
-      contentAsJson(result) shouldBe Json.obj(
-        "code"    -> "NOT_ACCEPTABLE",
-        "message" -> "CTC Guarantee Balance API version 2 is not yet available. Please continue to use version 1 to submit transit messages."
-      )
-
-      verify(mockAppConfig, times(1)).enablePhase5
-      verifyZeroInteractions(mockLockService)
-      verifyZeroInteractions(mockValidationService)
-      verifyZeroInteractions(mockRouterService)
-      verifyZeroInteractions(mockAuditService)
   }
 
 }
