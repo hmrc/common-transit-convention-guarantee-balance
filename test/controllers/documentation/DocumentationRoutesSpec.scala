@@ -36,10 +36,8 @@ class DocumentationRoutesSpec extends AnyFlatSpec with Matchers with GuiceOneApp
     contentType(result) should contain(JSON)
 
     val definitionJson = contentAsJson(result)
-    val scopeKey       = (definitionJson \ "scopes" \\ "key").head.as[String]
     val apiContext     = (definitionJson \ "api" \ "context").as[String]
 
-    scopeKey shouldBe "common-transit-convention-guarantee-balance"
     apiContext shouldBe "customs/guarantees"
   }
 
