@@ -49,8 +49,8 @@ class IOFuturesSpec extends AnyFlatSpec with Matchers with ScalaCheckPropertyChe
       }
   }
 
-  it should "run failed Futures to identical result" in forAll {
-    num: Int =>
+  "IO.runFuture" should "run failed Futures to identical result" in forAll {
+    (num: Int) =>
       val exc = new RuntimeException
 
       val viaIO =

@@ -18,11 +18,17 @@ package v2.services
 
 import cats.data.NonEmptyList
 import models.values.InternalId
-import org.mockito.scalatest.AsyncIdiomaticMockito
+import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{eq => eqTo}
+
+import org.mockito.Mockito.reset
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.flatspec.AsyncFlatSpec
 import org.scalatest.matchers.should.Matchers
-import play.api.libs.json.Writes
+import org.scalatestplus.mockito.MockitoSugar.mock
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import v2.models.AccessCode
@@ -37,9 +43,9 @@ import v2.models.errors.RequestLockingError
 import v2.models.errors.RoutingError
 import v2.models.errors.ValidationError
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
-class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMockito with BeforeAndAfterEach {
+class AuditServiceSpec extends AsyncFlatSpec with Matchers with BeforeAndAfterEach {
 
   val auditConnector: AuditConnector = mock[AuditConnector]
   val auditService                   = new AuditServiceImpl(auditConnector)
@@ -61,15 +67,11 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
     auditService
       .balanceRequestSucceeded(auditInfo, balance)
 
-    auditConnector.sendExplicitAudit[SuccessResponseEvent](
-      "SuccessResponse",
-      balanceRequestSucceeded
-    )(
-      any[HeaderCarrier],
-      any[ExecutionContext],
-      any[Writes[SuccessResponseEvent]]
-    ) wasCalled once
+    val captor = ArgumentCaptor.forClass(classOf[SuccessResponseEvent])
 
+    verify(auditConnector, times(1)).sendExplicitAudit[SuccessResponseEvent](eqTo("SuccessResponse"), captor.capture())(any(), any(), any())
+
+    captor.getValue shouldBe balanceRequestSucceeded
   }
 
   "AuditService.balanceRequestFailed with guarantee reference number not found " should "audit a failed balance request" in {
@@ -85,15 +87,11 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
     auditService
       .balanceRequestFailed(RoutingError.GuaranteeReferenceNotFound)
 
-    auditConnector.sendExplicitAudit[ErrorResponseEvent](
-      "ErrorResponse",
-      balanceRequestFailed
-    )(
-      any[HeaderCarrier],
-      any[ExecutionContext],
-      any[Writes[ErrorResponseEvent]]
-    ) wasCalled once
+    val captor = ArgumentCaptor.forClass(classOf[ErrorResponseEvent])
 
+    verify(auditConnector, times(1)).sendExplicitAudit[ErrorResponseEvent](eqTo("ErrorResponse"), captor.capture())(any(), any(), any())
+
+    captor.getValue shouldBe balanceRequestFailed
   }
 
   "AuditService.balanceRequestFailed with rate limit exceeded " should "audit a failed balance request" in {
@@ -108,15 +106,11 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
     auditService
       .balanceRequestFailed(RequestLockingError.AlreadyLocked)
 
-    auditConnector.sendExplicitAudit[RateLimitedRequestEvent](
-      "RateLimitedRequest",
-      balanceRequestFailed
-    )(
-      any[HeaderCarrier],
-      any[ExecutionContext],
-      any[Writes[RateLimitedRequestEvent]]
-    ) wasCalled once
+    val captor = ArgumentCaptor.forClass(classOf[RateLimitedRequestEvent])
 
+    verify(auditConnector, times(1)).sendExplicitAudit[RateLimitedRequestEvent](eqTo("RateLimitedRequest"), captor.capture())(any(), any(), any())
+
+    captor.getValue shouldBe balanceRequestFailed
   }
 
   "AuditService.balanceRequestFailed with routing invalid access code" should "audit a failed balance request" in {
@@ -132,14 +126,11 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
     auditService
       .balanceRequestFailed(RoutingError.InvalidAccessCode)
 
-    auditConnector.sendExplicitAudit[ErrorResponseEvent](
-      "ErrorResponse",
-      balanceRequestFailed
-    )(
-      any[HeaderCarrier],
-      any[ExecutionContext],
-      any[Writes[ErrorResponseEvent]]
-    ) wasCalled once
+    val captor = ArgumentCaptor.forClass(classOf[ErrorResponseEvent])
+
+    verify(auditConnector, times(1)).sendExplicitAudit[ErrorResponseEvent](eqTo("ErrorResponse"), captor.capture())(any(), any(), any())
+
+    captor.getValue shouldBe balanceRequestFailed
 
   }
 
@@ -156,14 +147,11 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
     auditService
       .balanceRequestFailed(RoutingError.Unexpected(Some(new Exception("unexpected routing error"))))
 
-    auditConnector.sendExplicitAudit[ErrorResponseEvent](
-      "ErrorResponse",
-      balanceRequestFailed
-    )(
-      any[HeaderCarrier],
-      any[ExecutionContext],
-      any[Writes[ErrorResponseEvent]]
-    ) wasCalled once
+    val captor = ArgumentCaptor.forClass(classOf[ErrorResponseEvent])
+
+    verify(auditConnector, times(1)).sendExplicitAudit[ErrorResponseEvent](eqTo("ErrorResponse"), captor.capture())(any(), any(), any())
+
+    captor.getValue shouldBe balanceRequestFailed
   }
 
   "AuditService.balanceRequestFailed with ValidationError" should "audit a failed balance request" in {
@@ -179,15 +167,10 @@ class AuditServiceSpec extends AsyncFlatSpec with Matchers with AsyncIdiomaticMo
     auditService
       .balanceRequestFailed(NonEmptyList.one(ValidationError.InvalidAccessCodeLength(accessCode)))
 
-    auditConnector.sendExplicitAudit[ErrorResponseEvent](
-      "ErrorResponse",
-      balanceRequestFailed
-    )(
-      any[HeaderCarrier],
-      any[ExecutionContext],
-      any[Writes[ErrorResponseEvent]]
-    ) wasCalled once
+    val captor = ArgumentCaptor.forClass(classOf[ErrorResponseEvent])
 
+    verify(auditConnector, times(1)).sendExplicitAudit[ErrorResponseEvent](eqTo("ErrorResponse"), captor.capture())(any(), any(), any())
+
+    captor.getValue shouldBe balanceRequestFailed
   }
-
 }

@@ -17,7 +17,7 @@
 package v2.models
 
 import cats.effect.unsafe.implicits.global
-import org.mockito.MockitoSugar
+
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
@@ -26,7 +26,7 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.libs.json.Json
 import v2.generators.Generators
 
-class HateoasResponseSpec extends AnyFlatSpec with Matchers with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
+class HateoasResponseSpec extends AnyFlatSpec with Matchers with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
 
   "HateoasResponse#apply" should "return an appropriate Hateoas response" in forAll(
     arbitrary[GuaranteeReferenceNumber],

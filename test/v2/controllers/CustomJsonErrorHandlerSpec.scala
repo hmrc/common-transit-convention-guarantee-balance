@@ -17,11 +17,12 @@
 package v2.controllers
 
 import com.typesafe.config.ConfigFactory
-import org.mockito.quality.Strictness
-import org.mockito.scalatest.MockitoSugar
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.Configuration
 import play.api.http.HeaderNames
 import play.api.libs.json.JsObject
@@ -29,8 +30,8 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.FakeHeaders
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
-import uk.gov.hmrc.http._
+import play.api.test.Helpers.*
+import uk.gov.hmrc.http.*
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
 import uk.gov.hmrc.play.audit.model.DataEvent
@@ -40,7 +41,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-class CustomJsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFutures with MockitoSugar {
+class CustomJsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFutures {
 
   private class Setup(
     config: Map[String, Any] = Map("appName" -> "common-transit-convention-guarantee-balance")
@@ -63,7 +64,7 @@ class CustomJsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFut
     when(auditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(Future.successful(Success))
 
-    val httpAuditEvent: HttpAuditEvent = mock[HttpAuditEvent](withSettings.strictness(Strictness.LENIENT))
+    private val httpAuditEvent = mock[HttpAuditEvent]
 
     val configuration: Configuration =
       Configuration.from(config).withFallback(Configuration(ConfigFactory.load()))

@@ -38,7 +38,7 @@ trait WireMockSpec extends BeforeAndAfterEach with BeforeAndAfterAll with GuiceF
 
   protected def configuration: Seq[(String, Any)] = Seq()
 
-  override lazy val fakeApplication: Application =
+  override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
       .configure(
         "metrics.jvm" -> false
@@ -47,19 +47,19 @@ trait WireMockSpec extends BeforeAndAfterEach with BeforeAndAfterAll with GuiceF
         portConfigKeys.map {
           key =>
             key -> wireMockServer.port.toString
-        }: _*
+        } *
       )
-      .configure(configuration: _*)
-      .overrides(bindings: _*)
+      .configure(configuration *)
+      .overrides(bindings *)
       .build()
 
   protected def bindings: Seq[GuiceableModule] = Seq.empty
 
-  protected lazy val injector: Injector = fakeApplication.injector
+  protected lazy val injector: Injector = fakeApplication().injector
 
   override def beforeAll(): Unit = {
     wireMockServer.start()
-    fakeApplication
+    fakeApplication()
     super.beforeAll()
   }
 

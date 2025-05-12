@@ -19,13 +19,14 @@ package v2.services
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import org.mockito.ArgumentMatchers.{eq => eqTo}
-import org.mockito.MockitoSugar
+import org.mockito.Mockito.when
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.SpanSugar.convertIntToGrainOfTime
+import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.http.Status.BAD_REQUEST
 import play.api.http.Status.FORBIDDEN
@@ -41,7 +42,7 @@ import v2.models.InternalBalanceResponse
 import v2.models.errors.RoutingError
 import v2.models.errors.UpstreamError
 
-class RouterServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
+class RouterServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val timeout: Timeout           = Timeout(1.second)
