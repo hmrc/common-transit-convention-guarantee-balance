@@ -44,6 +44,10 @@ lazy val buildSettings = Def.settings(
 )
 
 lazy val scalacSettings = Def.settings(
+  Test / scalacOptions ~= {
+    opts =>
+      opts.filterNot(Set("-Wdead-code"))
+  },
   // Disable warnings arising from generated routing code
   scalacOptions += "-Wconf:src=routes/.*:silent",
   // Disable fatal warnings and warnings from discarding values

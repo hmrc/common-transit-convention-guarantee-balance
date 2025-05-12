@@ -64,8 +64,8 @@ class RequestLockingServiceImpl @Inject() (lockRepo: MongoLockRepository, appCon
           ttl = appConfig.balanceRequestLockoutTtl
         )
         .map {
-          case false => Left(RequestLockingError.AlreadyLocked)
-          case true  => Right(())
+          case Some(_) => Right(())
+          case None    => Left(RequestLockingError.AlreadyLocked)
         }
         .recover {
           case NonFatal(ex) => Left(RequestLockingError.Unexpected(Some(ex)))

@@ -66,7 +66,7 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar wi
     whenReady(input.asPresentation(auditInfo, mockAuditService).value.unsafeToFuture()) {
       _ shouldBe Right(())
     }
-    verify(mockAuditService, times(0)).balanceRequestFailed(any())(eqTo(auditInfo), eqTo(hc), eqTo(ec))
+    verify(mockAuditService, times(0)).balanceRequestFailed(any)(eqTo(auditInfo), eqTo(hc), eqTo(ec))
   }
 
   it should "for an error returns a left with the appropriate presentation error" in {

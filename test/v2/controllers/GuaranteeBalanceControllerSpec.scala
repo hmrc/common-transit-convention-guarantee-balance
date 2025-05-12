@@ -95,7 +95,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
         .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditServiceImpl]
@@ -117,9 +117,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         r => contentAsJson(result) shouldBe r
       }
 
-      verify(mockAuditService, times(1)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
-      verify(mockAuditService, times(0)).balanceRequestFailed(any())(any(), any(), any())
-      verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
+      verify(mockAuditService, times(1)).balanceRequestSucceeded(any, Balance(anyDouble()))(any, any)
+      verify(mockAuditService, times(0)).balanceRequestFailed(any)(any, any, any)
+      verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any, GuaranteeReferenceNumber(anyString()))(any, any)
   }
 
   it should "return OK with a result if everything is okay but we have additional junk in the JSON payload" in forAll(
@@ -150,7 +150,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
         .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
@@ -172,9 +172,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         r => contentAsJson(result) shouldBe r
       }
 
-      verify(mockAuditService, times(1)).balanceRequestSucceeded(any(), Balance(any()))(any(), any())
-      verify(mockAuditService, times(0)).balanceRequestFailed(any())(any(), any(), any())
-      verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
+      verify(mockAuditService, times(1)).balanceRequestSucceeded(any, Balance(any))(any, any)
+      verify(mockAuditService, times(0)).balanceRequestFailed(any)(any, any, any)
+      verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any, GuaranteeReferenceNumber(anyString()))(any, any)
   }
 
   it should "return NOT_ACCEPTABLE if the accept header is is version 1" in forAll(
@@ -207,7 +207,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
         .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
@@ -230,9 +230,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "message" -> "The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."
       )
 
-      verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
-      verify(mockAuditService, times(0)).balanceRequestFailed(any())(any(), any(), any())
-      verify(mockAuditService, times(1)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
+      verify(mockAuditService, times(0)).balanceRequestSucceeded(any, Balance(anyDouble()))(any, any)
+      verify(mockAuditService, times(0)).balanceRequestFailed(any)(any, any, any)
+      verify(mockAuditService, times(1)).invalidPayloadBalanceRequest(any, GuaranteeReferenceNumber(anyString()))(any, any)
   }
 
   it should "return Too Many Requests if rate limiting is in effect" in forAll(
@@ -262,7 +262,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
         .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
@@ -285,9 +285,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "message" -> "The request for the API is throttled as you have exceeded your quota."
       )
 
-      verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
-      verify(mockAuditService, times(1)).balanceRequestFailed(eqTo(RequestLockingError.AlreadyLocked))(any(), any(), any())
-      verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
+      verify(mockAuditService, times(0)).balanceRequestSucceeded(any, Balance(anyDouble()))(any, any)
+      verify(mockAuditService, times(1)).balanceRequestFailed(eqTo(RequestLockingError.AlreadyLocked))(any, any, any)
+      verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any, GuaranteeReferenceNumber(anyString()))(any, any)
   }
 
   it should "return an error if the body cannot be parsed correctly" in forAll(
@@ -321,7 +321,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
         .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
@@ -343,9 +343,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "code"    -> "BAD_REQUEST",
         "message" -> "The access code was not supplied."
       )
-      verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
-      verify(mockAuditService, times(0)).balanceRequestFailed(any())(any(), any(), any())
-      verify(mockAuditService, times(1)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
+      verify(mockAuditService, times(0)).balanceRequestSucceeded(any, Balance(anyDouble()))(any, any)
+      verify(mockAuditService, times(0)).balanceRequestFailed(any)(any, any, any)
+      verify(mockAuditService, times(1)).invalidPayloadBalanceRequest(any, GuaranteeReferenceNumber(anyString()))(any, any)
 
   }
 
@@ -377,7 +377,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         .thenReturn(EitherT.leftT[IO, Unit](NonEmptyList.one(ValidationError.InvalidAccessCodeLength(AccessCode("1")))))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
         .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
@@ -400,9 +400,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "message" -> "Access code 1 must be four alphanumeric characters."
       )
 
-      verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
-      verify(mockAuditService, times(1)).balanceRequestFailed(any())(any(), any(), any())
-      verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
+      verify(mockAuditService, times(0)).balanceRequestSucceeded(any, Balance(anyDouble()))(any, any)
+      verify(mockAuditService, times(1)).balanceRequestFailed(any)(any, any, any)
+      verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any, GuaranteeReferenceNumber(anyString()))(any, any)
   }
 
   "GuaranteeBalanceController#postRequest" should "return NOT_FOUND if the GRN was not found, or if the access code was not valid" in forAll(
@@ -431,7 +431,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
         .thenReturn(EitherT.leftT[IO, InternalBalanceResponse](RoutingError.GuaranteeReferenceNotFound))
 
       val mockAuditService = mock[AuditService]
@@ -454,9 +454,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "message" -> "The guarantee reference number or access code did not match an existing guarantee."
       )
 
-      verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
-      verify(mockAuditService, times(1)).balanceRequestFailed(eqTo(RoutingError.GuaranteeReferenceNotFound))(any(), any(), any())
-      verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
+      verify(mockAuditService, times(0)).balanceRequestSucceeded(any, Balance(anyDouble()))(any, any)
+      verify(mockAuditService, times(1)).balanceRequestFailed(eqTo(RoutingError.GuaranteeReferenceNotFound))(any, any, any)
+      verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any, GuaranteeReferenceNumber(anyString()))(any, any)
   }
 
   "GuaranteeBalanceController#postRequest" should "return NOT_FOUND if the access code was not valid" in forAll(
@@ -485,7 +485,7 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any()))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
         .thenReturn(EitherT.leftT[IO, InternalBalanceResponse](RoutingError.InvalidAccessCode))
 
       val mockAuditService = mock[AuditService]
@@ -508,9 +508,9 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Mock
         "message" -> "The guarantee reference number or access code did not match an existing guarantee."
       )
 
-      verify(mockAuditService, times(0)).balanceRequestSucceeded(any(), Balance(anyDouble()))(any(), any())
-      verify(mockAuditService, times(1)).balanceRequestFailed(eqTo(RoutingError.InvalidAccessCode))(any(), any(), any())
-      verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any(), GuaranteeReferenceNumber(anyString()))(any(), any())
+      verify(mockAuditService, times(0)).balanceRequestSucceeded(any, Balance(anyDouble()))(any, any)
+      verify(mockAuditService, times(1)).balanceRequestFailed(eqTo(RoutingError.InvalidAccessCode))(any, any, any)
+      verify(mockAuditService, times(0)).invalidPayloadBalanceRequest(any, GuaranteeReferenceNumber(anyString()))(any, any)
   }
 
 }
