@@ -17,11 +17,11 @@
 package v2.controllers
 
 import cats.arrow.FunctionK
-import cats.data._
+import cats.data.*
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cats.effect.unsafe.implicits.global
-import controllers.actions._
+import controllers.actions.*
 import metrics.FakeMetrics
 import models.request.AuthenticatedRequest
 import models.values.InternalId
@@ -29,31 +29,34 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyDouble
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.{eq => eqTo}
-import org.mockito.MockitoSugar
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.when
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.http.HeaderNames
-import play.api.http.Status._
-import play.api.libs.json._
+import play.api.http.Status.*
+import play.api.libs.json.*
 import play.api.mvc.Request
 import play.api.test.Helpers.contentAsJson
 import play.api.test.Helpers.defaultAwaitTimeout
 import play.api.test.Helpers.status
 import play.api.test.Helpers.stubControllerComponents
-import play.api.test._
+import play.api.test.*
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.generators.Generators
-import v2.models._
-import v2.models.errors._
-import v2.services._
+import v2.models.*
+import v2.models.errors.*
+import v2.services.*
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContextExecutor
 
-class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
+class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
 
   private def fakeAuthActionProvider(internalId: InternalId): FakeAuthActionProvider =
     new FakeAuthActionProvider(

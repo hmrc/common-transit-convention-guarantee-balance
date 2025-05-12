@@ -23,16 +23,21 @@ import com.codahale.metrics.Counter
 import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.Timer
 import controllers.actions.IOActions
-import org.mockito.ArgumentMatchersSugar
-import org.mockito.IdiomaticMockito
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.endsWith
+import org.mockito.Mockito.reset
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.mvc.Action
 import play.api.mvc.AnyContent
 import play.api.test.FakeRequest
 import play.api.test.Helpers
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import runtime.IOFutures
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -40,9 +45,9 @@ import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import java.util.concurrent.CancellationException
 import scala.concurrent.Future
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
-class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach with IdiomaticMockito with ArgumentMatchersSugar {
+class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach {
 
   class IOMetricsConnector(val metrics: Metrics) extends IOFutures with IOMetrics {
 
@@ -146,19 +151,19 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
 
   override protected def beforeEach(): Unit = {
     reset(metrics, registry, timer, timerContext, successCounter, failureCounter)
-    metrics.defaultRegistry returns registry
-    registry.timer(*[String]) returns timer
-    registry.counter(endsWith("-success-counter")) returns successCounter
-    registry.counter(endsWith("-failed-counter")) returns failureCounter
-    timer.time() returns timerContext
+    when(metrics.defaultRegistry).thenReturn(registry)
+    when(registry.timer(any())).thenReturn(timer)
+    when(registry.counter(endsWith("success-counter"))).thenReturn(successCounter)
+    when(registry.counter(endsWith("failed-counter"))).thenReturn(failureCounter)
+    when(timer.time()).thenReturn(timerContext)
   }
 
   "IOMetrics.withMetricsTimer" should "complete with success when the call completes successfully" in {
     val connector = new IOMetricsConnector(metrics)
     connector.autoCompleteWithSuccessCall.unsafeRunSync()
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    successCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(successCounter, times(1)).inc()
   }
 
   it should "complete with failure when the IO action raises an error" in {
@@ -166,9 +171,9 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
     assertThrows[RuntimeException] {
       connector.autoCompleteWithFailureErrorCall.unsafeRunSync()
     }
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    failureCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(failureCounter, times(1)).inc()
   }
 
   it should "complete with failure when there is an unhandled runtime exception in the HTTP Future call" in {
@@ -176,9 +181,9 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
     assertThrows[RuntimeException] {
       connector.unhandledExceptionHttpCall.unsafeRunSync()
     }
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    failureCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(failureCounter, times(1)).inc()
   }
 
   it should "complete with failure when the IO is cancelled" in {
@@ -186,49 +191,49 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
     assertThrows[CancellationException] {
       connector.cancelledHttpCall.unsafeRunSync()
     }
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    failureCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(failureCounter, times(1)).inc()
   }
 
   it should "complete with success when the user calls completeWithSuccess explicitly" in {
     val connector = new IOMetricsConnector(metrics)
     connector.manualCompleteSuccessCall.unsafeRunSync()
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    successCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(successCounter, times(1)).inc()
   }
 
   it should "complete with failure when the user calls completeWithFailure explicitly" in {
     val connector = new IOMetricsConnector(metrics)
     connector.manualCompleteFailureCall.unsafeRunSync()
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    failureCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(failureCounter, times(1)).inc()
   }
 
   "IOMetrics.withMetricsTimerResponse" should "complete with success when the HTTP response is a success" in {
     val connector = new IOMetricsConnector(metrics)
     connector.okHttpCall.unsafeRunSync()
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    successCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(successCounter, times(1)).inc()
   }
 
   it should "complete with failure when the HTTP response is a client error" in {
     val connector = new IOMetricsConnector(metrics)
     connector.clientErrorHttpCall.unsafeRunSync()
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    failureCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(failureCounter, times(1)).inc()
   }
 
   it should "complete with failure when the HTTP response is a server error" in {
     val connector = new IOMetricsConnector(metrics)
     connector.serverErrorHttpCall.unsafeRunSync()
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    failureCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(failureCounter, times(1)).inc()
   }
 
   it should "complete with failure when the IO action is cancelled" in {
@@ -236,9 +241,9 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
     assertThrows[CancellationException] {
       connector.cancelledHttpCall.unsafeRunSync()
     }
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    failureCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(failureCounter, times(1)).inc()
   }
 
   it should "complete with failure when there is an unhandled runtime exception" in {
@@ -246,36 +251,36 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
     assertThrows[RuntimeException] {
       connector.unhandledExceptionHttpCall.unsafeRunSync()
     }
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    failureCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(failureCounter, times(1)).inc()
   }
 
   "IOMetrics.withMetricsTimerResult" should "complete with success when the result has a successful status code" in {
     val controller = new IOMetricsController(metrics, global)
     val result     = controller.okEndpoint(FakeRequest())
     status(result) shouldBe OK
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    successCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(successCounter, times(1)).inc()
   }
 
   it should "complete with failure when the result has a client error status code" in {
     val controller = new IOMetricsController(metrics, global)
     val result     = controller.clientErrorEndpoint(FakeRequest())
     status(result) shouldBe BAD_REQUEST
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    failureCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(failureCounter, times(1)).inc()
   }
 
   it should "complete with failure when the result has a server error status code" in {
     val controller = new IOMetricsController(metrics, global)
     val result     = controller.serverErrorEndpoint(FakeRequest())
     status(result) shouldBe BAD_GATEWAY
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    failureCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(failureCounter, times(1)).inc()
   }
 
   it should "complete with failure when the server has an unhandled runtime exception" in {
@@ -283,9 +288,9 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
     assertThrows[RuntimeException] {
       await(controller.unhandledExceptionEndpoint(FakeRequest()))
     }
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    failureCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(failureCounter, times(1)).inc()
   }
 
   it should "complete with failure when the request handling IO action is cancelled" in {
@@ -293,8 +298,8 @@ class IOMetricsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach wi
     assertThrows[CancellationException] {
       await(controller.cancelledEndpoint(FakeRequest()))
     }
-    timer.time() wasCalled once
-    timerContext.stop() wasCalled once
-    failureCounter.inc() wasCalled once
+    verify(timer, times(1)).time()
+    verify(timerContext, times(1)).stop()
+    verify(failureCounter, times(1)).inc()
   }
 }

@@ -51,8 +51,8 @@ class RequestLockingServiceSpec
     new AppConfig(config, servicesConfig)
   }
 
-  val timestampSupport = new CurrentTimestampSupport
-  val repository       = new MongoLockRepository(mongoComponent, timestampSupport)
+  val timestampSupport                = new CurrentTimestampSupport
+  val repository: MongoLockRepository = new MongoLockRepository(mongoComponent, timestampSupport)
 
   val service = new RequestLockingServiceImpl(
     repository,

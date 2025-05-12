@@ -18,7 +18,7 @@ package v2.services
 
 import cats.data.NonEmptyList
 import cats.effect.unsafe.implicits.global
-import org.mockito.MockitoSugar
+
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
@@ -33,7 +33,7 @@ import v2.models.errors.ValidationError
 
 import scala.concurrent.duration.DurationInt
 
-class ValidationServiceSpec extends AnyFlatSpec with Matchers with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
+class ValidationServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
 
   val sut              = new ValidationServiceImpl
   val timeout: Timeout = Timeout(1.second)

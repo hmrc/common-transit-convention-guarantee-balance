@@ -18,7 +18,7 @@ package fakes.controllers.actions
 
 import controllers.actions.AuthActionProvider
 import models.request.AuthenticatedRequest
-import play.api.mvc._
+import play.api.mvc.*
 import play.api.test.Helpers.stubControllerComponents
 
 import scala.concurrent.ExecutionContext
@@ -38,7 +38,7 @@ object FakeIntegrationAuthAction extends ActionTransformer[Request, Authenticate
 
   override protected def transform[A](request: Request[A]): Future[AuthenticatedRequest[A]] =
     request match {
-      case x: AuthenticatedRequest[A] => Future.successful(x)
-      case _                          => Future.failed(new Exception("Non-authenticated request"))
+      case authRequest: AuthenticatedRequest[?] => Future.successful(authRequest.asInstanceOf[AuthenticatedRequest[A]])
+      case _                                    => Future.failed(new Exception("Non-authenticated request"))
     }
 }

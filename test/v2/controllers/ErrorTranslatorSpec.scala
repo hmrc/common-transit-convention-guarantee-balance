@@ -22,13 +22,16 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import models.values.InternalId
 import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
-import org.mockito.MockitoSugar
+import org.mockito.ArgumentMatchers.{eq => eqTo}
+import org.mockito.Mockito.reset
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.scalacheck.Gen
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.models.AccessCode
@@ -45,7 +48,7 @@ import v2.services.AuditService
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContextExecutor
 
-class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks with BeforeAndAfterEach {
+class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with ScalaFutures with ScalaCheckDrivenPropertyChecks with BeforeAndAfterEach {
 
   object Harness extends ErrorTranslator
 

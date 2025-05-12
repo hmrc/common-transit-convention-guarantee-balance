@@ -29,6 +29,7 @@ import org.apache.pekko.stream.Materializer
 import play.api.http.ContentTypes
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
+import play.api.libs.ws.JsonBodyWritables
 import runtime.IOFutures
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -58,7 +59,8 @@ class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpCli
     with IOFutures
     with IOMetrics
     with CircuitBreakers
-    with Logging {
+    with Logging
+    with JsonBodyWritables {
 
   override def circuitBreakerConfig: CircuitBreakerConfig = appConfig.routerCircuitBreakerConfig
 

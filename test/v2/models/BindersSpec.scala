@@ -16,7 +16,6 @@
 
 package v2.models
 
-import org.mockito.MockitoSugar
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalatest.concurrent.ScalaFutures
@@ -25,7 +24,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import v2.generators.Generators
 
-class BindersSpec extends AnyFlatSpec with Matchers with MockitoSugar with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
+class BindersSpec extends AnyFlatSpec with Matchers with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
 
   "grnBinder" should "return a right if the GRN is valid" in forAll(arbitrary[GuaranteeReferenceNumber]) {
     grn =>
