@@ -55,6 +55,7 @@ import v2.services.*
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.Future
 
 class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with ScalaFutures with ScalaCheckDrivenPropertyChecks with Generators {
 
@@ -91,15 +92,15 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
       )
 
       val mockLockService = mock[RequestLockingService]
-      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value))))
-        .thenReturn(EitherT.rightT[IO, RequestLockingError](()))
+      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value)))(any))
+        .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
-      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
+      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
-        .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any, any))
+        .thenReturn(EitherT.rightT[Future, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditServiceImpl]
 
@@ -110,15 +111,13 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         mockRouterService,
         mockAuditService,
         stubControllerComponents(),
-        IORuntime.global,
         new FakeMetrics
       )
 
       val result = sut.postRequest(grn)(request = request)
       status(result) shouldBe OK
-      whenReady(HateoasResponse(grn, internalBalanceResponse).unsafeToFuture()) {
-        r => contentAsJson(result) shouldBe r
-      }
+      val hateoasResponse = HateoasResponse(grn, internalBalanceResponse)
+      contentAsJson(result) shouldBe hateoasResponse
 
       verify(mockAuditService, times(1)).balanceRequestSucceeded(any, Balance(anyDouble()))(any, any)
       verify(mockAuditService, times(0)).balanceRequestFailed(any)(any, any, any)
@@ -146,15 +145,15 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
       )
 
       val mockLockService = mock[RequestLockingService]
-      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value))))
-        .thenReturn(EitherT.rightT[IO, RequestLockingError](()))
+      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value)))(any))
+        .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
-      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
+      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
-        .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any, any))
+        .thenReturn(EitherT.rightT[Future, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
 
@@ -165,15 +164,13 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         mockRouterService,
         mockAuditService,
         stubControllerComponents(),
-        IORuntime.global,
         new FakeMetrics
       )
 
       val result = sut.postRequest(grn)(request = request)
       status(result) shouldBe OK
-      whenReady(HateoasResponse(grn, internalBalanceResponse).unsafeToFuture()) {
-        r => contentAsJson(result) shouldBe r
-      }
+      val hateoasResponse = HateoasResponse(grn, internalBalanceResponse)
+      contentAsJson(result) shouldBe hateoasResponse
 
       verify(mockAuditService, times(1)).balanceRequestSucceeded(any, Balance(any))(any, any)
       verify(mockAuditService, times(0)).balanceRequestFailed(any)(any, any, any)
@@ -203,15 +200,15 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
       )
 
       val mockLockService = mock[RequestLockingService]
-      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value))))
-        .thenReturn(EitherT.rightT[IO, RequestLockingError](()))
+      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value)))(any))
+        .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
-      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
+      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
-        .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any, any))
+        .thenReturn(EitherT.rightT[Future, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
 
@@ -222,7 +219,6 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         mockRouterService,
         mockAuditService,
         stubControllerComponents(),
-        IORuntime.global,
         new FakeMetrics
       )
 
@@ -258,15 +254,15 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
       )
 
       val mockLockService = mock[RequestLockingService]
-      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value))))
-        .thenReturn(EitherT.leftT[IO, Unit](RequestLockingError.AlreadyLocked))
+      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value)))(any))
+        .thenReturn(EitherT.leftT[Future, Unit](RequestLockingError.AlreadyLocked))
 
       val mockValidationService = mock[ValidationService]
-      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
+      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
-        .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any, any))
+        .thenReturn(EitherT.rightT[Future, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
 
@@ -277,7 +273,6 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         mockRouterService,
         mockAuditService,
         stubControllerComponents(),
-        IORuntime.global,
         new FakeMetrics
       )
 
@@ -317,15 +312,15 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         )
 
       val mockLockService = mock[RequestLockingService]
-      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value))))
-        .thenReturn(EitherT.rightT[IO, RequestLockingError](()))
+      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value)))(any))
+        .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
-      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
+      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
-        .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any, any))
+        .thenReturn(EitherT.rightT[Future, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
 
@@ -336,7 +331,6 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         mockRouterService,
         mockAuditService,
         stubControllerComponents(),
-        IORuntime.global,
         new FakeMetrics
       )
 
@@ -372,16 +366,16 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
       )
 
       val mockLockService = mock[RequestLockingService]
-      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value))))
-        .thenReturn(EitherT.rightT[IO, RequestLockingError](()))
+      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value)))(any))
+        .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
-      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1")))))
-        .thenReturn(EitherT.leftT[IO, Unit](NonEmptyList.one(ValidationError.InvalidAccessCodeLength(AccessCode("1")))))
+      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any))
+        .thenReturn(EitherT.leftT[Future, Unit](NonEmptyList.one(ValidationError.InvalidAccessCodeLength(AccessCode("1")))))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
-        .thenReturn(EitherT.rightT[IO, RoutingError](internalBalanceResponse))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any, any))
+        .thenReturn(EitherT.rightT[Future, RoutingError](internalBalanceResponse))
 
       val mockAuditService = mock[AuditService]
 
@@ -392,7 +386,6 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         mockRouterService,
         mockAuditService,
         stubControllerComponents(),
-        IORuntime.global,
         new FakeMetrics
       )
 
@@ -427,15 +420,15 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
       )
 
       val mockLockService = mock[RequestLockingService]
-      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value))))
-        .thenReturn(EitherT.rightT[IO, RequestLockingError](()))
+      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value)))(any))
+        .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
-      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
+      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
-        .thenReturn(EitherT.leftT[IO, InternalBalanceResponse](RoutingError.GuaranteeReferenceNotFound))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any, any))
+        .thenReturn(EitherT.leftT[Future, InternalBalanceResponse](RoutingError.GuaranteeReferenceNotFound))
 
       val mockAuditService = mock[AuditService]
 
@@ -446,7 +439,6 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         mockRouterService,
         mockAuditService,
         stubControllerComponents(),
-        IORuntime.global,
         new FakeMetrics
       )
 
@@ -481,15 +473,15 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
       )
 
       val mockLockService = mock[RequestLockingService]
-      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value))))
-        .thenReturn(EitherT.rightT[IO, RequestLockingError](()))
+      when(mockLockService.lock(GuaranteeReferenceNumber(eqTo(grn.value)), InternalId(eqTo(internalId.value)))(any))
+        .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
-      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))).thenReturn(EitherT.rightT[IO, NonEmptyList[ValidationError]](()))
+      when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
-      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any))
-        .thenReturn(EitherT.leftT[IO, InternalBalanceResponse](RoutingError.InvalidAccessCode))
+      when(mockRouterService.request(GuaranteeReferenceNumber(eqTo(grn.value)), eqTo(BalanceRequest(AccessCode("1"))))(any, any))
+        .thenReturn(EitherT.leftT[Future, InternalBalanceResponse](RoutingError.InvalidAccessCode))
 
       val mockAuditService = mock[AuditService]
 
@@ -500,7 +492,6 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         mockRouterService,
         mockAuditService,
         stubControllerComponents(),
-        IORuntime.global,
         new FakeMetrics
       )
 

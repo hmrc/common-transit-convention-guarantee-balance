@@ -19,9 +19,9 @@ package connectors
 import org.apache.pekko.pattern.CircuitBreaker
 import org.apache.pekko.stream.Materializer
 import config.CircuitBreakerConfig
-import logging.Logging
+import play.api.Logging
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 trait CircuitBreakers { self: Logging =>
   def materializer: Materializer
@@ -38,21 +38,21 @@ trait CircuitBreakers { self: Logging =>
     exponentialBackoffFactor = circuitBreakerConfig.exponentialBackoffFactor,
     randomFactor = circuitBreakerConfig.randomFactor
   )(materializer.executionContext)
-    .onOpen(slf4jLogger.error(s"Circuit breaker for $clazz opening due to failures"))
-    .onHalfOpen(slf4jLogger.warn(s"Circuit breaker for $clazz resetting after failures"))
+    .onOpen(logger.error(s"Circuit breaker for $clazz opening due to failures"))
+    .onHalfOpen(logger.warn(s"Circuit breaker for $clazz resetting after failures"))
     .onClose {
-      slf4jLogger.warn(s"Circuit breaker for $clazz closing after trial connection success")
+      logger.warn(s"Circuit breaker for $clazz closing after trial connection success")
     }
     .onCallFailure(
-      _ => slf4jLogger.error(s"Circuit breaker for $clazz recorded failed call")
+      _ => logger.error(s"Circuit breaker for $clazz recorded failed call")
     )
     .onCallBreakerOpen {
-      slf4jLogger.error(s"Circuit breaker for $clazz rejected call due to previous failures")
+      logger.error(s"Circuit breaker for $clazz rejected call due to previous failures")
     }
     .onCallTimeout {
       elapsed =>
         val duration = Duration.fromNanos(elapsed)
-        slf4jLogger.error(
+        logger.error(
           s"Circuit breaker for $clazz recorded failed call due to timeout after ${duration.toMillis}ms"
         )
     }

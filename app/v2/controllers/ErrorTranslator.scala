@@ -21,20 +21,21 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.models.AuditInfo
-import v2.models.errors._
+import v2.models.errors.*
 import v2.services.AuditService
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 trait ErrorTranslator {
 
-  implicit class ErrorConverter[E, A](value: EitherT[IO, E, A]) {
+  implicit class ErrorConverter[E, A](value: EitherT[Future, E, A]) {
 
     def asPresentation(auditInfo: AuditInfo, auditService: AuditService)(implicit
       c: Converter[E],
       headerCarrier: HeaderCarrier,
       ec: ExecutionContext
-    ): EitherT[IO, PresentationError, A] = {
+    ): EitherT[Future, PresentationError, A] = {
       implicit val info: AuditInfo = auditInfo
       value.leftMap {
         error =>

@@ -2,7 +2,6 @@ import sbt._
 
 object AppDependencies {
   val catsVersion       = "2.13.0"
-  val catsEffectVersion = "3.6.1"
   val log4catsVersion   = "2.7.0"
   val bootstrapVersion  = "9.11.0"
   val hmrcMongoVersion  = "2.6.0"
@@ -12,7 +11,6 @@ object AppDependencies {
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30"          % hmrcMongoVersion,
     "io.lemonlabs"      %% "scala-uri"                   % "4.0.3",
     "org.typelevel"     %% "cats-core"                   % catsVersion,
-    "org.typelevel"     %% "cats-effect"                 % catsEffectVersion,
     "org.typelevel"     %% "log4cats-slf4j"              % log4catsVersion,
     "org.apache.pekko"  %% "pekko-connectors-xml"        % "1.1.0",
     "org.apache.pekko"  %% "pekko-slf4j"                 % "1.1.3",

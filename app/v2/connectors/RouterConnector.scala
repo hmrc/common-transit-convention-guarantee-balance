@@ -16,32 +16,32 @@
 
 package v2.connectors
 
-import cats.effect.IO
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import com.google.inject.ImplementedBy
 import com.google.inject.Inject
 import config.AppConfig
 import config.CircuitBreakerConfig
 import connectors.CircuitBreakers
-import logging.Logging
-import metrics.IOMetrics
 import metrics.MetricsKeys
 import org.apache.pekko.stream.Materializer
+import play.api.Logging
 import play.api.http.ContentTypes
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import play.api.libs.ws.JsonBodyWritables
-import runtime.IOFutures
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.ctcguaranteebalancerouter.metrics.HasMetrics
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import v2.models.BalanceRequest
 import v2.models.GuaranteeReferenceNumber
 import v2.models.InternalBalanceResponse
 import v2.models.errors.UpstreamError
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.util.Success
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -49,53 +49,52 @@ import scala.util.control.NonFatal
 @ImplementedBy(classOf[RouterConnectorImpl])
 trait RouterConnector {
 
-  def post(grn: GuaranteeReferenceNumber, balanceRequest: BalanceRequest)(implicit hc: HeaderCarrier): IO[Either[Throwable, InternalBalanceResponse]]
-
+  def post(grn: GuaranteeReferenceNumber, balanceRequest: BalanceRequest)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Future[Either[Throwable, InternalBalanceResponse]]
 }
 
 class RouterConnectorImpl @Inject() (appConfig: AppConfig, httpClientV2: HttpClientV2, val metrics: Metrics)(implicit
   val materializer: Materializer
 ) extends RouterConnector
-    with IOFutures
-    with IOMetrics
-    with CircuitBreakers
     with Logging
+    with CircuitBreakers
+    with HasMetrics
     with JsonBodyWritables {
 
-  override def circuitBreakerConfig: CircuitBreakerConfig = appConfig.routerCircuitBreakerConfig
+  override val circuitBreakerConfig: CircuitBreakerConfig = appConfig.routerCircuitBreakerConfig
 
-  override def post(grn: GuaranteeReferenceNumber, balanceRequest: BalanceRequest)(implicit hc: HeaderCarrier): IO[Either[Throwable, InternalBalanceResponse]] =
+  override def post(grn: GuaranteeReferenceNumber, balanceRequest: BalanceRequest)(implicit
+    hc: HeaderCarrier,
+    executionContext: ExecutionContext
+  ): Future[Either[Throwable, InternalBalanceResponse]] = {
+    val url = appConfig.routerUrl.addPathPart(grn.value).addPathPart("balance")
+
     withMetricsTimerResponse(MetricsKeys.Connectors.RouterRequest) {
-      IO.runFuture {
-        implicit ec =>
-          circuitBreaker.withCircuitBreaker(
-            {
-              val url = appConfig.routerUrl.addPathPart(grn.value).addPathPart("balance")
-
-              httpClientV2
-                .post(url"$url")
-                .withBody(Json.toJson(balanceRequest))
-                .setHeader(
-                  HeaderNames.ACCEPT        -> ContentTypes.JSON,
-                  HeaderNames.CONTENT_TYPE  -> ContentTypes.JSON,
-                  HeaderNames.AUTHORIZATION -> appConfig.internalAuthToken
-                )
-                .execute[HttpResponse]
-                .map {
-                  response =>
-                    response.status match {
-                      case x if x <= 399 => Right(response.json.as[InternalBalanceResponse])
-                      case _             => Left(UpstreamError(response.body, response.status, response.status, response.headers))
-                    }
-                }
-                .recover {
-                  case NonFatal(ex) => Left[Throwable, InternalBalanceResponse](ex)
-                }
-            },
-            defineFailureFn = isFailure
+      circuitBreaker.withCircuitBreaker(
+        httpClientV2
+          .post(url"$url")
+          .withBody(Json.toJson(balanceRequest))
+          .setHeader(
+            HeaderNames.ACCEPT        -> ContentTypes.JSON,
+            HeaderNames.CONTENT_TYPE  -> ContentTypes.JSON,
+            HeaderNames.AUTHORIZATION -> appConfig.internalAuthToken
           )
-      }
+          .execute[HttpResponse]
+          .map {
+            response =>
+              response.status match {
+                case x if x <= 399 => Right(response.json.as[InternalBalanceResponse])
+                case _             => Left(UpstreamError(response.body, response.status, response.status, response.headers))
+              }
+          }
+          .recover {
+            case NonFatal(ex) => Left[Throwable, InternalBalanceResponse](ex)
+          }
+      )
     }
+  }
 
   def isFailure(result: Try[Either[Throwable, InternalBalanceResponse]]): Boolean =
     result match {

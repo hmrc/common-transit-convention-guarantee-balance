@@ -17,13 +17,8 @@
 package v2.controllers
 
 import cats.data.EitherT
-import cats.effect.IO
-import cats.effect.unsafe.IORuntime
 import com.google.inject.Inject
 import controllers.actions.AuthActionProvider
-import controllers.actions.IOActions
-import logging.Logging
-import metrics.IOMetrics
 import models.request.AuthenticatedRequest
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
@@ -43,6 +38,7 @@ import v2.services.RouterService
 import v2.services.ValidationService
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 class GuaranteeBalanceController @Inject() (
   authenticate: AuthActionProvider,
@@ -51,19 +47,15 @@ class GuaranteeBalanceController @Inject() (
   routerService: RouterService,
   auditService: AuditService,
   cc: ControllerComponents,
-  val runtime: IORuntime,
   val metrics: Metrics
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
-    with IOActions
-    with IOMetrics
-    with Logging
     with ErrorTranslator {
 
   private val AcceptHeaderRegex = """application/vnd\.hmrc\.(2.0)\+json""".r
 
   def postRequest(grn: GuaranteeReferenceNumber): Action[JsValue] =
-    authenticate().io(parse.json) {
+    authenticate().async(parse.json) {
       implicit request =>
         (for {
           _      <- validateAcceptHeader(grn)
@@ -72,8 +64,8 @@ class GuaranteeBalanceController @Inject() (
           _                <- lockService.lock(grn, request.internalId).asPresentation(auditInfo, auditService)
           _                <- validationService.validate(parsed).asPresentation(auditInfo, auditService)
           internalResponse <- routerService.request(grn, parsed).asPresentation(auditInfo, auditService)
-          hateoas          <- EitherT.right[PresentationError](HateoasResponse(grn, internalResponse))
-          _ = auditService.balanceRequestSucceeded(auditInfo, internalResponse.balance)
+          hateoas = HateoasResponse(grn, internalResponse)
+          _       = auditService.balanceRequestSucceeded(auditInfo, internalResponse.balance)
         } yield hateoas).fold(
           presentationError => Status(presentationError.code.statusCode)(Json.toJson(presentationError)),
           result => Ok(result)
@@ -82,9 +74,9 @@ class GuaranteeBalanceController @Inject() (
 
   private def parseJson(request: AuthenticatedRequest[JsValue], guaranteeReferenceNumber: GuaranteeReferenceNumber)(implicit
     hc: HeaderCarrier
-  ): EitherT[IO, PresentationError, BalanceRequest] =
+  ): EitherT[Future, PresentationError, BalanceRequest] =
     EitherT {
-      IO {
+      Future {
         request.body.validate[BalanceRequest].asEither match {
           case Right(x) => Right(x)
           case Left(_) =>
@@ -97,9 +89,9 @@ class GuaranteeBalanceController @Inject() (
   private def validateAcceptHeader(guaranteeReferenceNumber: GuaranteeReferenceNumber)(implicit
     request: AuthenticatedRequest[JsValue],
     hc: HeaderCarrier
-  ): EitherT[IO, PresentationError, Unit] =
+  ): EitherT[Future, PresentationError, Unit] =
     EitherT {
-      IO {
+      Future {
         request.headers.get(ACCEPT) match {
           case Some(AcceptHeaderRegex(_)) => Right(())
           case _ =>

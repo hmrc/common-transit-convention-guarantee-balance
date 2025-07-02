@@ -16,7 +16,6 @@
 
 package v2.connectors
 
-import cats.effect.unsafe.implicits.global
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
@@ -92,7 +91,7 @@ class RouterConnectorSpec
     )
 
     val sut = injector.instanceOf[RouterConnector]
-    sut.post(grn, balanceRequest).unsafeToFuture().map {
+    sut.post(grn, balanceRequest).map {
       result => result shouldBe Right(internalBalanceResponse)
     }
   }
@@ -122,7 +121,7 @@ class RouterConnectorSpec
     )
 
     val sut = injector.instanceOf[RouterConnector]
-    sut.post(grn, balanceRequest).unsafeToFuture().map {
+    sut.post(grn, balanceRequest).map {
       case Left(UpstreamError(_, errorCode.statusCode, _, _)) => succeed
       case x                                                  => fail(s"Expected failure with status code ${errorCode.statusCode}, but got $x instead")
     }

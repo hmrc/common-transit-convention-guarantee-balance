@@ -34,18 +34,26 @@ import v2.models.errors.RoutingError
 import v2.models.errors.StandardError
 import v2.models.errors.UpstreamError
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.util.Try
 
 @ImplementedBy(classOf[RouterServiceImpl])
 trait RouterService {
 
-  def request(grn: GuaranteeReferenceNumber, request: BalanceRequest)(implicit hc: HeaderCarrier): EitherT[IO, RoutingError, InternalBalanceResponse]
+  def request(grn: GuaranteeReferenceNumber, request: BalanceRequest)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): EitherT[Future, RoutingError, InternalBalanceResponse]
 
 }
 
 class RouterServiceImpl @Inject() (routerConnector: RouterConnector) extends RouterService {
 
-  override def request(grn: GuaranteeReferenceNumber, request: BalanceRequest)(implicit hc: HeaderCarrier): EitherT[IO, RoutingError, InternalBalanceResponse] =
+  override def request(grn: GuaranteeReferenceNumber, request: BalanceRequest)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): EitherT[Future, RoutingError, InternalBalanceResponse] =
     EitherT {
       for {
         response  <- routerConnector.post(grn, request)
@@ -53,8 +61,10 @@ class RouterServiceImpl @Inject() (routerConnector: RouterConnector) extends Rou
       } yield converted
     }
 
-  private def convertException(result: Either[Throwable, InternalBalanceResponse]): IO[Either[RoutingError, InternalBalanceResponse]] =
-    IO {
+  private def convertException(
+    result: Either[Throwable, InternalBalanceResponse]
+  )(implicit ec: ExecutionContext): Future[Either[RoutingError, InternalBalanceResponse]] =
+    Future {
       result match {
         case Right(internalBalanceResponse)                 => Right(internalBalanceResponse)
         case Left(UpstreamError(_, FORBIDDEN, _, _))        => Left(RoutingError.InvalidAccessCode)

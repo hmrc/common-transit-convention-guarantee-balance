@@ -20,7 +20,6 @@ import cats.data.NonEmptyList
 import com.google.inject.ImplementedBy
 import models.request.AuthenticatedRequest
 import play.api.libs.json.JsValue
-import runtime.IOFutures
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import v2.models._
@@ -52,7 +51,7 @@ trait AuditService {
 }
 
 @Singleton
-class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditService with IOFutures {
+class AuditServiceImpl @Inject() (connector: AuditConnector) extends AuditService {
 
   override def balanceRequestSucceeded(auditInfo: AuditInfo, balance: Balance)(implicit
     hc: HeaderCarrier,

@@ -43,9 +43,7 @@ class HateoasResponseSpec extends AnyFlatSpec with Matchers with ScalaFutures wi
         "currency" -> internalBalanceResponse.currencyCL
       )
 
-      whenReady(HateoasResponse(grn, internalBalanceResponse).unsafeToFuture()) {
-        _ shouldBe expected
-      }
+      expected shouldBe HateoasResponse(grn, internalBalanceResponse)
   }
 
 }

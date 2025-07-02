@@ -27,10 +27,13 @@ import v2.models.AccessCode
 import v2.models.BalanceRequest
 import v2.models.errors.ValidationError
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 @ImplementedBy(classOf[ValidationServiceImpl])
 trait ValidationService {
 
-  def validate(payload: BalanceRequest): EitherT[IO, NonEmptyList[ValidationError], Unit]
+  def validate(payload: BalanceRequest)(implicit executionContext: ExecutionContext): EitherT[Future, NonEmptyList[ValidationError], Unit]
 
 }
 
@@ -50,8 +53,8 @@ class ValidationServiceImpl extends ValidationService {
       alphanumeric(code.value, ValidationError.InvalidAccessCodeCharacters(code))
     ).tupled.void
 
-  override def validate(payload: BalanceRequest): EitherT[IO, NonEmptyList[ValidationError], Unit] = EitherT {
-    IO {
+  override def validate(payload: BalanceRequest)(implicit executionContext: ExecutionContext): EitherT[Future, NonEmptyList[ValidationError], Unit] = EitherT {
+    Future {
       validateAccessCode(payload.accessCode).toEither
     }
   }

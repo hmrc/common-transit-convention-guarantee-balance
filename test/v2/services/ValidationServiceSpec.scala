@@ -30,6 +30,7 @@ import v2.generators.Generators
 import v2.models.AccessCode
 import v2.models.BalanceRequest
 import v2.models.errors.ValidationError
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.duration.DurationInt
 
@@ -39,7 +40,7 @@ class ValidationServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
   val timeout: Timeout = Timeout(1.second)
   "ValidationService#validate" should "validate a valid request" in forAll(arbitrary[BalanceRequest]) {
     balanceRequest =>
-      whenReady(sut.validate(balanceRequest).value.unsafeToFuture(), timeout) {
+      whenReady(sut.validate(balanceRequest).value, timeout) {
         r => r shouldBe Right(())
       }
   }
@@ -49,7 +50,7 @@ class ValidationServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
     Gen.stringOfN(5, Gen.alphaNumChar).map(AccessCode(_))
   ) {
     (balanceRequest, brokenAccessCode) =>
-      whenReady(sut.validate(balanceRequest.copy(accessCode = brokenAccessCode)).value.unsafeToFuture()) {
+      whenReady(sut.validate(balanceRequest.copy(accessCode = brokenAccessCode)).value) {
         r => r shouldBe Left(NonEmptyList.one(ValidationError.InvalidAccessCodeLength(brokenAccessCode)))
       }
   }
@@ -63,7 +64,7 @@ class ValidationServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
       )
   ) {
     (balanceRequest, brokenAccessCode) =>
-      whenReady(sut.validate(balanceRequest.copy(accessCode = brokenAccessCode)).value.unsafeToFuture()) {
+      whenReady(sut.validate(balanceRequest.copy(accessCode = brokenAccessCode)).value) {
         r => r shouldBe Left(NonEmptyList.one(ValidationError.InvalidAccessCodeCharacters(brokenAccessCode)))
       }
   }
@@ -77,7 +78,7 @@ class ValidationServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures 
       )
   ) {
     (balanceRequest, brokenAccessCode) =>
-      whenReady(sut.validate(balanceRequest.copy(accessCode = brokenAccessCode)).value.unsafeToFuture()) {
+      whenReady(sut.validate(balanceRequest.copy(accessCode = brokenAccessCode)).value) {
         r =>
           r shouldBe Left(
             NonEmptyList.of(

@@ -16,8 +16,6 @@
 
 package v2.services
 
-import cats.effect.IO
-import cats.effect.unsafe.implicits.global
 import config.AppConfig
 import models.values.InternalId
 import org.scalacheck.Gen
@@ -35,7 +33,7 @@ import v2.models.GuaranteeReferenceNumber
 import v2.models.errors.RequestLockingError
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
+import scala.concurrent.Future
 
 class RequestLockingServiceSpec
     extends AnyFlatSpec
@@ -64,7 +62,7 @@ class RequestLockingServiceSpec
     Gen.stringOfN(18, Gen.alphaNumChar).map(GuaranteeReferenceNumber(_))
   ) {
     (internalId, grn) =>
-      service.lock(grn, internalId).value.unsafeToFuture().futureValue shouldBe Right(())
+      service.lock(grn, internalId).value.futureValue shouldBe Right(())
   }
 
   it should "allow the same user to take the lock for two different GRNs within the timeout period" in forAll(
@@ -75,11 +73,11 @@ class RequestLockingServiceSpec
     (internalId, grn1, grn2) =>
       val assertion = for {
         first  <- service.lock(grn1, internalId).value
-        _      <- IO.sleep(50.millis)
+        _      <- Future(Thread.sleep(50))
         second <- service.lock(grn2, internalId).value
       } yield (first, second)
 
-      assertion.unsafeToFuture().futureValue.shouldBe((Right(()), Right(())))
+      assertion.futureValue.shouldBe((Right(()), Right(())))
   }
 
   it should "allow two different users to take the lock for the same GRN within the timeout period" in forAll(
@@ -90,11 +88,11 @@ class RequestLockingServiceSpec
     (internalId1, internalId2, grn) =>
       val assertion = for {
         first  <- service.lock(grn, internalId1).value
-        _      <- IO.sleep(50.millis)
+        _      <- Future(Thread.sleep(50))
         second <- service.lock(grn, internalId2).value
       } yield (first, second)
 
-      assertion.unsafeToFuture().futureValue.shouldBe((Right(()), Right(())))
+      assertion.futureValue.shouldBe((Right(()), Right(())))
   }
 
   it should "deny the second lock acquisition attempt for the same GRN within the timeout period" in forAll(
@@ -104,11 +102,11 @@ class RequestLockingServiceSpec
     (internalId, grn) =>
       val assertion = for {
         first  <- service.lock(grn, internalId).value
-        _      <- IO.sleep(50.millis)
+        _      <- Future(Thread.sleep(50))
         second <- service.lock(grn, internalId).value
       } yield (first, second)
 
-      assertion.unsafeToFuture().futureValue.shouldBe((Right(()), Left(RequestLockingError.AlreadyLocked)))
+      assertion.futureValue.shouldBe((Right(()), Left(RequestLockingError.AlreadyLocked)))
   }
 
   it should "allow the lock to be acquired again for a given GRN after the timeout period" in forAll(
@@ -118,10 +116,10 @@ class RequestLockingServiceSpec
     (internalId, grn) =>
       val assertion = for {
         first  <- service.lock(grn, internalId).value
-        _      <- IO.sleep(300.millis)
+        _      <- Future(Thread.sleep(300))
         second <- service.lock(grn, internalId).value
       } yield (first, second)
 
-      assertion.unsafeToFuture().futureValue.shouldBe((Right(()), Right(())))
+      assertion.futureValue.shouldBe((Right(()), Right(())))
   }
 }
