@@ -18,8 +18,6 @@ package v2.controllers
 
 import cats.data.EitherT
 import cats.data.NonEmptyList
-import cats.effect.IO
-import cats.effect.unsafe.implicits.global
 import models.values.InternalId
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.{eq => eqTo}
@@ -47,6 +45,7 @@ import v2.services.AuditService
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.Future
 
 class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with ScalaFutures with ScalaCheckDrivenPropertyChecks with BeforeAndAfterEach {
 
@@ -65,8 +64,8 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with ScalaFutures wi
 
   "ErrorConverter#asPresentation" should "for a success return the same right" in {
 
-    val input: EitherT[IO, RequestLockingError, Unit] = EitherT.rightT[IO, RequestLockingError](())
-    whenReady(input.asPresentation(auditInfo, mockAuditService).value.unsafeToFuture()) {
+    val input: EitherT[Future, RequestLockingError, Unit] = EitherT.rightT[Future, RequestLockingError](())
+    whenReady(input.asPresentation(auditInfo, mockAuditService).value) {
       _ shouldBe Right(())
     }
     verify(mockAuditService, times(0)).balanceRequestFailed(any)(eqTo(auditInfo), eqTo(hc), eqTo(ec))
@@ -74,9 +73,9 @@ class ErrorTranslatorSpec extends AnyFlatSpec with Matchers with ScalaFutures wi
 
   it should "for an error returns a left with the appropriate presentation error" in {
 
-    val error                                         = new IllegalStateException()
-    val input: EitherT[IO, RequestLockingError, Unit] = EitherT.leftT[IO, Unit](RequestLockingError.Unexpected(Some(error)))
-    whenReady(input.asPresentation(auditInfo, mockAuditService).value.unsafeToFuture()) {
+    val error                                             = new IllegalStateException()
+    val input: EitherT[Future, RequestLockingError, Unit] = EitherT.leftT[Future, Unit](RequestLockingError.Unexpected(Some(error)))
+    whenReady(input.asPresentation(auditInfo, mockAuditService).value) {
       _ shouldBe Left(InternalServiceError(cause = Some(error)))
 
     }

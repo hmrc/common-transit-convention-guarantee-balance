@@ -19,41 +19,64 @@ package v2.services
 import cats.data.EitherT
 import cats.data.NonEmptyList
 import cats.data.Validated
-import cats.effect.IO
 import cats.implicits.catsSyntaxTuple2Semigroupal
 import cats.implicits.toFunctorOps
 import com.google.inject.ImplementedBy
+import models.request.AuthenticatedRequest
+import play.api.http.HeaderNames
+import play.api.libs.json.JsValue
+import uk.gov.hmrc.http.HeaderCarrier
 import v2.models.AccessCode
 import v2.models.BalanceRequest
+import v2.models.GuaranteeReferenceNumber
+import v2.models.errors.PresentationError
 import v2.models.errors.ValidationError
+
+import javax.inject.Inject
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 @ImplementedBy(classOf[ValidationServiceImpl])
 trait ValidationService {
 
-  def validate(payload: BalanceRequest): EitherT[IO, NonEmptyList[ValidationError], Unit]
+  def validate(payload: BalanceRequest)(implicit ec: ExecutionContext): EitherT[Future, NonEmptyList[ValidationError], Unit]
 
+  def validateAcceptHeader(
+    grn: GuaranteeReferenceNumber
+  )(implicit request: AuthenticatedRequest[JsValue], hc: HeaderCarrier, ec: ExecutionContext): Either[PresentationError, Unit]
 }
 
-class ValidationServiceImpl extends ValidationService {
+class ValidationServiceImpl @Inject() (auditService: AuditService) extends ValidationService {
 
-  type ValidateResult = Validated[NonEmptyList[ValidationError], Unit]
+  private val AcceptHeaderRegex = """application/vnd\.hmrc\.(2.0)\+json""".r
 
-  private def exactLength(value: String, length: Int, error: Int => ValidationError): ValidateResult =
+  private def exactLength(value: String, length: Int, error: Int => ValidationError): Validated[NonEmptyList[ValidationError], Unit] =
     Validated.condNel(value.length == length, (), error(length))
 
-  private def alphanumeric(value: String, error: => ValidationError): ValidateResult =
+  private def alphanumeric(value: String, error: => ValidationError): Validated[NonEmptyList[ValidationError], Unit] =
     Validated.condNel(value.forall(_.isLetterOrDigit), (), error)
 
-  private def validateAccessCode(code: AccessCode): ValidateResult =
+  private def validateAccessCode(code: AccessCode): Validated[NonEmptyList[ValidationError], Unit] =
     (
       exactLength(code.value, 4, _ => ValidationError.InvalidAccessCodeLength(code)),
       alphanumeric(code.value, ValidationError.InvalidAccessCodeCharacters(code))
     ).tupled.void
 
-  override def validate(payload: BalanceRequest): EitherT[IO, NonEmptyList[ValidationError], Unit] = EitherT {
-    IO {
+  override def validate(payload: BalanceRequest)(implicit ec: ExecutionContext): EitherT[Future, NonEmptyList[ValidationError], Unit] = EitherT {
+    Future {
       validateAccessCode(payload.accessCode).toEither
     }
   }
 
+  def validateAcceptHeader(grn: GuaranteeReferenceNumber)(implicit
+    request: AuthenticatedRequest[JsValue],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Either[PresentationError, Unit] =
+    request.headers.get(HeaderNames.ACCEPT) match {
+      case Some(AcceptHeaderRegex(_)) => Right(())
+      case _ =>
+        auditService.invalidPayloadBalanceRequest(request, grn)
+        Left(PresentationError.notAcceptableError("The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."))
+    }
 }

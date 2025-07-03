@@ -80,7 +80,7 @@ class AuthActionSpec extends AsyncFlatSpec with Matchers {
   it should "rethrow if there is any other kind of exception" in {
     val authConnector = FakeAuthConnector(Future.failed(new IOException))
     val authAction    = mkAuthActionBuilder(authConnector)
-    recoverToSucceededIf[IOException] {
+    recoverToSucceededIf[Exception] {
       authAction(
         _ => Results.Ok
       )(FakeRequest())

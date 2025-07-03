@@ -20,7 +20,6 @@ lazy val microservice = Project(appName, file("."))
     PlayKeys.playDefaultPort := 10207,
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
-    resolvers += Resolver.jcenterRepo,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     RoutesKeys.routesImport ++= Seq(
       "models.values._",

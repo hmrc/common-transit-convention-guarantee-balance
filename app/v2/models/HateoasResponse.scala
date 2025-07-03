@@ -16,14 +16,13 @@
 
 package v2.models
 
-import cats.effect.IO
 import controllers.LocationWithContext
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
 
 object HateoasResponse extends LocationWithContext {
 
-  def apply(grn: GuaranteeReferenceNumber, response: InternalBalanceResponse): IO[JsObject] = IO {
+  def apply(grn: GuaranteeReferenceNumber, response: InternalBalanceResponse): JsObject =
     Json.obj(
       "_links" -> Json.obj(
         "self" -> Json.obj(
@@ -33,6 +32,5 @@ object HateoasResponse extends LocationWithContext {
       "balance"  -> response.balance.value,
       "currency" -> response.currencyCL
     )
-  }
 
 }
