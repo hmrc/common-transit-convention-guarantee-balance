@@ -27,13 +27,13 @@ import scala.util.control.NonFatal
 trait HasMetrics {
   def metrics: Metrics
 
-  lazy val registry: MetricRegistry = metrics.defaultRegistry
+  private lazy val registry: MetricRegistry = metrics.defaultRegistry
 
   class MetricsTimer(metricKey: String) {
-    val timerContext   = registry.timer(s"$metricKey-timer").time()
-    val successCounter = registry.counter(s"$metricKey-success-counter")
-    val failureCounter = registry.counter(s"$metricKey-failed-counter")
-    val timerRunning   = new AtomicBoolean(true)
+    private val timerContext   = registry.timer(s"$metricKey-timer").time()
+    private val successCounter = registry.counter(s"$metricKey-success-counter")
+    private val failureCounter = registry.counter(s"$metricKey-failed-counter")
+    private val timerRunning   = new AtomicBoolean(true)
 
     def completeWithSuccess(): Unit =
       if (timerRunning.compareAndSet(true, false)) {
@@ -80,7 +80,7 @@ trait HasMetrics {
         response
     }
 
-  def withMetricsTimer[T](metricKey: String)(block: MetricsTimer => T): T = {
+  private def withMetricsTimer[T](metricKey: String)(block: MetricsTimer => T): T = {
     val timer = new MetricsTimer(metricKey)
 
     try block(timer)

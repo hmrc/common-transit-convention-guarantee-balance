@@ -40,7 +40,7 @@ trait RequestLockingService {
 class RequestLockingServiceImpl @Inject() (lockRepo: MongoLockRepository, appConfig: AppConfig) extends RequestLockingService {
 
   // Note to implementors: THIS IS NOT THREAD SAFE. We have to synchronise on this in our IOs below, hence the blocking.
-  val hash: MessageDigest = MessageDigest.getInstance("SHA-256")
+  private val hash: MessageDigest = MessageDigest.getInstance("SHA-256")
 
   override def lock(grn: GuaranteeReferenceNumber, internalId: InternalId)(implicit ec: ExecutionContext): EitherT[Future, RequestLockingError, Unit] = {
     val key    = internalId.value + grn.value

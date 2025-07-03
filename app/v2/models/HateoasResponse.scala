@@ -16,13 +16,9 @@
 
 package v2.models
 
-import cats.effect.IO
 import controllers.LocationWithContext
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 object HateoasResponse extends LocationWithContext {
 

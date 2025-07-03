@@ -18,7 +18,6 @@ package v2.controllers
 
 import cats.data.EitherT
 import cats.data.NonEmptyList
-import cats.effect.IO
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.models.AuditInfo
 import v2.models.errors.*

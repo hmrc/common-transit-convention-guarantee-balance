@@ -18,9 +18,6 @@ package v2.controllers
 
 import cats.arrow.FunctionK
 import cats.data.*
-import cats.effect.IO
-import cats.effect.unsafe.IORuntime
-import cats.effect.unsafe.implicits.global
 import controllers.actions.*
 import metrics.FakeMetrics
 import models.request.AuthenticatedRequest
@@ -96,6 +93,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
+      when(mockValidationService.validateAcceptHeader(any)(any, any, any)).thenReturn(Right(()))
+
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
@@ -149,6 +148,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
+      when(mockValidationService.validateAcceptHeader(any)(any, any, any)).thenReturn(Right(()))
+
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
@@ -204,6 +205,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
+      when(mockValidationService.validateAcceptHeader(any)(any, any, any))
+        .thenReturn(Left(PresentationError.notAcceptableError("The accept header must be set to application/vnd.hmrc.2.0+json to use this resource.")))
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
@@ -231,7 +234,6 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
 
       verify(mockAuditService, times(0)).balanceRequestSucceeded(any, Balance(anyDouble()))(any, any)
       verify(mockAuditService, times(0)).balanceRequestFailed(any)(any, any, any)
-      verify(mockAuditService, times(1)).invalidPayloadBalanceRequest(any, GuaranteeReferenceNumber(anyString()))(any, any)
   }
 
   it should "return Too Many Requests if rate limiting is in effect" in forAll(
@@ -258,6 +260,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         .thenReturn(EitherT.leftT[Future, Unit](RequestLockingError.AlreadyLocked))
 
       val mockValidationService = mock[ValidationService]
+      when(mockValidationService.validateAcceptHeader(any)(any, any, any)).thenReturn(Right(()))
+
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
@@ -316,6 +320,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
+      when(mockValidationService.validateAcceptHeader(any)(any, any, any)).thenReturn(Right(()))
+
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
@@ -370,6 +376,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
+      when(mockValidationService.validateAcceptHeader(any)(any, any, any)).thenReturn(Right(()))
+
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any))
         .thenReturn(EitherT.leftT[Future, Unit](NonEmptyList.one(ValidationError.InvalidAccessCodeLength(AccessCode("1")))))
 
@@ -424,6 +432,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
+      when(mockValidationService.validateAcceptHeader(any)(any, any, any)).thenReturn(Right(()))
+
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]
@@ -477,6 +487,8 @@ class GuaranteeBalanceControllerSpec extends AnyFlatSpec with Matchers with Scal
         .thenReturn(EitherT.rightT[Future, RequestLockingError](()))
 
       val mockValidationService = mock[ValidationService]
+      when(mockValidationService.validateAcceptHeader(any)(any, any, any)).thenReturn(Right(()))
+
       when(mockValidationService.validate(eqTo(BalanceRequest(AccessCode("1"))))(any)).thenReturn(EitherT.rightT[Future, NonEmptyList[ValidationError]](()))
 
       val mockRouterService = mock[RouterService]

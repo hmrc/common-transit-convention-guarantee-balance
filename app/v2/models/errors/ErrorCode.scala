@@ -26,18 +26,18 @@ import play.api.libs.json.Writes
 sealed abstract class ErrorCode(val code: String, val statusCode: Int) extends Product with Serializable
 
 object ErrorCode {
-  case object BadRequest           extends ErrorCode("BAD_REQUEST", BAD_REQUEST)
-  case object InvalidGuaranteeType extends ErrorCode("INVALID_GUARANTEE_TYPE", BAD_REQUEST)
-  case object NotFound             extends ErrorCode("NOT_FOUND", NOT_FOUND)
-  case object Forbidden            extends ErrorCode("FORBIDDEN", FORBIDDEN)
-  case object InternalServerError  extends ErrorCode("INTERNAL_SERVER_ERROR", INTERNAL_SERVER_ERROR)
-  case object GatewayTimeout       extends ErrorCode("GATEWAY_TIMEOUT", GATEWAY_TIMEOUT)
-  case object EntityTooLarge       extends ErrorCode("REQUEST_ENTITY_TOO_LARGE", REQUEST_ENTITY_TOO_LARGE)
-  case object UnsupportedMediaType extends ErrorCode("UNSUPPORTED_MEDIA_TYPE", UNSUPPORTED_MEDIA_TYPE)
-  case object Unauthorized         extends ErrorCode("UNAUTHORIZED", UNAUTHORIZED)
-  case object NotAcceptable        extends ErrorCode("NOT_ACCEPTABLE", NOT_ACCEPTABLE)
-  case object TooManyRequests      extends ErrorCode("MESSAGE_THROTTLED_OUT", TOO_MANY_REQUESTS) // to match API Platform
-  case object Gone                 extends ErrorCode("GONE", GONE)
+  case object BadRequest                   extends ErrorCode("BAD_REQUEST", BAD_REQUEST)
+  case object InvalidGuaranteeType         extends ErrorCode("INVALID_GUARANTEE_TYPE", BAD_REQUEST)
+  case object NotFound                     extends ErrorCode("NOT_FOUND", NOT_FOUND)
+  case object Forbidden                    extends ErrorCode("FORBIDDEN", FORBIDDEN)
+  case object InternalServerError          extends ErrorCode("INTERNAL_SERVER_ERROR", INTERNAL_SERVER_ERROR)
+  case object Unauthorized                 extends ErrorCode("UNAUTHORIZED", UNAUTHORIZED)
+  case object NotAcceptable                extends ErrorCode("NOT_ACCEPTABLE", NOT_ACCEPTABLE)
+  case object TooManyRequests              extends ErrorCode("MESSAGE_THROTTLED_OUT", TOO_MANY_REQUESTS) // to match API Platform
+  case object Gone                         extends ErrorCode("GONE", GONE)
+  private case object GatewayTimeout       extends ErrorCode("GATEWAY_TIMEOUT", GATEWAY_TIMEOUT)
+  private case object EntityTooLarge       extends ErrorCode("REQUEST_ENTITY_TOO_LARGE", REQUEST_ENTITY_TOO_LARGE)
+  private case object UnsupportedMediaType extends ErrorCode("UNSUPPORTED_MEDIA_TYPE", UNSUPPORTED_MEDIA_TYPE)
 
   lazy val errorCodes: Seq[ErrorCode] = Seq(
     BadRequest,
@@ -60,13 +60,8 @@ object ErrorCode {
   implicit val errorCodeReads: Reads[ErrorCode] = Reads {
     errorCode =>
       errorCodes
-        .find(
-          value => value.code == errorCode.asInstanceOf[JsString].value
-        )
-        .map(
-          errorCode => JsSuccess(errorCode)
-        )
+        .find(_.code == errorCode.asInstanceOf[JsString].value)
+        .map(JsSuccess(_))
         .getOrElse(JsError())
   }
-
 }

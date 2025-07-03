@@ -22,12 +22,12 @@ import models.request.AuthenticatedRequest
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import v2.models._
+import v2.models.*
 import v2.models.errors.RequestLockingError
 import v2.models.errors.RoutingError
 import v2.models.errors.ValidationError
 
-import javax.inject._
+import javax.inject.*
 import scala.concurrent.ExecutionContext
 
 @ImplementedBy(classOf[AuditServiceImpl])
