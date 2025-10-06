@@ -133,7 +133,7 @@ class RouterServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with
       val EmptyMap = Map.empty[String, Seq[String]]
       whenReady(sut.request(grn, balanceRequest).value, timeout) {
         case Left(RoutingError.Unexpected(Some(UpstreamErrorResponse(`message`, BAD_REQUEST, BAD_REQUEST, EmptyMap)))) => succeed
-        case x                                                                                                         => fail(s"Expected Left(Unexpected(Some(UpstreamErrorResponse))), got $x")
+        case x => fail(s"Expected Left(Unexpected(Some(UpstreamErrorResponse))), got $x")
       }
   }
 
