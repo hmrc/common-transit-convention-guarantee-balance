@@ -45,7 +45,7 @@ class RequestLockingServiceImpl @Inject() (lockRepo: MongoLockRepository, appCon
   override def lock(grn: GuaranteeReferenceNumber, internalId: InternalId)(implicit ec: ExecutionContext): EitherT[Future, RequestLockingError, Unit] = {
     val key    = internalId.value + grn.value
     val digest = hash.synchronized(hash.digest(key.getBytes(StandardCharsets.UTF_8)))
-    val hex = digest.map(
+    val hex    = digest.map(
       x => f"$x%02x"
     )
     EitherT(isLockedOut(hex, internalId))

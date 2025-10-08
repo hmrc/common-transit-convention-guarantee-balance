@@ -49,7 +49,7 @@ class AuthActionSpec extends AsyncFlatSpec with Matchers {
     val retrieval     = Some(internalId)
     val authConnector = FakeAuthConnector(Future.successful(retrieval))
     val authAction    = mkAuthActionBuilder(authConnector)
-    val result = authAction(
+    val result        = authAction(
       _ => Results.Ok
     )(FakeRequest())
 
@@ -60,7 +60,7 @@ class AuthActionSpec extends AsyncFlatSpec with Matchers {
     val retrieval     = None
     val authConnector = FakeAuthConnector(Future.successful(retrieval))
     val authAction    = mkAuthActionBuilder(authConnector)
-    val result = authAction(
+    val result        = authAction(
       _ => Results.Ok
     )(FakeRequest())
 
@@ -70,7 +70,7 @@ class AuthActionSpec extends AsyncFlatSpec with Matchers {
   it should "return Unauthorized when there is any other kind of authorization failure" in {
     val authConnector = FakeAuthConnector(Future.failed(MissingBearerToken()))
     val authAction    = mkAuthActionBuilder(authConnector)
-    val result = authAction(
+    val result        = authAction(
       _ => Results.Ok
     )(FakeRequest())
 

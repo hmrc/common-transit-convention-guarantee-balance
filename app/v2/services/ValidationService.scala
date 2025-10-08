@@ -75,7 +75,7 @@ class ValidationServiceImpl @Inject() (auditService: AuditService) extends Valid
   ): Either[PresentationError, Unit] =
     request.headers.get(HeaderNames.ACCEPT) match {
       case Some(AcceptHeaderRegex(_)) => Right(())
-      case _ =>
+      case _                          =>
         auditService.invalidPayloadBalanceRequest(request, grn)
         Left(PresentationError.notAcceptableError("The accept header must be set to application/vnd.hmrc.2.0+json to use this resource."))
     }
