@@ -5,3 +5,4 @@ test-repositories:
   - ctc-guarantee-balance-performance-tests
   - ctc-guarantee-balance-postman
   - ctc-guarantee-balance-api-tests
+serviceNowMapping: SNSVC0005357
